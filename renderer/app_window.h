@@ -11,6 +11,7 @@ public:
 
 protected:
 	std::unique_ptr<Renderer> m_renderer;
+    bool m_paused;
 };
 
 class AppWindowFactory
