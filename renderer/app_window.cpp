@@ -28,8 +28,6 @@ int AppWindow::shutdown()
 ///////////////////////////////////////////////////////////////////////////////
 // Win32AppWindow
 ///////////////////////////////////////////////////////////////////////////////
-#define IDT_REDRAW 0x0100
-
 class Win32AppWindow : public AppWindow
 {
 public:
@@ -38,20 +36,20 @@ public:
 	int shutdown() override;
 
 	void on_key_pressed(int key_code);
-	void on_paint(HDC hdc);
+	void on_paint();
 
 private:
 	static const char* mc_window_title;
 	static const char* mc_window_class;
 
-	void create_backbuffer();
+	void create_framebuffers();
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HWND m_windowHandle;
 
 	HBRUSH m_backbuffer_brush;
 	HBITMAP m_backbuffer_bitmap;
-	HDC m_backbuffer;
+	HDC m_frontbuffer, m_backbuffer;
 
 	ULONG_PTR m_gdiplusToken;
 	MSG m_msg;
@@ -124,18 +122,30 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
     ShowWindow(m_windowHandle, SW_SHOW);
     UpdateWindow(m_windowHandle);
 
-	SetTimer(m_windowHandle, IDT_REDRAW, 16, nullptr);
-
-	create_backbuffer();
+    create_framebuffers();
+    m_paused = false;
 }
 
 void Win32AppWindow::mainloop()
 {
 	flog();
-	while (GetMessage(&m_msg, nullptr, 0, 0))
+
+    while (true)
     {
-        TranslateMessage(&m_msg);
-        DispatchMessage(&m_msg);
+	    while (PeekMessage(&m_msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&m_msg);
+            DispatchMessage(&m_msg);
+        }
+        if (m_msg.message == WM_QUIT)
+            break;
+
+        if (m_paused)
+        {
+            Sleep(10);
+            continue;
+        }
+        on_paint();
     }
 }
 
@@ -145,10 +155,10 @@ int Win32AppWindow::shutdown()
 
 	// delete backbuffer
 	DeleteObject(m_backbuffer_brush);
-	ReleaseDC(m_windowHandle, m_backbuffer);
 	DeleteObject(m_backbuffer_bitmap);
+    DeleteDC(m_backbuffer);
+    ReleaseDC(m_windowHandle, m_frontbuffer);
 	
-	KillTimer(m_windowHandle, IDT_REDRAW);
 	GdiplusShutdown(m_gdiplusToken);
 
 	AppWindow::shutdown();
@@ -166,7 +176,7 @@ void Win32AppWindow::on_key_pressed(int key_code)
 	}
 }
 
-void Win32AppWindow::on_paint(HDC hdc)
+void Win32AppWindow::on_paint()
 {
 	// clear backbuffer
 	RECT rc;
@@ -177,7 +187,7 @@ void Win32AppWindow::on_paint(HDC hdc)
 	m_renderer->on_draw(Graphics(m_backbuffer));
 	m_renderer->end_frame();
 
-	BitBlt(hdc,
+	BitBlt(m_frontbuffer,
 		rc.left, rc.top,
 		rc.right - rc.left, rc.bottom - rc.top,
 		m_backbuffer,
@@ -186,17 +196,17 @@ void Win32AppWindow::on_paint(HDC hdc)
 	);
 }
 
-void Win32AppWindow::create_backbuffer()
+void Win32AppWindow::create_framebuffers()
 {
 	flog();
 
 	RECT rc;
 	GetClientRect(m_windowHandle, &rc);
-
-	HDC hdc = GetDC(m_windowHandle);
-    m_backbuffer = CreateCompatibleDC(hdc);
+    
+	m_frontbuffer = GetDC(m_windowHandle);
+    m_backbuffer = CreateCompatibleDC(m_frontbuffer);
 	m_backbuffer_bitmap = CreateCompatibleBitmap(
-		hdc,
+		m_frontbuffer,
         rc.right - rc.left,
         rc.bottom - rc.top
 	);
@@ -214,25 +224,18 @@ LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 	switch (message)
 	{
+        case WM_ACTIVATEAPP:
+            window->m_paused = !wParam;
+            break;
+
 		case WM_PAINT:
 			hdc = BeginPaint(hWnd, &ps);
-			window->on_paint(hdc);
+			window->on_paint();
 			EndPaint(hWnd, &ps);
 			break;
 
 		case WM_KEYDOWN:
 			window->on_key_pressed(wParam);
-			break;
-
-		case WM_TIMER:
-			switch (wParam)
-			{
-				case IDT_REDRAW:
-					window->m_renderer->on_update();
-					RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
-					UpdateWindow(hWnd);
-					break;
-			}
 			break;
 
 		case WM_DESTROY:
