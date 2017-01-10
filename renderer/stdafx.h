@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <memory>

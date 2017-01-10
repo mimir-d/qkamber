@@ -17,6 +17,13 @@ public:
 	virtual void update(float abs_time, float elapsed_time) = 0;
 	virtual void draw(Gdiplus::Graphics& g, float abs_time, float elapsed_time) = 0;
 
+    float get_fps() const;
+
 protected:
 	Timer m_timer;
+    uint64_t m_frame_number;
+    
+    float m_fps;
+    uint32_t m_fps_last_count;
+    float m_fps_last_timestamp;
 };
