@@ -1,6 +1,7 @@
 #pragma once
 
 class Renderer;
+class RenderDevice;
 
 class AppWindow
 {
@@ -11,6 +12,7 @@ public:
 
 protected:
 	std::unique_ptr<Renderer> m_renderer;
+    std::unique_ptr<RenderDevice> m_dev;
     bool m_paused;
 };
 

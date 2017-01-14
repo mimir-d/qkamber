@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\win32">
+      <UniqueIdentifier>{de239a83-a0f6-4c26-98bf-6b13f8f41291}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\win32">
+      <UniqueIdentifier>{d5c2a5cb-024f-4442-85db-838eb5c5df26}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -36,6 +42,12 @@
     <ClInclude Include="timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="win32\win32_app_window.h">
+      <Filter>Header Files\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\win32_render_device.h">
+      <Filter>Header Files\win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -58,6 +70,12 @@
     </ClCompile>
     <ClCompile Include="timer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\win32_app_window.cpp">
+      <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\win32_render_device.cpp">
+      <Filter>Source Files\win32</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
