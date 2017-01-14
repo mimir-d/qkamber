@@ -1,10 +1,10 @@
 #pragma once
 
-#include "app_window.h"
+#include "window.h"
 
 class Renderer;
 
-class Win32AppWindow : public AppWindow
+class Win32Window : public Window
 {
 public:
     void init(std::unique_ptr<Renderer> renderer) override;

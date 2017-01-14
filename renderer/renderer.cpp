@@ -59,9 +59,9 @@ void Renderer::on_update()
 {
 	update(m_timer.get_abs_time(), m_timer.get_diff_time());
 }
-void Renderer::on_draw()
+void Renderer::on_render()
 {
-	draw(m_timer.get_abs_time(), m_timer.get_diff_time());
+	render(m_timer.get_abs_time(), m_timer.get_diff_time());
 }
 
 float Renderer::get_fps() const
