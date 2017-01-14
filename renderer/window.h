@@ -3,7 +3,7 @@
 class Renderer;
 class RenderDevice;
 
-class AppWindow
+class Window
 {
 public:
 	virtual void init(std::unique_ptr<Renderer> renderer);
@@ -19,6 +19,6 @@ protected:
 class AppWindowFactory
 {
 public:
-	static std::unique_ptr<AppWindow> create();
+	static std::unique_ptr<Window> create();
 };
 

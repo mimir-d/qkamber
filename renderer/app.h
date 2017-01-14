@@ -1,6 +1,6 @@
 #pragma once
 
-class AppWindow;
+class Window;
 class Renderer;
 
 class Application
@@ -11,5 +11,5 @@ public:
 	int shutdown();
 
 private:
-	std::unique_ptr<AppWindow> m_window;
+	std::unique_ptr<Window> m_window;
 };

@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 #include "renderer.h"
-#include "win32_app_window.h"
+#include "win32_window.h"
 #include "win32_render_device.h"
 using namespace std;
 using namespace Gdiplus;
@@ -9,10 +9,10 @@ using namespace Gdiplus;
 #define WINDOW_TITLE "my little renderererererer"
 #define WINDOW_CLASS "win32app"
 
-void Win32AppWindow::init(unique_ptr<Renderer> renderer)
+void Win32Window::init(unique_ptr<Renderer> renderer)
 {
     flog();
-    AppWindow::init(std::move(renderer));
+    Window::init(std::move(renderer));
 
     WNDCLASSEX wcex;
     const HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -75,7 +75,7 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
     m_paused = false;
 }
 
-void Win32AppWindow::mainloop()
+void Win32Window::mainloop()
 {
     flog();
 
@@ -98,16 +98,16 @@ void Win32AppWindow::mainloop()
     }
 }
 
-int Win32AppWindow::shutdown()
+int Win32Window::shutdown()
 {
     flog();
 
 
-    AppWindow::shutdown();
+    Window::shutdown();
     return static_cast<int>(m_msg.wParam);
 }
 
-void Win32AppWindow::on_key_pressed(int key_code)
+void Win32Window::on_key_pressed(int key_code)
 {
     dlog("Pressed %d", key_code);
     switch (key_code)
@@ -118,18 +118,18 @@ void Win32AppWindow::on_key_pressed(int key_code)
     }
 }
 
-void Win32AppWindow::on_paint()
+void Win32Window::on_paint()
 {
     m_renderer->begin_frame();
-    m_renderer->on_draw();
+    m_renderer->on_render();
     m_renderer->end_frame();
 }
 
-LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
     HDC hdc;
-    Win32AppWindow* window = reinterpret_cast<Win32AppWindow*>(GetWindowLong(hWnd, GWL_USERDATA));
+    Win32Window* window = reinterpret_cast<Win32Window*>(GetWindowLong(hWnd, GWL_USERDATA));
 
     switch (message)
     {

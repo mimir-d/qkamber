@@ -1,14 +1,14 @@
 
 #include "stdafx.h"
-#include "app_window.h"
+#include "window.h"
 #include "renderer.h"
-#include "win32/win32_app_window.h"
+#include "win32/win32_window.h"
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AppWindow
 ///////////////////////////////////////////////////////////////////////////////
-void AppWindow::init(unique_ptr<Renderer> renderer)
+void Window::init(unique_ptr<Renderer> renderer)
 {
 	flog();
     m_dev = RenderDeviceFactory::create();
@@ -17,10 +17,10 @@ void AppWindow::init(unique_ptr<Renderer> renderer)
 	m_renderer->init(m_dev.get());
 }
 
-void AppWindow::mainloop()
+void Window::mainloop()
 {}
 
-int AppWindow::shutdown()
+int Window::shutdown()
 {
 	flog();
 	m_renderer->shutdown();
@@ -30,12 +30,12 @@ int AppWindow::shutdown()
 ///////////////////////////////////////////////////////////////////////////////
 // AppWindowFactory
 ///////////////////////////////////////////////////////////////////////////////
-unique_ptr<AppWindow> AppWindowFactory::create()
+unique_ptr<Window> AppWindowFactory::create()
 {
 	// switch on platform
 #ifdef WIN32
 	dlog("AppWindowFactory creating a Win32AppWindow...");
-	return unique_ptr<AppWindow>(new Win32AppWindow);
+	return unique_ptr<Window>(new Win32Window);
 #endif
     return nullptr;
 }

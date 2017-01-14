@@ -6,7 +6,7 @@ using namespace std;
 using namespace Gdiplus;
 
 #include "app.h"
-#include "app_window.h"
+#include "window.h"
 #include "renderer.h"
 #include "timer.h"
 
@@ -14,14 +14,14 @@ class MyRenderer : public Renderer
 {
 public:
 	void update(float abs_time, float elapsed_time) override;
-	void draw(float abs_time, float elapsed_time) override;
+	void render(float abs_time, float elapsed_time) override;
 };
 
 void MyRenderer::update(float abs_time, float elapsed_time)
 {
 }
 
-void MyRenderer::draw(float abs_time, float elapsed_time)
+void MyRenderer::render(float abs_time, float elapsed_time)
 {
     m_dev->draw_line(100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
     m_dev->draw_tri(

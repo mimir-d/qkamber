@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 #include "app.h"
-#include "app_window.h"
+#include "window.h"
 #include "renderer.h"
 using namespace std;
 

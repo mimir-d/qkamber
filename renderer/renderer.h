@@ -23,10 +23,10 @@ public:
 	void end_frame();
 
 	void on_update();
-	void on_draw();
+	void on_render();
 
 	virtual void update(float abs_time, float elapsed_time) = 0;
-	virtual void draw(float abs_time, float elapsed_time) = 0;
+	virtual void render(float abs_time, float elapsed_time) = 0;
 
     float get_fps() const;
 
