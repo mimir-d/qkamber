@@ -35,7 +35,7 @@ void MyRenderer::render(float abs_time, float elapsed_time)
         vec3(0, 1, 0)
     );
     mat4 proj = mat4::proj_perspective(3.14f / 2, 1.333f, 0.01f, 100.0f);
-    mat4 clip = mat4::clip(0, 480, 640, -480, 0, 1);
+    mat<float, 3, 4> clip = mat4::clip(0, 480, 640, -480, 0, 1);
     mat4 wvp = proj * view * world;
 
     vec4 v0(1, -0.5, 0, 1);
@@ -51,11 +51,11 @@ void MyRenderer::render(float abs_time, float elapsed_time)
     v2 = wvp * v2;
     v2 *= 1.0f / v2.w();
 
-    v0 = clip * v0;
-    v1 = clip * v1;
-    v2 = clip * v2;
+    vec3 sv0 = clip * v0;
+    vec3 sv1 = clip * v1;
+    vec3 sv2 = clip * v2;
 
-    m_dev->draw_tri(v0.x(), v0.y(), v1.x(), v1.y(), v2.x(), v2.y());
+    m_dev->draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
 
     //m_dev->draw_line(100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
     //m_dev->draw_tri(

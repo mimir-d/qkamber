@@ -192,13 +192,13 @@ public:
 
     row operator[](int index)
     {
-        return row(m_data.data() + D0 * index);
+        return row(m_data.data() + D1 * index);
     }
     // RANT: vs2012 signals this as redefinition if defined outside the class, even if
     // the method is marked as const as opposed to the higher one
     const_row operator[](int index) const
     {
-        return const_row(m_data.data() + D0 * index);
+        return const_row(m_data.data() + D1 * index);
     }
 
     mat& operator=(const mat& rhs);
@@ -298,7 +298,7 @@ public:
     static mat4 lookat(const vec3& eye, const vec3& at, const vec3& up);
     static mat4 proj_perspective(float fov, float aspect, float near_plane, float far_plane);
     // static mat4 proj_ortho();
-    static mat4 clip(float x, float y, float width, float height, float near_limit, float far_limit);
+    static mat<float, 3, 4> clip(float x, float y, float width, float height, float near_limit, float far_limit);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -746,7 +746,7 @@ template <int I, int J>
 template <int D2>
 inline void mat<T, D0, D1>::mul_op<_D1, K>::mul_row<I, J>::operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const
 {
-    out.m_data[I*D0 + J] += lhs.m_data[I*D0 + K] * rhs.m_data[K*D0 + J];
+    out.m_data[I*D1 + J] += lhs.m_data[I*D1 + K] * rhs.m_data[K*D1 + J];
     typename mul_op<_D1, K+1>::template mul_row<I, J>()(out, lhs, rhs);
 }
 
@@ -757,7 +757,7 @@ template <int D2>
 inline void mat<T, D0, D1>::mul_op<_D1, 0>::mul_row<I, J>::operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const
 {
     // start with 0 case because we need to initialize the out matrix
-    out.m_data[I*D0 + J] = lhs.m_data[I*D0] * rhs.m_data[J];
+    out.m_data[I*D1 + J] = lhs.m_data[I*D1] * rhs.m_data[J];
     typename mul_op<_D1, 1>::template mul_row<I, J>()(out, lhs, rhs);
 }
 
@@ -775,7 +775,7 @@ template <typename T, int D0, int D1>
 template <int I, int J>
 inline void mat<T, D0, D1>::transform_op<I, J>::operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const
 {
-    out[I] += lhs.m_data[I*D0 + J] * rhs[J];
+    out[I] += lhs.m_data[I*D1 + J] * rhs[J];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -867,15 +867,13 @@ inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
     return ret;
 }
 
-inline mat4 mat4::clip(float x, float y, float w, float h, float n, float f)
+inline mat<float, 3, 4> mat4::clip(float x, float y, float w, float h, float n, float f)
 {
-    no_init_tag no_init;
-    mat4 ret(no_init);
+    mat<float, 3, 4> ret;
 
     ret[0] = vec4(w/2, 0, 0, x + w/2);
     ret[1] = vec4(0, h/2, 0, y + h/2);
     ret[2] = vec4(0, 0, (f - n)/2, (f + n) / 2);
-    ret[3] = vec4(0, 0, 0, 1);
 
     return ret;
 }
