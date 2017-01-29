@@ -9,6 +9,7 @@ using namespace Gdiplus;
 #include "window.h"
 #include "renderer.h"
 #include "timer.h"
+#include "math3.h"
 
 class MyRenderer : public Renderer
 {
@@ -23,24 +24,45 @@ void MyRenderer::update(float abs_time, float elapsed_time)
 
 void MyRenderer::render(float abs_time, float elapsed_time)
 {
-    m_dev->draw_line(100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
-    m_dev->draw_tri(
-        150 + 50*sin(abs_time*2), 150 + 150*cos(abs_time),
-        150 + 50*sin(abs_time*2), 250-50*sin(abs_time),
-        350 - 150*cos(abs_time*2), 150 + 150*cos(abs_time)
+    mat4 world = mat4::rotate(
+        0*1.0f * abs_time,
+        5.8f * abs_time,
+        0*3.0f * abs_time
+    ) * mat4::scale(3 + abs(4*sin(11.6*abs_time)), 3 + abs(4*cos(11.6*abs_time)), 1);
+    mat4 view = mat4::lookat(
+        vec3(0, 0, 10),
+        vec3(0, 0, 0),
+        vec3(0, 1, 0)
     );
-//     Font font(L"TimesNewRoman", 12);
-//     SolidBrush hb(Color(150, 0, 200));
-// 
-//     wostringstream ostr;
-//     ostr << "fps: " << fixed << setprecision(2) << get_fps() << ends;
-//     wstring fps_string = ostr.str();
-//     g.DrawString(fps_string.c_str(), fps_string.size(), &font, PointF(3, 3), &hb);
-// 
-// 	Pen p(Color(255, 150, 0, 255), 4);
-// 	g.DrawLine(&p, 100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
-// 
-// 	g.FillRectangle(&hb, 150 + 50*sin(abs_time*2), 150 + 150*cos(abs_time), 350 - 150*cos(abs_time*2), 250-50*sin(abs_time));
+    mat4 proj = mat4::proj_perspective(3.14f / 2, 1.333f, 0.01f, 100.0f);
+    mat4 clip = mat4::clip(0, 480, 640, -480, 0, 1);
+    mat4 wvp = proj * view * world;
+
+    vec4 v0(1, -0.5, 0, 1);
+    vec4 v1(0, 0.5, 0, 1);
+    vec4 v2(-1, -0.5, 0, 1);
+
+    v0 = wvp * v0;
+    v0 *= 1.0f / v0.w();
+
+    v1 = wvp * v1;
+    v1 *= 1.0f / v1.w();
+
+    v2 = wvp * v2;
+    v2 *= 1.0f / v2.w();
+
+    v0 = clip * v0;
+    v1 = clip * v1;
+    v2 = clip * v2;
+
+    m_dev->draw_tri(v0.x(), v0.y(), v1.x(), v1.y(), v2.x(), v2.y());
+
+    //m_dev->draw_line(100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
+    //m_dev->draw_tri(
+    //    150 + 50*sin(abs_time*2), 150 + 150*cos(abs_time),
+    //    150 + 50*sin(abs_time*2), 250-50*sin(abs_time),
+    //    350 - 150*cos(abs_time*2), 150 + 150*cos(abs_time)
+    //);
 }
 
 int main()
@@ -69,4 +91,11 @@ int main()
 // refactoir happlication
 // math: vec3, vec4, mat4x4, world, view, proj
 // vertex buffer (vec3) + model + index buffer
-// render device class to pass to on_draw
+// inherit app and override update/render, renderer is created by app
+// zbuffer/scanline-tri; display lists + sorting
+//
+// 
+int mainx()
+{
+    return 0;
+}
