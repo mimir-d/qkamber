@@ -143,6 +143,9 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
             EndPaint(hWnd, &ps);
             break;
 
+        case WM_ERASEBKGND:
+            return true;
+
         case WM_KEYDOWN:
             window->on_key_pressed(wParam);
             break;

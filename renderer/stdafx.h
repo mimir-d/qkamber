@@ -7,20 +7,19 @@
 
 #include "targetver.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <objidl.h>
-#include <gdiplus.h>
+#ifdef WIN32
+#   define WIN32_LEAN_AND_MEAN
+#   include <Windows.h>
+#   include <objidl.h>
+#   include <gdiplus.h>
+#endif
 
-#include <stdio.h>
-#include <tchar.h>
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <sstream>
+#include <array>
+#include <random>
 #include <memory>
 
 #include "logger.h"
-
-
-// TODO: reference additional headers your program requires here
