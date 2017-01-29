@@ -17,6 +17,9 @@ namespace detail
         std::default_random_engine m_gen;
         std::uniform_real_distribution<T> m_dist;
     };
+
+    // TODO: should post no_init ctors public?
+    struct no_init_tag {};
 };
 
 inline float frand()
@@ -57,8 +60,7 @@ public:
     T operator*(const vec& rhs) const;
 
 protected:
-    struct no_init_tag {};
-    vec(no_init_tag) {}
+    vec(detail::no_init_tag) {}
 
 private:
     template <int I>
@@ -215,8 +217,7 @@ public:
 protected:
     // optimization for binary operations that overwrite internal data:
     // since there is no need to zero initialize the matrix, just skip that
-    struct no_init_tag {};
-    mat(no_init_tag) {}
+    mat(detail::no_init_tag) {}
 
 private:
     template <int I>
@@ -286,7 +287,7 @@ public:
     mat4(const mat4& rhs) : mat<float, 4>(rhs) {}
 
 private:
-    mat4(no_init_tag) {}
+    mat4(detail::no_init_tag) {}
 
 public:
     static mat4 identity();
@@ -421,7 +422,7 @@ inline vec<T, N>& vec<T, N>::operator*=(T rhs)
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator-() const
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     vec ret(no_init);
     return detail::iterate1<N, neg_op>()(ret, *this);
 }
@@ -429,7 +430,7 @@ inline vec<T, N> vec<T, N>::operator-() const
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator+(const vec& rhs) const
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     vec ret(no_init);
     return detail::iterate1<N, add_op>()(ret, *this, rhs);
 }
@@ -437,7 +438,7 @@ inline vec<T, N> vec<T, N>::operator+(const vec& rhs) const
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator-(const vec& rhs) const
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     vec ret(no_init);
     return detail::iterate1<N, sub_op>()(ret, *this, rhs);
 }
@@ -696,7 +697,7 @@ template <typename T, int D0, int D1>
 template <int D2>
 inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs)
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat<T, D0, D2> ret(no_init);
     return detail::iterate2<D0, D2, mul_op<>::mul_row>()(ret, *this, rhs);
 }
@@ -782,7 +783,7 @@ inline void mat<T, D0, D1>::transform_op<I, J>::operator()(vec<T, D0>& out, cons
 ///////////////////////////////////////////////////////////////////////////////
 inline mat4 mat4::identity()
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
 
     ret[0] = vec4(1, 0, 0, 0);
@@ -795,7 +796,7 @@ inline mat4 mat4::identity()
 
 inline mat4 mat4::translate(float x, float y, float z)
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
 
     ret[0] = vec4(1, 0, 0, x);
@@ -809,7 +810,7 @@ inline mat4 mat4::translate(float x, float y, float z)
 inline mat4 mat4::rotate(float x, float y, float z)
 {
     // yaw pitch roll = y x z (directx)
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
     const float ca = cos(x), sa = sin(x);
     const float cb = cos(y), sb = sin(y);
@@ -825,7 +826,7 @@ inline mat4 mat4::rotate(float x, float y, float z)
 
 inline mat4 mat4::scale(float x, float y, float z)
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
 
     ret[0] = vec4(x, 0, 0, 0);
@@ -838,7 +839,7 @@ inline mat4 mat4::scale(float x, float y, float z)
 
 inline mat4 mat4::lookat(const vec3& eye, const vec3& at, const vec3& up)
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
     vec3 z = (at - eye).normalize();
     vec3 x = (z ^ up).normalize();
@@ -854,7 +855,7 @@ inline mat4 mat4::lookat(const vec3& eye, const vec3& at, const vec3& up)
 
 inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
 {
-    no_init_tag no_init;
+    detail::no_init_tag no_init;
     mat4 ret(no_init);
     const float ti = 1.0f / tan(fov / 2);
 
