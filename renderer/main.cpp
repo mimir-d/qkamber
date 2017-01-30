@@ -14,8 +14,8 @@ using namespace Gdiplus;
 class MyRenderer : public Renderer
 {
 public:
-	void update(float abs_time, float elapsed_time) override;
-	void render(float abs_time, float elapsed_time) override;
+    void update(float abs_time, float elapsed_time) override;
+    void render(float abs_time, float elapsed_time) override;
 };
 
 void MyRenderer::update(float abs_time, float elapsed_time)
@@ -24,18 +24,20 @@ void MyRenderer::update(float abs_time, float elapsed_time)
 
 void MyRenderer::render(float abs_time, float elapsed_time)
 {
-    mat4 world = mat4::rotate(
+    /*mat4 world = mat4::rotate(
         0*1.0f * abs_time,
         5.8f * abs_time,
         0*3.0f * abs_time
     ) * mat4::scale(3 + abs(4*sin(11.6*abs_time)), 3 + abs(4*cos(11.6*abs_time)), 1);
+    */
+    mat4 world = mat4::identity();
     mat4 view = mat4::lookat(
         vec3(0, 0, 10),
         vec3(0, 0, 0),
         vec3(0, 1, 0)
     );
     mat4 proj = mat4::proj_perspective(3.14f / 2, 1.333f, 0.01f, 100.0f);
-    mat<float, 3, 4> clip = mat4::clip(0, 480, 640, -480, 0, 1);
+    auto clip = mat4::clip(0, 480, 640, -480, 0, 1);
     mat4 wvp = proj * view * world;
 
     vec4 v0(1, -0.5, 0, 1);
@@ -65,37 +67,61 @@ void MyRenderer::render(float abs_time, float elapsed_time)
     //);
 }
 
-int main()
+int mainx()
 {
-	flog();
-	Application app;
-	try
-	{
-		unique_ptr<Renderer> renderer(new MyRenderer);
-		app.init(std::move(renderer));
-		app.run();
-		int rc = app.shutdown();
+    flog();
+    Application app;
+    try
+    {
+        unique_ptr<Renderer> renderer(new MyRenderer);
+        app.init(std::move(renderer));
+        app.run();
+        int rc = app.shutdown();
 
-		//cout << endl << "Press enter to continue ..." << endl;
-		//cin.get();
-		return rc;
-	}
-	catch (exception& ex)
-	{
-		cout << "Exception caught: " << ex.what() << endl;
-		return 1;
-	}
+        //cout << endl << "Press enter to continue ..." << endl;
+        //cin.get();
+        return rc;
+    }
+    catch (exception& ex)
+    {
+        cout << "Exception caught: " << ex.what() << endl;
+        return 1;
+    }
 }
 
 // TODO:
 // refactoir happlication
-// math: vec3, vec4, mat4x4, world, view, proj
-// vertex buffer (vec3) + model + index buffer
+// vertex buffer (vec3) + decl + model + index buffer
 // inherit app and override update/render, renderer is created by app
 // zbuffer/scanline-tri; display lists + sorting
+// scene tree
 //
-// 
-int mainx()
+#include "mesh.h"
+int main()
 {
+    Mesh m;
+
+    auto p = m.get_primitive();
+    float x = *reinterpret_cast<float*>(p.vertices.lock());
+    x = *reinterpret_cast<float*>(p.vertices.lock() + 12);
     return 0;
 }
+/*
+renderer draws primitives
+    primitive has a vdata and idata
+>> drawing:
+>> go thru decl and get vecref ptrs
+
+model has model units
+    model unit has a mesh and material, local transform
+        mesh has a vertex data and index data, get primitive
+
+vdata has vertex buffer + decl
+idata has index buffer
+
+decl has decl elements
+    elem has offset, size, semantic
+
+scene has scene nodes
+    scene node maybe has a model + world transform
+    */
