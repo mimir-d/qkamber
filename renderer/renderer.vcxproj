@@ -82,8 +82,15 @@
   <ItemGroup>
     <ClInclude Include="app.h" />
     <ClInclude Include="logger.h" />
+    <ClInclude Include="material.h" />
     <ClInclude Include="math3.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="model.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="render_buffers.h" />
+    <ClInclude Include="render_primitive.h" />
+    <ClInclude Include="render_queue.h" />
+    <ClInclude Include="scene.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="timer.h" />
@@ -98,7 +105,10 @@
     <ClCompile Include="app.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="model.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="render_buffers.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
