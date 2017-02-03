@@ -91,6 +91,7 @@
     <ClInclude Include="render_primitive.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="timer.h" />
+    <ClInclude Include="viewport.h" />
     <ClInclude Include="win32\win32_render_device.h" />
     <ClInclude Include="win32\win32_window.h" />
     <ClInclude Include="window.h" />
@@ -108,6 +109,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="timer.cpp" />
+    <ClCompile Include="viewport.cpp" />
     <ClCompile Include="win32\win32_render_device.cpp" />
     <ClCompile Include="win32\win32_window.cpp" />
     <ClCompile Include="window.cpp" />

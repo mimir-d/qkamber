@@ -28,6 +28,7 @@ void Renderer::init(Timer* timer)
         { 0, 0, 0 },
         { 0, 1, 0 }
     });
+    m_viewport = std::make_unique<Viewport>(640, 480);
 }
 void Renderer::shutdown()
 {
@@ -39,7 +40,7 @@ void Renderer::render()
     begin_frame();
 
     mat4 projview = m_camera->get_proj() * m_camera->get_view();
-    mat<float, 3, 4> clip = mat4::clip(0, 480, 640, -480, 0.0f, 1.0f);
+    mat3x4 clip = m_viewport->get_clip();
 
     mat4 world = mat4::identity();
 

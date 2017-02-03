@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera.h"
+#include "viewport.h"
 #include "timer.h"
 
 class RenderDevice
@@ -35,6 +36,8 @@ protected:
 
     //TEMP:
     std::unique_ptr<Camera> m_camera;
+    std::unique_ptr<Viewport> m_viewport;
+
 	Timer* m_timer;
     uint64_t m_frame_number;
 

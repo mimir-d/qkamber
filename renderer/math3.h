@@ -277,6 +277,8 @@ protected:
     std::array<T, D0 * D1> m_data;
 };
 
+using mat3x4 = mat<float, 3, 4>;
+
 class mat4 : public mat<float, 4>
 {
 public:
