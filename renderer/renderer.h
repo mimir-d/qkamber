@@ -2,7 +2,10 @@
 
 #include "camera.h"
 #include "viewport.h"
+#include "render_queue.h"
 #include "timer.h"
+#include "camera.h"
+#include "viewport.h"
 
 class RenderDevice
 {
@@ -24,6 +27,7 @@ public:
     void render();
 
     RenderDevice& get_device();
+    RenderQueue& get_queue();
 
     float get_fps() const;
 
@@ -33,6 +37,7 @@ private:
 
 protected:
     std::unique_ptr<RenderDevice> m_dev;
+    RenderQueue m_queue;
 
     //TEMP:
     std::unique_ptr<Camera> m_camera;
@@ -58,6 +63,11 @@ public:
 inline RenderDevice& Renderer::get_device()
 {
     return *m_dev;
+}
+
+inline RenderQueue& Renderer::get_queue()
+{
+    return m_queue;
 }
 
 inline float Renderer::get_fps() const
