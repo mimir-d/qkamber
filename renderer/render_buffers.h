@@ -1,5 +1,7 @@
 #pragma once
 
+#include "misc.h"
+
 class DeviceBuffer
 {
 public:
@@ -104,23 +106,10 @@ inline uint8_t* DeviceBuffer::lock()
 inline void DeviceBuffer::unlock()
 {}
 
-namespace detail
-{
-    // TODO: might need to extract this somewher else
-    template<typename Func, typename R, typename Arg, typename... Rest>
-    Arg first_arg_helper(R (Func::*)(Arg, Rest...));
-
-    template<typename Func, typename R, typename Arg, typename... Rest>
-    Arg first_arg_helper(R (Func::*)(Arg, Rest...) const);
-
-    template <typename Func>
-    using first_arg_t = decltype(first_arg_helper(&Func::operator()));
-}
-
 template <typename Func>
 inline void lock_buffer(DeviceBuffer* buffer, Func fun)
 {
-    fun(reinterpret_cast<detail::first_arg_t<Func>>(buffer->lock()));
+    fun(reinterpret_cast<first_arg_t<Func>>(buffer->lock()));
     buffer->unlock();
 }
 
