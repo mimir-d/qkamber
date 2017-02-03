@@ -1,5 +1,6 @@
 #pragma once
 
+#include "camera.h"
 #include "timer.h"
 
 class RenderDevice
@@ -32,6 +33,8 @@ private:
 protected:
     std::unique_ptr<RenderDevice> m_dev;
 
+    //TEMP:
+    std::unique_ptr<Camera> m_camera;
 	Timer* m_timer;
     uint64_t m_frame_number;
 
