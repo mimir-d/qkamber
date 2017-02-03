@@ -16,26 +16,25 @@ public:
 class Renderer
 {
 public:
-	void init(RenderDevice* device);
+	void init(Timer* timer);
 	void shutdown();
 
-	void begin_frame();
-	void end_frame();
+    void render();
 
-	void on_update();
-	void on_render();
-
-	virtual void update(float abs_time, float elapsed_time) = 0;
-	virtual void render(float abs_time, float elapsed_time) = 0;
+    RenderDevice& get_device();
 
     float get_fps() const;
 
-protected:
-    RenderDevice* m_dev;
+private:
+    void begin_frame();
+    void end_frame();
 
-	Timer m_timer;
+protected:
+    std::unique_ptr<RenderDevice> m_dev;
+
+	Timer* m_timer;
     uint64_t m_frame_number;
-    
+
     float m_target_fps, m_fps;
     uint32_t m_fps_last_count;
     float m_fps_last_timestamp;
@@ -46,3 +45,16 @@ class RenderDeviceFactory
 public:
     static std::unique_ptr<RenderDevice> create();
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// Renderer impl
+///////////////////////////////////////////////////////////////////////////////
+inline RenderDevice& Renderer::get_device()
+{
+    return *m_dev;
+}
+
+inline float Renderer::get_fps() const
+{
+    return m_fps;
+}

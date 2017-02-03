@@ -1,15 +1,20 @@
 #pragma once
 
-class Window;
-class Renderer;
+#include "renderer.h"
 
 class Application
 {
 public:
-	void init(std::unique_ptr<Renderer> renderer);
-	void run();
-	int shutdown();
+    // TODO: temp
+    Renderer& get_renderer()
+    {
+        return m_renderer;
+    }
 
-private:
-	std::unique_ptr<Window> m_window;
+public:
+    virtual void update(float abs_time, float elapsed_time) = 0;
+    virtual void render(float abs_time, float elapsed_time) = 0;
+
+protected:
+    Renderer m_renderer;
 };

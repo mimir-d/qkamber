@@ -2,29 +2,70 @@
 #include "stdafx.h"
 #include "renderer.h"
 #include "win32/win32_render_device.h"
+#include "math3.h"
+
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer
 ///////////////////////////////////////////////////////////////////////////////
-void Renderer::init(RenderDevice* device)
+void Renderer::init(Timer* timer)
 {
-	flog();
-    m_dev = device;
+    flog();
+    m_timer = timer;
+
+    m_dev = RenderDeviceFactory::create();
 
     m_frame_number = 0;
     m_fps_last_count = 0;
     m_fps_last_timestamp = 0;
-    
+
     m_target_fps = 60;
     m_fps = 0;
-
-	m_timer.start();
 }
 void Renderer::shutdown()
 {
 	flog();
-	m_timer.stop();
+}
+
+void Renderer::render()
+{
+    begin_frame();
+
+    mat4 view = mat4::lookat(
+        { 0, 0, 10 },
+        { 0, 0, 0 },
+        { 0, 1, 0 }
+    );
+    mat4 proj = mat4::proj_perspective(3.14f / 2, 1.333f, 0.01f, 100.0f);
+
+    mat4 projview = proj * view;
+    mat<float, 3, 4> clip = mat4::clip(0, 480, 640, -480, 0.0f, 1.0f);
+
+    mat4 world = mat4::identity();
+
+    mat4 wvp = projview * world;
+
+    vec4 v0(1, -0.5, 0, 1);
+    vec4 v1(0, 0.5, 0, 1);
+    vec4 v2(-1, -0.5, 0, 1);
+
+    v0 = wvp * v0;
+    v0 *= 1.0f / v0.w();
+
+    v1 = wvp * v1;
+    v1 *= 1.0f / v1.w();
+
+    v2 = wvp * v2;
+    v2 *= 1.0f / v2.w();
+
+    vec3 sv0 = clip * v0;
+    vec3 sv1 = clip * v1;
+    vec3 sv2 = clip * v2;
+
+    m_dev->draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
+
+    end_frame();
 }
 
 void Renderer::begin_frame()
@@ -42,7 +83,7 @@ void Renderer::end_frame()
     m_frame_number ++;
     m_fps_last_count ++;
 
-    float now = m_timer.get_abs_time();
+    float now = m_timer->get_abs_time();
     float delta = now - m_fps_last_timestamp;
     if (delta >= 1.0f)
     {
@@ -53,20 +94,6 @@ void Renderer::end_frame()
 
     m_dev->swap_buffers();
     // delay for fps
-}
-
-void Renderer::on_update()
-{
-	update(m_timer.get_abs_time(), m_timer.get_diff_time());
-}
-void Renderer::on_render()
-{
-	render(m_timer.get_abs_time(), m_timer.get_diff_time());
-}
-
-float Renderer::get_fps() const
-{
-    return m_fps;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

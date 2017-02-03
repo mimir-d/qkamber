@@ -2,12 +2,13 @@
 
 #include "window.h"
 
+class Application;
 class Renderer;
 
 class Win32Window : public Window
 {
 public:
-    void init(std::unique_ptr<Renderer> renderer) override;
+    void init(Application* app, Timer* timer) override;
     void mainloop() override;
     int shutdown() override;
 
