@@ -1,18 +1,22 @@
 #pragma once
 
-#include "camera.h"
-#include "viewport.h"
 #include "render_queue.h"
 #include "timer.h"
 #include "camera.h"
 #include "viewport.h"
 
+struct RenderPrimitive;
+
 class RenderDevice
 {
 public:
-    virtual void draw_line(float x0, float y0, float x1, float y1) = 0;
-    virtual void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+    virtual void draw_primitive(const RenderPrimitive& primitive) = 0;
     virtual void draw_text(const std::string& text, float x, float y) = 0;
+
+    virtual void set_world_matrix(mat4 world_matrix) = 0;
+    virtual void set_view_matrix(mat4 view_matrix) = 0;
+    virtual void set_proj_matrix(mat4 proj_matrix) = 0;
+    virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
 
     virtual void clear() = 0;
     virtual void swap_buffers() = 0;
