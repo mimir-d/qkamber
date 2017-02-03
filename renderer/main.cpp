@@ -18,12 +18,28 @@ class MyApplication : public Application
 public:
     void update(float abs_time, float elapsed_time) override;
     void render(float abs_time, float elapsed_time) override;
+
+private:
+    Mesh m_mesh;
+    mat4 m_world_matrix;
 };
 
 void MyApplication::update(float abs_time, float elapsed_time)
 {
     // TODO: check paren identation formatting
     // scene stuff
+    m_world_matrix = mat4::rotate(
+        1.0f * abs_time,
+        5.8f * abs_time,
+        3.0f * abs_time
+    ) * mat4::scale(
+        3.0f + abs(4.0f * sin(11.6f * abs_time)),
+        3.0f + abs(4.0f * cos(11.6f * abs_time)),
+        1.0f
+    );
+
+    auto& q = m_renderer.get_queue();
+    q.add(m_world_matrix, m_mesh);
 
     // m_scene.update();
 }
