@@ -1,6 +1,9 @@
 
 #include "stdafx.h"
 #include "win32_render_device.h"
+
+#include "render_primitive.h"
+
 using namespace std;
 using namespace Gdiplus;
 
@@ -28,6 +31,7 @@ void Win32RenderDevice::win32_init(HWND window_handle)
 
     m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
 }
+
 void Win32RenderDevice::win32_shutdown()
 {
     flog();
@@ -40,34 +44,55 @@ void Win32RenderDevice::win32_shutdown()
     GdiplusShutdown(m_gdiplus_token);
 }
 
-void Win32RenderDevice::draw_line(float x0, float y0, float x1, float y1)
+///////////////////////////////////////////////////////////////////////////////
+// Drawing methods
+///////////////////////////////////////////////////////////////////////////////
+void Win32RenderDevice::draw_primitive(const RenderPrimitive& primitive)
 {
-    Pen p(Color(255, 150, 0, 255));
-    m_graphics->DrawLine(&p, x0, y0, x1, y1);
-}
+    /*
+    const VertexBuffer& vb = primitive.vertices;
+    const IndexBuffer& ib = primitive.indices;
 
-void Win32RenderDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
-{
-    Point vertices[] = {
-        Point((INT)x0, (INT)y0), 
-        Point((INT)x1, (INT)y1),
-        Point((INT)x2, (INT)y2)
-    };
+    //for (auto& decl : v
+    for (int i = 0; i < ib.get_count(); i += 3)
+    {
 
-    SolidBrush hb(Color(150, 0, 200));
-    m_graphics->FillPolygon(&hb, vertices, 3);
+    }*/
+    auto& mvp = m_mvp_matrix.get();
+
+    vec4 v0(1, -0.5, 0, 1);
+    vec4 v1(0, 0.5, 0, 1);
+    vec4 v2(-1, -0.5, 0, 1);
+
+    v0 = mvp * v0;
+    v0 *= 1.0f / v0.w();
+
+    v1 = mvp * v1;
+    v1 *= 1.0f / v1.w();
+
+    v2 = mvp * v2;
+    v2 *= 1.0f / v2.w();
+
+    vec3 sv0 = m_clip_matrix * v0;
+    vec3 sv1 = m_clip_matrix * v1;
+    vec3 sv2 = m_clip_matrix * v2;
+
+    draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
 }
 
 void Win32RenderDevice::draw_text(const std::string& text, float x, float y)
 {
     Font font(L"TimesNewRoman", 12);
     SolidBrush hb(Color(150, 0, 200));
-    
+
     unique_ptr<wchar_t[]> wcbuf(new wchar_t[text.size() + 1]);
     mbstowcs_s(nullptr, wcbuf.get(), text.size(), text.c_str(), text.size());
     m_graphics->DrawString(wcbuf.get(), text.size(), &font, PointF(3, 3), &hb);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Frame methods
+///////////////////////////////////////////////////////////////////////////////
 void Win32RenderDevice::clear()
 {
     RECT rc;
@@ -84,4 +109,25 @@ void Win32RenderDevice::swap_buffers()
         0, 0,
         SRCCOPY
     );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper methods
+///////////////////////////////////////////////////////////////////////////////
+void Win32RenderDevice::draw_line(float x0, float y0, float x1, float y1)
+{
+    Pen p(Color(255, 150, 0, 255));
+    m_graphics->DrawLine(&p, x0, y0, x1, y1);
+}
+
+void Win32RenderDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
+{
+    Point vertices[] = {
+        Point((INT)x0, (INT)y0),
+        Point((INT)x1, (INT)y1),
+        Point((INT)x2, (INT)y2)
+    };
+
+    SolidBrush hb(Color(150, 0, 200));
+    m_graphics->FillPolygon(&hb, vertices, 3);
 }

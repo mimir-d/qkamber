@@ -1,6 +1,9 @@
 
 #include "stdafx.h"
 #include "renderer.h"
+#include "render_queue.h"
+#include "render_primitive.h"
+#include "mesh.h"
 #include "win32/win32_render_device.h"
 #include "math3.h"
 
@@ -39,33 +42,15 @@ void Renderer::render()
 {
     begin_frame();
 
-    mat4 projview = m_camera->get_proj() * m_camera->get_view();
-    mat3x4 clip = m_viewport->get_clip();
+    // set camera and viewport just once
+    m_dev->set_view_matrix(m_camera->get_view());
+    m_dev->set_proj_matrix(m_camera->get_proj());
+    m_dev->set_clip_matrix(m_viewport->get_clip());
 
     for (auto& qi : m_queue)
     {
-        Mesh& mesh = qi.mesh;
-
-        mat4 wvp = projview * qi.world_matrix;
-
-        vec4 v0(1, -0.5, 0, 1);
-        vec4 v1(0, 0.5, 0, 1);
-        vec4 v2(-1, -0.5, 0, 1);
-
-        v0 = wvp * v0;
-        v0 *= 1.0f / v0.w();
-
-        v1 = wvp * v1;
-        v1 *= 1.0f / v1.w();
-
-        v2 = wvp * v2;
-        v2 *= 1.0f / v2.w();
-
-        vec3 sv0 = clip * v0;
-        vec3 sv1 = clip * v1;
-        vec3 sv2 = clip * v2;
-
-        m_dev->draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
+        m_dev->set_world_matrix(qi.world_matrix);
+        m_dev->draw_primitive(qi.mesh.get_primitive());
     }
 
     end_frame();
