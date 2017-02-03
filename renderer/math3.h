@@ -17,9 +17,6 @@ namespace detail
         std::default_random_engine m_gen;
         std::uniform_real_distribution<T> m_dist;
     };
-
-    // TODO: should post no_init ctors public?
-    struct no_init_tag {};
 };
 
 inline float frand()
@@ -27,6 +24,9 @@ inline float frand()
     static detail::RealGenerator<float> gen;
     return gen();
 }
+
+// TODO: rename or move to namespace?
+struct no_init_tag {};
 
 ///////////////////////////////////////////////////////////////////////////////
 // vector types
@@ -38,6 +38,13 @@ class vec
 public:
     vec();
     vec(const vec& rhs);
+
+    template <
+        typename... Args,
+        typename = std::enable_if_t<std::is_convertible<std::common_type_t<Args...>, T>::value>
+    >
+    vec(Args&&... args);
+    vec(no_init_tag) {}
 
     T len() const;
     vec normalize() const;
@@ -58,9 +65,6 @@ public:
     vec operator*(T rhs) const;
 
     T operator*(const vec& rhs) const;
-
-protected:
-    vec(detail::no_init_tag) {}
 
 private:
     template <int I>
@@ -101,10 +105,11 @@ protected:
 class vec3 : public vec<float, 3>
 {
 public:
+    using vec<float, 3>::vec;
+
     vec3() : vec<float, 3>() {}
     vec3(const vec3& rhs) : vec<float, 3>(rhs) {}
     vec3(const vec<float, 3>& rhs) : vec<float, 3>(rhs) {}
-    vec3(float x, float y, float z);
 
     float& x() { return m_data[0]; }
     float& y() { return m_data[1]; }
@@ -121,10 +126,11 @@ public:
 class vec4 : public vec<float, 4>
 {
 public:
+    using vec<float, 4>::vec;
+
     vec4() : vec<float, 4>() {}
     vec4(const vec4& rhs) : vec<float, 4>(rhs) {}
     vec4(const vec<float, 4>& rhs) : vec<float, 4>(rhs) {}
-    vec4(float x, float y, float z, float w);
 
     float& x() { return m_data[0]; }
     float& y() { return m_data[1]; }
@@ -144,7 +150,6 @@ template <typename T, int D0, int D1 = D0>
 class mat
 {
 public:
-    //TODO: add bounds checking
     template <bool is_const>
     class row_t
     {
@@ -186,15 +191,20 @@ public:
 
 public:
     mat();
-    // TODO: refactor this with initializer_list
-    // mat(const T data[D0 * D1]);
     mat(const mat& rhs);
+
+    template <
+        typename... Args,
+        typename = std::enable_if_t<std::is_convertible<std::common_type_t<Args...>, T>::value>
+    >
+    mat(Args&&... args);
+    mat(no_init_tag) {}
 
     row operator[](int index)
     {
         return row(m_data.data() + D1 * index);
     }
-    // RANT: vs2012 signals this as redefinition if defined outside the class, even if
+    // RANT: vs2015 signals this as redefinition if defined outside the class, even if
     // the method is marked as const as opposed to the higher one
     const_row operator[](int index) const
     {
@@ -203,21 +213,14 @@ public:
 
     mat& operator=(const mat& rhs);
 
-    // RANT: vs2012 cannot have default value for function templates, see:
-    // http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#226
-    template <int _D1>
-    typename std::enable_if<D0 == _D1, mat&>::type operator*=(const mat<T, D0, _D1>& rhs);
+    template <typename = std::enable_if_t<D0 == D1>>
+    mat& operator*=(const mat& rhs);
     mat& operator*=(T rhs);
 
     template <int D2>
     mat<T, D0, D2> operator*(const mat<T, D1, D2>& rhs) const;
     vec<T, D0> operator*(const vec<T, D1>& rhs) const;
     mat operator*(T rhs) const;
-
-protected:
-    // optimization for binary operations that overwrite internal data:
-    // since there is no need to zero initialize the matrix, just skip that
-    mat(detail::no_init_tag) {}
 
 private:
     template <int I>
@@ -233,7 +236,7 @@ private:
     };
 
     // NOTE: this needs to have increasing K such that the compiler sees the instructions sequentially forward
-    // RANT: vs2012 can't deal with implicit D1 so a value copy needs to happen here
+    // RANT: vs2015 can't deal with implicit D1 so a value copy needs to happen here
     template <int _D1 = D1, int K = 0>
     struct mul_op
     {
@@ -273,6 +276,12 @@ private:
         void operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const;
     };
 
+    template <int I>
+    struct transform_op<I, 0>
+    {
+        void operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const;
+    };
+
 protected:
     std::array<T, D0 * D1> m_data;
 };
@@ -282,14 +291,11 @@ using mat3x4 = mat<float, 3, 4>;
 class mat4 : public mat<float, 4>
 {
 public:
-    mat4() : mat<float, 4>() {}
-    // TODO: initializer_list
-    // mat4(const float m[16]) : mat<float, 4>(m) {}
-    mat4(const mat<float, 4>& rhs) : mat<float, 4>(rhs) {}
-    mat4(const mat4& rhs) : mat<float, 4>(rhs) {}
+    using mat<float, 4>::mat;
 
-private:
-    mat4(detail::no_init_tag) {}
+    mat4() : mat<float, 4>() {}
+    mat4(const mat4& rhs) : mat<float, 4>(rhs) {}
+    mat4(const mat<float, 4>& rhs) : mat<float, 4>(rhs) {}
 
 public:
     static mat4 identity();
@@ -300,7 +306,8 @@ public:
     static mat4 lookat(const vec3& eye, const vec3& at, const vec3& up);
     static mat4 proj_perspective(float fov, float aspect, float near_plane, float far_plane);
     // static mat4 proj_ortho();
-    static mat<float, 3, 4> clip(float x, float y, float width, float height, float near_limit, float far_limit);
+    // TODO: maybe move this?
+    static mat3x4 clip(float x, float y, float width, float height, float near_limit, float far_limit);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -325,33 +332,19 @@ namespace detail
     template <int D0, template<int> class Func, int I = 0>
     struct iterate1
     {
-        // TODO: variadic template
-        template <typename Result, typename Lhs, typename Rhs>
-        Result& operator()(Result& out, const Lhs& lhs, const Rhs& rhs) const
+        template <typename Result, typename... Args>
+        Result& operator()(Result& out, Args&&... args) const
         {
-            Func<I>()(out, lhs, rhs);
-            return iterate1<D0, Func, I+1>()(out, lhs, rhs);
-        }
-
-        template <typename Result, typename Rhs>
-        Result& operator()(Result& out, const Rhs& rhs) const
-        {
-            Func<I>()(out, rhs);
-            return iterate1<D0, Func, I+1>()(out, rhs);
+            Func<I>()(out, std::forward<Args>(args)...);
+            return iterate1<D0, Func, I+1>()(out, std::forward<Args>(args)...);
         }
     };
 
     template <int D0, template<int> class Func>
     struct iterate1<D0, Func, D0>
     {
-        template <typename Result, typename Lhs, typename Rhs>
-        Result& operator()(Result& out, const Lhs&, const Rhs&) const
-        {
-            return out;
-        }
-
-        template <typename Result, typename Rhs>
-        Result& operator()(Result& out, const Rhs&) const
+        template <typename Result, typename... Args>
+        Result& operator()(Result& out, Args&&...) const
         {
             return out;
         }
@@ -367,6 +360,12 @@ inline vec<T, N>::vec()
 template <typename T, int N>
 inline vec<T, N>::vec(const vec& rhs) :
     m_data(rhs.m_data)
+{}
+
+template <typename T, int N>
+template <typename... Args, typename>
+inline vec<T, N>::vec(Args&&... args) :
+    m_data { static_cast<T>(args)... }
 {}
 
 template <typename T, int N>
@@ -424,32 +423,28 @@ inline vec<T, N>& vec<T, N>::operator*=(T rhs)
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator-() const
 {
-    detail::no_init_tag no_init;
-    vec ret(no_init);
+    vec ret(no_init_tag {});
     return detail::iterate1<N, neg_op>()(ret, *this);
 }
 
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator+(const vec& rhs) const
 {
-    detail::no_init_tag no_init;
-    vec ret(no_init);
+    vec ret(no_init_tag {});
     return detail::iterate1<N, add_op>()(ret, *this, rhs);
 }
 
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator-(const vec& rhs) const
 {
-    detail::no_init_tag no_init;
-    vec ret(no_init);
+    vec ret(no_init_tag {});
     return detail::iterate1<N, sub_op>()(ret, *this, rhs);
 }
 
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::operator*(T rhs) const
 {
-    no_init_tag no_init;
-    vec ret(no_init);
+    vec ret(no_init_tag {});
     return detail::iterate1<N, mul_op>()(ret, *this, rhs);
 }
 
@@ -510,34 +505,19 @@ inline void vec<T, N>::dot_op<I>::operator()(T& out, const vec& lhs, const vec& 
 ///////////////////////////////////////////////////////////////////////////////
 static_assert(sizeof(vec3) == 3 * sizeof(float), "vec3 is not a value type");
 
-inline vec3::vec3(float x, float y, float z)
-{
-    m_data[0] = x;
-    m_data[1] = y;
-    m_data[2] = z;
-}
-
 inline vec3 vec3::operator^(const vec3& rhs) const
 {
-    return vec3(
-        m_data[1]*rhs.m_data[2] - m_data[2]*rhs.m_data[1],
-        m_data[2]*rhs.m_data[0] - m_data[0]*rhs.m_data[2],
-        m_data[0]*rhs.m_data[1] - m_data[1]*rhs.m_data[0]
-    );
+    return vec3 {
+        m_data[1] * rhs.m_data[2] - m_data[2] * rhs.m_data[1],
+        m_data[2] * rhs.m_data[0] - m_data[0] * rhs.m_data[2],
+        m_data[0] * rhs.m_data[1] - m_data[1] * rhs.m_data[0]
+    };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // vec4 impl
 ///////////////////////////////////////////////////////////////////////////////
 static_assert(sizeof(vec4) == 4 * sizeof(float), "vec4 is not a value type");
-
-inline vec4::vec4(float x, float y, float z, float w)
-{
-    m_data[0] = x;
-    m_data[1] = y;
-    m_data[2] = z;
-    m_data[3] = w;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // mat<T, D0, D1>::row_t<is_const> impl
@@ -613,49 +593,29 @@ namespace detail
     template <int D0, int D1, template<int, int> class Op, int I = 0, int J = 0>
     struct iterate2
     {
-        // TODO: variadic templates
-        template <typename Result, typename Lhs, typename Rhs>
-        Result& operator()(Result& out, const Lhs& lhs, const Rhs& rhs) const
+        template <typename Result, typename... Args>
+        Result& operator()(Result& out, Args&&... args) const
         {
-            Op<I,J>()(out, lhs, rhs);
-            return iterate2<D0, D1, Op, I, J+1>()(out, lhs, rhs);
-        }
-
-        template <typename Result, typename Rhs>
-        Result& operator()(Result& out, const Rhs& rhs) const
-        {
-            Op<I,J>()(out, rhs);
-            return iterate2<D0, D1, Op, I, J+1>()(out, rhs);
+            Op<I,J>()(out, std::forward<Args>(args)...);
+            return iterate2<D0, D1, Op, I, J+1>()(out, std::forward<Args>(args)...);
         }
     };
 
     template <int D0, int D1, template<int, int> class Op, int I>
     struct iterate2<D0, D1, Op, I, D1>
     {
-        template <typename Result, typename Lhs, typename Rhs>
-        Result& operator()(Result& out, const Lhs& lhs, const Rhs& rhs) const
+        template <typename Result, typename... Args>
+        Result& operator()(Result& out, Args&&... args) const
         {
-            return iterate2<D0, D1, Op, I+1>()(out, lhs, rhs);
-        }
-
-        template <typename Result, typename Rhs>
-        Result& operator()(Result& out, const Rhs& rhs) const
-        {
-            return iterate2<D0, D1, Op, I+1>()(out, rhs);
+            return iterate2<D0, D1, Op, I+1>()(out, std::forward<Args>(args)...);
         }
     };
 
     template <int D0, int D1, template<int, int> class Op>
     struct iterate2<D0, D1, Op, D0, 0>
     {
-        template <typename Result, typename Lhs, typename Rhs>
-        Result& operator()(Result& out, const Lhs&, const Rhs&) const
-        {
-            return out;
-        }
-
-        template <typename Result, typename Rhs>
-        Result& operator()(Result& out, const Rhs&) const
+        template <typename Result, typename... Args>
+        Result& operator()(Result& out, Args&&...) const
         {
             return out;
         }
@@ -676,17 +636,27 @@ inline mat<T, D0, D1>::mat(const mat& rhs) :
 {}
 
 template <typename T, int D0, int D1>
+template <typename... Args, typename>
+inline mat<T, D0, D1>::mat(Args&&... args) :
+    m_data { static_cast<T>(args)... }
+{}
+
+template <typename T, int D0, int D1>
 inline mat<T, D0, D1>& mat<T, D0, D1>::operator=(const mat& rhs)
 {
     return detail::iterate1<D0 * D1, eq_op>()(*this, rhs);
 }
 
 template <typename T, int D0, int D1>
-template <int _D1>
-inline typename std::enable_if<D0 == _D1, mat<T, D0, D1>&>::type
-mat<T, D0, D1>::operator*=(const mat<T, D0, _D1>& rhs)
+template <typename>
+mat<T, D0, D1>& mat<T, D0, D1>::operator*=(const mat& rhs)
 {
-    return detail::iterate2<D0, D1, mul_op<>::mul_row>()(*this, *this, rhs);
+    // NOTE: keep result in a different var because cells get overwritten
+    // while doing the multiplication algo
+    mat result(no_init_tag {});
+
+    detail::iterate2<D0, D1, mul_op<>::mul_row>()(result, *this, rhs);
+    return detail::iterate1<D0 * D1, eq_op>()(*this, result);
 }
 
 template <typename T, int D0, int D1>
@@ -699,23 +669,21 @@ template <typename T, int D0, int D1>
 template <int D2>
 inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs) const
 {
-    detail::no_init_tag no_init;
-    mat<T, D0, D2> ret(no_init);
+    mat<T, D0, D2> ret(no_init_tag {});
     return detail::iterate2<D0, D2, mul_op<>::mul_row>()(ret, *this, rhs);
 }
 
 template <typename T, int D0, int D1>
 inline vec<T, D0> mat<T, D0, D1>::operator*(const vec<T, D1>& rhs) const
 {
-    vec<T, D0> ret;
+    vec<T, D0> ret(no_init_tag {});
     return detail::iterate2<D0, D1, transform_op>()(ret, *this, rhs);
 }
 
 template <typename T, int D0, int D1>
 inline mat<T, D0, D1> mat<T, D0, D1>::operator*(T rhs) const
 {
-    no_init_tag no_init;
-    mat ret(no_init);
+    mat ret(no_init_tag {});
     return detail::iterate1<D0 * D1, scale_op>()(ret, *this, rhs);
 }
 
@@ -780,102 +748,92 @@ inline void mat<T, D0, D1>::transform_op<I, J>::operator()(vec<T, D0>& out, cons
     out[I] += lhs.m_data[I*D1 + J] * rhs[J];
 }
 
+template <typename T, int D0, int D1>
+template <int I>
+inline void mat<T, D0, D1>::transform_op<I, 0>::operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const
+{
+    out[I] = lhs.m_data[I*D1] * rhs[0];
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // matrices impl
 ///////////////////////////////////////////////////////////////////////////////
 inline mat4 mat4::identity()
 {
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
-
-    ret[0] = vec4(1, 0, 0, 0);
-    ret[1] = vec4(0, 1, 0, 0);
-    ret[2] = vec4(0, 0, 1, 0);
-    ret[3] = vec4(0, 0, 0, 1);
-
-    return ret;
+    return mat4 {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
 }
 
 inline mat4 mat4::translate(float x, float y, float z)
 {
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
-
-    ret[0] = vec4(1, 0, 0, x);
-    ret[1] = vec4(0, 1, 0, y);
-    ret[2] = vec4(0, 0, 1, z);
-    ret[3] = vec4(0, 0, 0, 1);
-
-    return ret;
+    return mat4 {
+        1, 0, 0, x,
+        0, 1, 0, y,
+        0, 0, 1, z,
+        0, 0, 0, 1
+    };
 }
 
 inline mat4 mat4::rotate(float x, float y, float z)
 {
     // yaw pitch roll = y x z (directx)
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
     const float ca = cos(x), sa = sin(x);
     const float cb = cos(y), sb = sin(y);
-	const float cc = cos(z), sc = sin(z);
+    const float cc = cos(z), sc = sin(z);
 
-    ret[0] = vec4(cc*cb, -sc*ca + cc*sb*sa, sc*sa + cc*sb*ca, 0);
-    ret[1] = vec4(sc*cb, cc*ca + sc*sb*sa, -cc*sa + sc*sb*ca, 0);
-    ret[2] = vec4(-sb, cb*sa, cb*ca, 0);
-    ret[3] = vec4(0, 0, 0, 1);
-
-    return ret;
+    return mat4 {
+        cc*cb, -sc*ca + cc*sb*sa,  sc*sa + cc*sb*ca, 0,
+        sc*cb,  cc*ca + sc*sb*sa, -cc*sa + sc*sb*ca, 0,
+        -sb, cb*sa, cb*ca, 0,
+        0, 0, 0, 1
+    };
 }
 
 inline mat4 mat4::scale(float x, float y, float z)
 {
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
-
-    ret[0] = vec4(x, 0, 0, 0);
-    ret[1] = vec4(0, y, 0, 0);
-    ret[2] = vec4(0, 0, z, 0);
-    ret[3] = vec4(0, 0, 0, 1);
-
-    return ret;
+    return mat4 {
+        x, 0, 0, 0,
+        0, y, 0, 0,
+        0, 0, z, 0,
+        0, 0, 0, 1
+    };
 }
 
 inline mat4 mat4::lookat(const vec3& eye, const vec3& at, const vec3& up)
 {
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
     vec3 z = (at - eye).normalize();
     vec3 x = (z ^ up).normalize();
     vec3 y = x ^ z;
 
-    ret[0] = vec4(x[0], x[1], x[2], -x * eye);
-    ret[1] = vec4(y[0], y[1], y[2], -y * eye);
-    ret[2] = vec4(-z[0], -z[1], -z[2], z * eye);
-    ret[3] = vec4(0, 0, 0, 1);
-
-    return ret;
+    return mat4 {
+         x[0],  x[1],  x[2], -x * eye,
+         y[0],  y[1],  y[2], -y * eye,
+        -z[0], -z[1], -z[2],  z * eye,
+        0, 0, 0, 1
+    };
 }
 
 inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
 {
-    detail::no_init_tag no_init;
-    mat4 ret(no_init);
     const float ti = 1.0f / tan(fov / 2);
 
-    ret[0] = vec4(ti / aspect, 0, 0, 0);
-    ret[1] = vec4(0, ti, 0, 0);
-    ret[2] = vec4(0, 0, f / (n-f), n * f / (n-f));
-    ret[3] = vec4(0, 0, -1, 0);
-
-    return ret;
+    return mat4 {
+        ti / aspect, 0, 0, 0,
+        0, ti, 0, 0,
+        0, 0, f / (n-f), n * f / (n-f),
+        0, 0, -1, 0
+    };
 }
 
-inline mat<float, 3, 4> mat4::clip(float x, float y, float w, float h, float n, float f)
+inline mat3x4 mat4::clip(float x, float y, float w, float h, float n, float f)
 {
-    mat<float, 3, 4> ret;
-
-    ret[0] = vec4(w/2, 0, 0, x + w/2);
-    ret[1] = vec4(0, h/2, 0, y + h/2);
-    ret[2] = vec4(0, 0, (f - n)/2, (f + n) / 2);
-
-    return ret;
+    return mat3x4 {
+        w/2, 0, 0, x + w / 2,
+        0, h/2, 0, y + h / 2,
+        0, 0, (f - n) / 2, (f + n) / 2
+    };
 }
