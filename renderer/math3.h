@@ -210,9 +210,9 @@ public:
     mat& operator*=(T rhs);
 
     template <int D2>
-    mat<T, D0, D2> operator*(const mat<T, D1, D2>& rhs);
-    vec<T, D0> operator*(const vec<T, D1>& rhs);
-    mat operator*(T rhs);
+    mat<T, D0, D2> operator*(const mat<T, D1, D2>& rhs) const;
+    vec<T, D0> operator*(const vec<T, D1>& rhs) const;
+    mat operator*(T rhs) const;
 
 protected:
     // optimization for binary operations that overwrite internal data:
@@ -695,7 +695,7 @@ inline mat<T, D0, D1>& mat<T, D0, D1>::operator*=(T rhs)
 
 template <typename T, int D0, int D1>
 template <int D2>
-inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs)
+inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs) const
 {
     detail::no_init_tag no_init;
     mat<T, D0, D2> ret(no_init);
@@ -703,14 +703,14 @@ inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs)
 }
 
 template <typename T, int D0, int D1>
-inline vec<T, D0> mat<T, D0, D1>::operator*(const vec<T, D1>& rhs)
+inline vec<T, D0> mat<T, D0, D1>::operator*(const vec<T, D1>& rhs) const
 {
     vec<T, D0> ret;
     return detail::iterate2<D0, D1, transform_op>()(ret, *this, rhs);
 }
 
 template <typename T, int D0, int D1>
-inline mat<T, D0, D1> mat<T, D0, D1>::operator*(T rhs)
+inline mat<T, D0, D1> mat<T, D0, D1>::operator*(T rhs) const
 {
     no_init_tag no_init;
     mat ret(no_init);

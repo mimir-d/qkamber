@@ -22,6 +22,12 @@ void Renderer::init(Timer* timer)
 
     m_target_fps = 60;
     m_fps = 0;
+
+    m_camera = std::unique_ptr<Camera>(new FpsCamera {
+        { 0, 0, 10 },
+        { 0, 0, 0 },
+        { 0, 1, 0 }
+    });
 }
 void Renderer::shutdown()
 {
@@ -32,14 +38,7 @@ void Renderer::render()
 {
     begin_frame();
 
-    mat4 view = mat4::lookat(
-        { 0, 0, 10 },
-        { 0, 0, 0 },
-        { 0, 1, 0 }
-    );
-    mat4 proj = mat4::proj_perspective(3.14f / 2, 1.333f, 0.01f, 100.0f);
-
-    mat4 projview = proj * view;
+    mat4 projview = m_camera->get_proj() * m_camera->get_view();
     mat<float, 3, 4> clip = mat4::clip(0, 480, 640, -480, 0.0f, 1.0f);
 
     mat4 world = mat4::identity();
