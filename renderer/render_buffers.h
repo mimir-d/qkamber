@@ -37,7 +37,7 @@ public:
         size_t offset;
         VertexType type;
         VertexSemantic semantic;
-        
+
         Element(size_t offset, VertexType type, VertexSemantic semantic) :
             offset(offset), type(type), semantic(semantic)
         {}
@@ -68,7 +68,7 @@ public:
 
     VertexDecl& get_declaration();
     size_t get_count() const;
-    
+
 private:
     std::unique_ptr<VertexDecl> m_decl;
     size_t m_count;
@@ -81,7 +81,7 @@ class IndexBuffer : public DeviceBuffer
 {
 public:
     IndexBuffer(size_t size);
-    
+
     size_t get_count() const;
 
 private:
@@ -104,10 +104,23 @@ inline uint8_t* DeviceBuffer::lock()
 inline void DeviceBuffer::unlock()
 {}
 
-template <typename T, typename Func>
+namespace detail
+{
+    // TODO: might need to extract this somewher else
+    template<typename Func, typename R, typename Arg, typename... Rest>
+    Arg first_arg_helper(R (Func::*)(Arg, Rest...));
+
+    template<typename Func, typename R, typename Arg, typename... Rest>
+    Arg first_arg_helper(R (Func::*)(Arg, Rest...) const);
+
+    template <typename Func>
+    using first_arg_t = decltype(first_arg_helper(&Func::operator()));
+}
+
+template <typename Func>
 inline void lock_buffer(DeviceBuffer* buffer, Func fun)
 {
-    fun(reinterpret_cast<T*>(buffer->lock()));
+    fun(reinterpret_cast<detail::first_arg_t<Func>>(buffer->lock()));
     buffer->unlock();
 }
 
