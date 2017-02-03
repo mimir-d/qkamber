@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "renderer.h"
+#include "app.h"
 #include "win32_window.h"
 #include "win32_render_device.h"
 using namespace std;
@@ -9,10 +9,12 @@ using namespace Gdiplus;
 #define WINDOW_TITLE "my little renderererererer"
 #define WINDOW_CLASS "win32app"
 
-void Win32Window::init(unique_ptr<Renderer> renderer)
+#pragma warning(disable:4302)
+
+void Win32Window::init(Application* app, Timer* timer)
 {
     flog();
-    Window::init(std::move(renderer));
+    Window::init(app, timer);
 
     WNDCLASSEX wcex;
     const HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -61,13 +63,14 @@ void Win32Window::init(unique_ptr<Renderer> renderer)
     dlog("Created window %#x: %s", m_window_handle, WINDOW_TITLE);
 
     // init win32 specific render device
-    static_cast<Win32RenderDevice*>(m_dev.get())->win32_init(m_window_handle);
+    auto& dev = m_app->get_renderer().get_device();
+    static_cast<Win32RenderDevice&>(dev).win32_init(m_window_handle);
 
     // save this pointer for wndproc
     SetWindowLong(m_window_handle, GWL_USERDATA, reinterpret_cast<LONG>(this));
 
     // The parameters to ShowWindow explained:
-    // hWnd: the value returned from CreateWindow
+    // hWnd: the value returned from CreateWindow`
     // nCmdShow: the fourth parameter from WinMain
     ShowWindow(m_window_handle, SW_SHOW);
     UpdateWindow(m_window_handle);
@@ -102,7 +105,6 @@ int Win32Window::shutdown()
 {
     flog();
 
-
     Window::shutdown();
     return static_cast<int>(m_msg.wParam);
 }
@@ -112,17 +114,19 @@ void Win32Window::on_key_pressed(int key_code)
     dlog("Pressed %d", key_code);
     switch (key_code)
     {
-    case VK_ESCAPE:
-        PostMessage(m_window_handle, WM_CLOSE, 0, 0);
-        break;
+        case VK_ESCAPE:
+            PostMessage(m_window_handle, WM_CLOSE, 0, 0);
+            break;
     }
 }
 
 void Win32Window::on_paint()
 {
-    m_renderer->begin_frame();
-    m_renderer->on_render();
-    m_renderer->end_frame();
+    float abs_time = m_timer->get_abs_time();
+    float diff_time = m_timer->get_diff_time();
+
+    m_app->update(abs_time, diff_time);
+    m_app->render(abs_time, diff_time);
 }
 
 LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

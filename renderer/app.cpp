@@ -5,11 +5,15 @@
 #include "renderer.h"
 using namespace std;
 
-void Application::init(unique_ptr<Renderer> renderer)
+void Application::init()
 {
 	flog();
-	m_window = AppWindowFactory::create();
-	m_window->init(std::move(renderer));
+
+    m_renderer.init(&m_timer);
+    m_timer.start();
+
+    m_window = AppWindowFactory::create();
+	m_window->init(this);
 }
 
 void Application::run()
@@ -21,5 +25,6 @@ void Application::run()
 int Application::shutdown()
 {
 	flog();
+    m_timer.stop();
 	return m_window->shutdown();
 }

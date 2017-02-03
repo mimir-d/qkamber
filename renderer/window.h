@@ -1,18 +1,19 @@
 #pragma once
 
-class Renderer;
-class RenderDevice;
+class Timer;
+class Application;
 
 class Window
 {
 public:
-	virtual void init(std::unique_ptr<Renderer> renderer);
+    // TODO: move these to ctor (create platform.h, copy all factories there and template
+	virtual void init(Application* app, Timer* timer);
 	virtual void mainloop();
 	virtual int shutdown();
 
 protected:
-	std::unique_ptr<Renderer> m_renderer;
-    std::unique_ptr<RenderDevice> m_dev;
+    Application* m_app;
+    Timer* m_timer;
     bool m_paused;
 };
 

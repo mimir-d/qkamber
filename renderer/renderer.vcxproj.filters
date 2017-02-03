@@ -9,10 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Header Files\win32">
       <UniqueIdentifier>{de239a83-a0f6-4c26-98bf-6b13f8f41291}</UniqueIdentifier>
     </Filter>
@@ -24,16 +20,10 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="timer.h">
@@ -51,28 +41,19 @@
     <ClInclude Include="math3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="to_fix_for_vs2010_math3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="render_primitive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="render_queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="render_buffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,9 +70,6 @@
     <ClCompile Include="renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="app.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -104,13 +82,13 @@
     <ClCompile Include="window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="render_buffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

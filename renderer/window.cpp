@@ -1,20 +1,17 @@
 
 #include "stdafx.h"
 #include "window.h"
-#include "renderer.h"
 #include "win32/win32_window.h"
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AppWindow
 ///////////////////////////////////////////////////////////////////////////////
-void Window::init(unique_ptr<Renderer> renderer)
+void Window::init(Application* app, Timer* timer)
 {
 	flog();
-    m_dev = RenderDeviceFactory::create();
-
-	m_renderer = std::move(renderer);
-	m_renderer->init(m_dev.get());
+    m_app = app;
+    m_timer = timer;
 }
 
 void Window::mainloop()
@@ -23,7 +20,6 @@ void Window::mainloop()
 int Window::shutdown()
 {
 	flog();
-	m_renderer->shutdown();
 	return 0;
 }
 
