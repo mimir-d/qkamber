@@ -6,18 +6,28 @@
 #include "viewport.h"
 
 struct RenderPrimitive;
+class VertexDecl;
+class VertexBuffer;
+class IndexBuffer;
 
 class RenderDevice
 {
 public:
+    // drawing methods
     virtual void draw_primitive(const RenderPrimitive& primitive) = 0;
     virtual void draw_text(const std::string& text, float x, float y) = 0;
 
+    // device state methods
     virtual void set_world_matrix(mat4 world_matrix) = 0;
     virtual void set_view_matrix(mat4 view_matrix) = 0;
     virtual void set_proj_matrix(mat4 proj_matrix) = 0;
     virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
 
+    // resource management methods
+    virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;
+    virtual std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) = 0;
+
+    // framebuffer methods
     virtual void clear() = 0;
     virtual void swap_buffers() = 0;
 };

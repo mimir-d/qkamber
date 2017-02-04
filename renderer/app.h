@@ -12,6 +12,8 @@ public:
     }
 
 public:
+    virtual void on_create() = 0;
+
     virtual void update(float abs_time, float elapsed_time) = 0;
     virtual void render(float abs_time, float elapsed_time) = 0;
 

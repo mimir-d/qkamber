@@ -4,13 +4,14 @@
 #include "render_buffers.h"
 #include "render_primitive.h"
 
+class RenderDevice;
 class VertexBuffer;
 class IndexBuffer;
 
 class Mesh
 {
 public:
-    Mesh();
+    Mesh(RenderDevice& dev);
 
     RenderPrimitive get_primitive() const;
 

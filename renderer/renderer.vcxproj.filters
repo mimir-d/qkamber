@@ -15,6 +15,12 @@
     <Filter Include="Source Files\win32">
       <UniqueIdentifier>{d5c2a5cb-024f-4442-85db-838eb5c5df26}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\software">
+      <UniqueIdentifier>{bcbd0ecb-dda0-45ae-8922-01d180348b1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\software">
+      <UniqueIdentifier>{565e5e22-ee42-4569-8fc2-d3adb7a6b8a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -68,6 +74,12 @@
     <ClInclude Include="misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="software\software_buffers.h">
+      <Filter>Header Files\software</Filter>
+    </ClInclude>
+    <ClInclude Include="software\software_device.h">
+      <Filter>Header Files\software</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -111,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="render_queue.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="software\software_device.cpp">
+      <Filter>Source Files\software</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

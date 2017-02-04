@@ -5,13 +5,8 @@
 class DeviceBuffer
 {
 public:
-    DeviceBuffer(size_t size);
-
-    uint8_t* lock();
-    void unlock();
-
-protected:
-    std::vector<uint8_t> m_data;
+    virtual uint8_t* lock() = 0;
+    virtual void unlock() = 0;
 };
 
 template <typename T, typename Func>
@@ -51,13 +46,12 @@ public:
     VertexDecl() {}
 
     void add(size_t offset, VertexType type, VertexSemantic semantic);
-    iterator begin();
-    iterator end();
+    iterator begin() const;
+    iterator end() const;
 
     size_t get_vertex_size() const;
 
-private:
-    size_t get_elem_size(VertexType type) const;
+    static size_t get_elem_size(VertexType type);
 
 private:
     std::vector<Element> m_elems;
@@ -68,7 +62,7 @@ class VertexBuffer : public DeviceBuffer
 public:
     VertexBuffer(std::unique_ptr<VertexDecl> decl, size_t count);
 
-    VertexDecl& get_declaration();
+    const VertexDecl& get_declaration() const;
     size_t get_count() const;
 
 private:
@@ -86,26 +80,13 @@ public:
 
     size_t get_count() const;
 
-private:
+protected:
     size_t m_count;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // DeviceBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
-inline DeviceBuffer::DeviceBuffer(size_t size)
-{
-    m_data.resize(size);
-}
-
-inline uint8_t* DeviceBuffer::lock()
-{
-    return m_data.data();
-}
-
-inline void DeviceBuffer::unlock()
-{}
-
 template <typename Func>
 inline void lock_buffer(DeviceBuffer* buffer, Func fun)
 {
@@ -114,15 +95,32 @@ inline void lock_buffer(DeviceBuffer* buffer, Func fun)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// VertexDecl impl
+///////////////////////////////////////////////////////////////////////////////
+inline void VertexDecl::add(size_t offset, VertexType type, VertexSemantic semantic)
+{
+    m_elems.emplace_back(offset, type, semantic);
+}
+
+inline VertexDecl::iterator VertexDecl::begin() const
+{
+    return m_elems.begin();
+}
+
+inline VertexDecl::iterator VertexDecl::end() const
+{
+    return m_elems.end();
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // VertexBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
 inline VertexBuffer::VertexBuffer(std::unique_ptr<VertexDecl> decl, size_t count) :
-    DeviceBuffer(decl->get_vertex_size() * count),
     m_decl(std::move(decl)),
     m_count(count)
 {}
 
-inline VertexDecl& VertexBuffer::get_declaration()
+inline const VertexDecl& VertexBuffer::get_declaration() const
 {
     return *m_decl;
 }
@@ -136,7 +134,6 @@ inline size_t VertexBuffer::get_count() const
 // IndexBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
 inline IndexBuffer::IndexBuffer(size_t count) :
-    DeviceBuffer(count * sizeof(uint16_t)),
     m_count(count)
 {}
 
