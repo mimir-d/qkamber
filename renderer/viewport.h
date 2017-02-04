@@ -5,8 +5,7 @@
 class Viewport
 {
 public:
-    Viewport(int width, int height);
-
+    void set_params(int width, int height);
     const mat3x4& get_clip() const;
 
 private:

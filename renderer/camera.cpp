@@ -2,8 +2,15 @@
 #include "stdafx.h"
 #include "camera.h"
 
-FpsCamera::FpsCamera(const vec3& eye, const vec3& at, const vec3& up)
+constexpr float FOV = static_cast<float>(M_PI) / 4;
+
+void FpsCamera::set_params(const vec3& eye, const vec3& at, const vec3& up)
 {
     m_view = mat4::lookat(eye, at, up);
-    m_proj = mat4::proj_perspective(3.14f / 4, 1.333f, 0.01f, 100.0f);
+}
+
+void FpsCamera::set_proj_params(int width, int height)
+{
+    const float aspect = static_cast<float>(width) / height;
+    m_proj = mat4::proj_perspective(FOV, aspect, 0.01f, 100.0f);
 }

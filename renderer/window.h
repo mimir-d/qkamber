@@ -14,7 +14,6 @@ public:
 protected:
     Application* m_app;
     Timer* m_timer;
-    bool m_paused;
 };
 
 class AppWindowFactory
@@ -22,4 +21,3 @@ class AppWindowFactory
 public:
 	static std::unique_ptr<Window> create();
 };
-

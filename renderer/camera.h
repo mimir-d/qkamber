@@ -16,7 +16,8 @@ protected:
 class FpsCamera : public Camera
 {
 public:
-    FpsCamera(const vec3& eye, const vec3& at, const vec3& up);
+    void set_params(const vec3& eye, const vec3& at, const vec3& up);
+    void set_proj_params(int width, int height);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

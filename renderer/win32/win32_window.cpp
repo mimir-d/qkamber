@@ -49,7 +49,7 @@ void Win32Window::init(Application* app, Timer* timer)
     m_window_handle = CreateWindow(
         WINDOW_CLASS,
         WINDOW_TITLE,
-        WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
+        WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
         640, 480,
         nullptr,
@@ -74,6 +74,7 @@ void Win32Window::init(Application* app, Timer* timer)
     // nCmdShow: the fourth parameter from WinMain
     ShowWindow(m_window_handle, SW_SHOW);
     UpdateWindow(m_window_handle);
+    m_window_state = SIZE_RESTORED;
 
     m_paused = false;
 }
@@ -129,6 +130,27 @@ void Win32Window::on_paint()
     m_app->render(abs_time, diff_time);
 }
 
+void Win32Window::on_resize()
+{
+    RECT rc;
+    GetClientRect(m_window_handle, &rc);
+    if (!EqualRect(&m_client_rect, &rc))
+    {
+        const LONG width = rc.right - rc.left;
+        const LONG height = rc.bottom - rc.top;
+
+        paused([&]()
+        {
+            auto& dev = m_app->get_renderer().get_device();
+            static_cast<Win32RenderDevice&>(dev).win32_resize(&rc);
+
+            m_app->on_resize(width, height);
+        });
+
+        CopyRect(&m_client_rect, &rc);
+    }
+}
+
 LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
@@ -152,6 +174,26 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
         case WM_KEYDOWN:
             window->on_key_pressed(wParam);
+            break;
+
+        case WM_SIZE:
+            switch (wParam)
+            {
+                case SIZE_MINIMIZED:
+                    window->m_paused = true;
+                    break;
+
+                case SIZE_MAXIMIZED:
+                case SIZE_RESTORED:
+                    if (window->m_window_state == SIZE_MINIMIZED)
+                    {
+                        // unpause since window was minimized and now restored
+                        window->m_paused = false;
+                    }
+                    window->on_resize();
+                    break;
+            }
+            window->m_window_state = wParam;
             break;
 
         case WM_DESTROY:

@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "viewport.h"
 
-Viewport::Viewport(int width, int height)
+void Viewport::set_params(int width, int height)
 {
     const float w = static_cast<float>(width);
     const float h = static_cast<float>(height);
