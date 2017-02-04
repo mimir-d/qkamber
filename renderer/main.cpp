@@ -42,7 +42,10 @@ void MyApplication::on_create()
     m_renderer.set_camera(&m_camera);
     m_renderer.set_viewport(&m_viewport);
 
-    m_mesh = make_unique<Mesh>(m_renderer.get_device());
+    auto& dev = m_renderer.get_device();
+    dev.set_polygon_mode(PolygonMode::Line);
+
+    m_mesh = make_unique<Mesh>(dev);
 }
 
 void MyApplication::on_resize(int width, int height)

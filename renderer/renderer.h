@@ -10,6 +10,11 @@ class VertexDecl;
 class VertexBuffer;
 class IndexBuffer;
 
+enum class PolygonMode
+{
+    Point, Line, Fill
+};
+
 class RenderDevice
 {
 public:
@@ -22,6 +27,8 @@ public:
     virtual void set_view_matrix(mat4 view_matrix) = 0;
     virtual void set_proj_matrix(mat4 proj_matrix) = 0;
     virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
+
+    virtual void set_polygon_mode(PolygonMode mode) = 0;
 
     // resource management methods
     virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;

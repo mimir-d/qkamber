@@ -46,25 +46,22 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const float* p1 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[1] * vertex_size);
         const float* p2 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[2] * vertex_size);
 
-        vec4 v0 { p0[0], p0[1], p0[2], 1.0f };
-        vec4 v1 { p1[0], p1[1], p1[2], 1.0f };
-        vec4 v2 { p2[0], p2[1], p2[2], 1.0f };
+        // transform to clip-space
+        vec4 v0 = mvp * vec4 { p0[0], p0[1], p0[2], 1.0f };
+        vec4 v1 = mvp * vec4 { p1[0], p1[1], p1[2], 1.0f };
+        vec4 v2 = mvp * vec4 { p2[0], p2[1], p2[2], 1.0f };
 
-        v0 = mvp * v0;
+        // perspective division
         v0 *= 1.0f / v0.w();
-
-        v1 = mvp * v1;
         v1 *= 1.0f / v1.w();
-
-        v2 = mvp * v2;
         v2 *= 1.0f / v2.w();
 
+        // transform to device space
         vec3 sv0 = m_clip_matrix * v0;
         vec3 sv1 = m_clip_matrix * v1;
         vec3 sv2 = m_clip_matrix * v2;
 
         draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
-        //draw_tri_wireframe(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
 
         ib_ptr += 3;
     }
@@ -81,4 +78,23 @@ unique_ptr<VertexBuffer> SoftwareDevice::create_vertex_buffer(unique_ptr<VertexD
 unique_ptr<IndexBuffer> SoftwareDevice::create_index_buffer(size_t count)
 {
     return unique_ptr<IndexBuffer>(new SoftwareIndexBuffer(count));
+}
+
+void SoftwareDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
+{
+    // TODO: refactor this for speed
+    switch (m_poly_mode)
+    {
+        case PolygonMode::Point:
+            draw_tri_point(x0, y0, x1, y1, x2, y2);
+            break;
+
+        case PolygonMode::Line:
+            draw_tri_line(x0, y0, x1, y1, x2, y2);
+            break;
+
+        case PolygonMode::Fill:
+            draw_tri_fill(x0, y0, x1, y1, x2, y2);
+            break;
+    }
 }
