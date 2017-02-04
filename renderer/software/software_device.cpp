@@ -63,10 +63,8 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         vec3 sv1 = m_clip_matrix * v1;
         vec3 sv2 = m_clip_matrix * v2;
 
-        //draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
-        draw_line(sv0.x(), sv0.y(), sv1.x(), sv1.y());
-        draw_line(sv1.x(), sv1.y(), sv2.x(), sv2.y());
-        draw_line(sv0.x(), sv0.y(), sv2.x(), sv2.y());
+        draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
+        //draw_tri_wireframe(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
 
         ib_ptr += 3;
     }

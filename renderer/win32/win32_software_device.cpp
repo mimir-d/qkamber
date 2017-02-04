@@ -100,20 +100,29 @@ void Win32RenderDevice::swap_buffers()
 ///////////////////////////////////////////////////////////////////////////////
 // Helper methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::draw_line(float x0, float y0, float x1, float y1)
+void Win32RenderDevice::draw_tri_wireframe(float x0, float y0, float x1, float y1, float x2, float y2)
 {
-    Pen p(Color(255, 150, 0, 255));
-    m_graphics->DrawLine(&p, x0, y0, x1, y1);
+    const Pen p(Color(255, 150, 0, 255));
+    const PointF points[] =
+    {
+        {x0, y0}, {x1, y1},
+        {x0, y0}, {x2, y2},
+        {x1, y1}, {x2, y2}
+    };
+    const size_t count = sizeof(points) / sizeof(points[0]);
+
+    m_graphics->DrawPolygon(&p, points, count);
 }
 
 void Win32RenderDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
 {
-    Point vertices[] = {
-        Point((INT)x0, (INT)y0),
-        Point((INT)x1, (INT)y1),
-        Point((INT)x2, (INT)y2)
+    const SolidBrush hb(Color(150, 0, 200));
+    const PointF points[] = {
+        { x0, y0 },
+        { x1, y1 },
+        { x2, y2 }
     };
+    const size_t count = sizeof(points) / sizeof(points[0]);
 
-    SolidBrush hb(Color(150, 0, 200));
-    m_graphics->FillPolygon(&hb, vertices, 3);
+    m_graphics->FillPolygon(&hb, points, count);
 }

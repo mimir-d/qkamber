@@ -42,7 +42,7 @@ public:
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) override;
 
 protected:
-    virtual void draw_line(float x0, float y0, float x1, float y1) = 0;
+    virtual void draw_tri_wireframe(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
     virtual void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
 
 private:
