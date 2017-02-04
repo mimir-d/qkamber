@@ -35,9 +35,6 @@
     <ClInclude Include="timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="win32\win32_render_device.h">
-      <Filter>Header Files\win32</Filter>
-    </ClInclude>
     <ClInclude Include="win32\win32_window.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>
@@ -80,6 +77,9 @@
     <ClInclude Include="software\software_device.h">
       <Filter>Header Files\software</Filter>
     </ClInclude>
+    <ClInclude Include="win32\win32_software_device.h">
+      <Filter>Header Files\win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -96,9 +96,6 @@
     </ClCompile>
     <ClCompile Include="timer.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="win32\win32_render_device.cpp">
-      <Filter>Source Files\win32</Filter>
     </ClCompile>
     <ClCompile Include="win32\win32_window.cpp">
       <Filter>Source Files\win32</Filter>
@@ -126,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="software\software_device.cpp">
       <Filter>Source Files\software</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\win32_software_device.cpp">
+      <Filter>Source Files\win32</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 #include "render_queue.h"
 #include "render_primitive.h"
 #include "mesh.h"
-#include "win32/win32_render_device.h"
+#include "win32/win32_software_device.h"
 #include "math3.h"
 
 using namespace std;
