@@ -21,7 +21,9 @@ using first_arg_t = decltype(detail::first_arg_helper(&Func::operator()));
 template <typename Func>
 using all_arg_t = decltype(detail::all_arg_helper(&Func::operator()));
 
-// TODO: find a better name for this
+///////////////////////////////////////////////////////////////////////////////
+// dirty_t
+///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename Func, typename FuncArgs = all_arg_t<Func>>
 class dirty_t
 {
@@ -79,3 +81,24 @@ inline void dirty_t<T, Func, FuncArgs>::refresh(std::index_sequence<I...>)
     m_data = Func {}(std::get<I>(m_args)...);
     m_dirty = false;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// repeat_t
+///////////////////////////////////////////////////////////////////////////////
+namespace detail
+{
+    template<typename T, std::size_t I>
+    using RepeatT = T;
+
+    template<typename T, std::size_t N, typename I = std::make_index_sequence<N>>
+    struct repeat_type;
+
+    template<typename T, std::size_t N, std::size_t... I>
+    struct repeat_type<T, N, std::index_sequence<I...>>
+    {
+        using type = std::tuple<RepeatT<T, I>...>;
+    };
+}
+
+template <typename T, std::size_t N>
+using repeat_t = typename detail::repeat_type<T, N>::type;
