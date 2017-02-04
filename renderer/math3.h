@@ -1,5 +1,7 @@
 #pragma once
 
+#include "misc.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 // generic math
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +43,7 @@ public:
 
     template <
         typename... Args,
-        typename = std::enable_if_t<std::is_convertible<std::common_type_t<Args...>, T>::value>
+        typename = std::enable_if_t<std::is_convertible<std::tuple<Args...>, repeat_t<T, N>>::value>
     >
     vec(Args&&... args);
     vec(no_init_tag) {}
@@ -195,7 +197,7 @@ public:
 
     template <
         typename... Args,
-        typename = std::enable_if_t<std::is_convertible<std::common_type_t<Args...>, T>::value>
+        typename = std::enable_if_t<std::is_convertible<std::tuple<Args...>, repeat_t<T, D0 * D1>>::value>
     >
     mat(Args&&... args);
     mat(no_init_tag) {}
