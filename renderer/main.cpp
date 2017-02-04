@@ -11,24 +11,44 @@ using namespace Gdiplus;
 #include "renderer.h"
 #include "timer.h"
 #include "math3.h"
+#include "camera.h"
+#include "viewport.h"
 #include "mesh.h"
 
 class MyApplication : public Application
 {
 public:
     void on_create() override;
+    void on_resize(int width, int height) override;
 
     void update(float abs_time, float elapsed_time) override;
     void render(float abs_time, float elapsed_time) override;
 
 private:
+    FpsCamera m_camera;
+    Viewport m_viewport;
+
     unique_ptr<Mesh> m_mesh;
     mat4 m_world_matrix[3];
 };
 
 void MyApplication::on_create()
 {
+    m_camera.set_params(
+        { 0, 0, 10 },
+        { 0, 0, 0 },
+        { 0, 1, 0 }
+    );
+    m_renderer.set_camera(&m_camera);
+    m_renderer.set_viewport(&m_viewport);
+
     m_mesh = make_unique<Mesh>(m_renderer.get_device());
+}
+
+void MyApplication::on_resize(int width, int height)
+{
+    m_camera.set_proj_params(width, height);
+    m_viewport.set_params(width, height);
 }
 
 void MyApplication::update(float abs_time, float elapsed_time)
@@ -44,12 +64,12 @@ void MyApplication::update(float abs_time, float elapsed_time)
             0,
             0
         );
-        //m_world_matrix[i] *= mat4::rotate(
-        //    (i+1) * abs_time,
-        //    (i+1) * abs_time,
-        //    (i+1) * abs_time
-        //);
-        m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
+        m_world_matrix[i] *= mat4::rotate(
+            (i+1) * abs_time,
+            (i+1) * abs_time,
+            (i+1) * abs_time
+        );
+        //m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
         m_world_matrix[i] *= mat4::scale(1.0f, 1.0f, 1.0f);
 
         q.add(m_world_matrix[i], *m_mesh);
@@ -126,4 +146,4 @@ scene has scene nodes
 
 // scene has a renderer ref
 // find visible objects, put in render queue
-// TODO: rename win32_render_device to win32_software_device
+// TODO: log dates with time and move filename to left + log cat

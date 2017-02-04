@@ -8,6 +8,11 @@
 using namespace std;
 using namespace Gdiplus;
 
+Win32RenderDevice::Win32RenderDevice() :
+    m_backbuffer(static_cast<HDC>(INVALID_HANDLE_VALUE)),
+    m_backbuffer_bitmap(static_cast<HBITMAP>(INVALID_HANDLE_VALUE))
+{}
+
 void Win32RenderDevice::win32_init(HWND window_handle)
 {
     flog();
@@ -16,21 +21,12 @@ void Win32RenderDevice::win32_init(HWND window_handle)
     GdiplusStartupInput gdip_startup;
     GdiplusStartup(&m_gdiplus_token, &gdip_startup, nullptr);
 
-    GetClientRect(m_window_handle, &m_rect);
-
     m_frontbuffer = GetDC(m_window_handle);
-    m_backbuffer = CreateCompatibleDC(m_frontbuffer);
-    m_backbuffer_bitmap = CreateCompatibleBitmap(
-        m_frontbuffer,
-        m_rect.right - m_rect.left,
-        m_rect.bottom - m_rect.top
-    );
-
-    SelectObject(m_backbuffer, m_backbuffer_bitmap);
-
     m_backbuffer_brush = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
 
-    m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
+    RECT rc;
+    GetClientRect(m_window_handle, &rc);
+    win32_resize(&rc);
 }
 
 void Win32RenderDevice::win32_shutdown()
@@ -38,11 +34,33 @@ void Win32RenderDevice::win32_shutdown()
     flog();
     // delete backbuffer
     DeleteObject(m_backbuffer_brush);
+
     DeleteObject(m_backbuffer_bitmap);
     DeleteDC(m_backbuffer);
     ReleaseDC(m_window_handle, m_frontbuffer);
 
     GdiplusShutdown(m_gdiplus_token);
+}
+
+void Win32RenderDevice::win32_resize(PRECT client_rect)
+{
+    if (m_backbuffer_bitmap != INVALID_HANDLE_VALUE)
+    {
+        DeleteObject(m_backbuffer_bitmap);
+        DeleteDC(m_backbuffer);
+    }
+
+    CopyRect(&m_rect, client_rect);
+    GetClientRect(m_window_handle, &m_rect);
+    m_backbuffer = CreateCompatibleDC(m_frontbuffer);
+    m_backbuffer_bitmap = CreateCompatibleBitmap(
+        m_frontbuffer,
+        client_rect->right - client_rect->left,
+        client_rect->bottom - client_rect->top
+    );
+
+    SelectObject(m_backbuffer, m_backbuffer_bitmap);
+    m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

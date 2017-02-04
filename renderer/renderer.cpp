@@ -25,13 +25,6 @@ void Renderer::init(Timer* timer)
 
     m_target_fps = 60;
     m_fps = 0;
-
-    m_camera = std::unique_ptr<Camera>(new FpsCamera {
-        { 0, 0, 10 },
-        { 0, 0, 0 },
-        { 0, 1, 0 }
-    });
-    m_viewport = std::make_unique<Viewport>(640, 480);
 }
 void Renderer::shutdown()
 {

@@ -43,6 +43,9 @@ public:
     RenderDevice& get_device();
     RenderQueue& get_queue();
 
+    void set_camera(Camera* camera);
+    void set_viewport(Viewport* viewport);
+
     float get_fps() const;
 
 private:
@@ -54,8 +57,8 @@ protected:
     RenderQueue m_queue;
 
     //TEMP:
-    std::unique_ptr<Camera> m_camera;
-    std::unique_ptr<Viewport> m_viewport;
+    Camera* m_camera;
+    Viewport* m_viewport;
 
 	Timer* m_timer;
     uint64_t m_frame_number;
@@ -82,6 +85,16 @@ inline RenderDevice& Renderer::get_device()
 inline RenderQueue& Renderer::get_queue()
 {
     return m_queue;
+}
+
+inline void Renderer::set_camera(Camera* camera)
+{
+    m_camera = camera;
+}
+
+inline void Renderer::set_viewport(Viewport* viewport)
+{
+    m_viewport = viewport;
 }
 
 inline float Renderer::get_fps() const
