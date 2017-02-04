@@ -22,8 +22,9 @@ public:
     void swap_buffers() override;
 
 protected:
-    void draw_tri_wireframe(float x0, float y0, float x1, float y1, float x2, float y2) override;
-    void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2) override;
+    void draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2) override;
+    void draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2) override;
+    void draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2) override;
 
 private:
     RECT m_rect;

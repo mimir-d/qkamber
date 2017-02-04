@@ -37,13 +37,19 @@ public:
     void set_proj_matrix(mat4 proj_matrix) override;
     void set_clip_matrix(mat3x4 clip_matrix) override;
 
+    void set_polygon_mode(PolygonMode mode) override;
+
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) override;
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) override;
 
 protected:
-    virtual void draw_tri_wireframe(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
-    virtual void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+    virtual void draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+    virtual void draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+    virtual void draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+
+private:
+    void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2);
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -51,10 +57,13 @@ private:
 
     // computed stuff
     dirty_t<mat4, detail::make_mvp> m_mvp_matrix;
+
+    PolygonMode m_poly_mode;
 };
 
 inline SoftwareDevice::SoftwareDevice() :
-    m_mvp_matrix(m_world_matrix, m_view_matrix, m_proj_matrix)
+    m_mvp_matrix(m_world_matrix, m_view_matrix, m_proj_matrix),
+    m_poly_mode(PolygonMode::Fill)
 {}
 
 inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
@@ -78,4 +87,9 @@ inline void SoftwareDevice::set_proj_matrix(mat4 proj_matrix)
 inline void SoftwareDevice::set_clip_matrix(mat3x4 clip_matrix)
 {
     m_clip_matrix = clip_matrix;
+}
+
+inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
+{
+    m_poly_mode = mode;
 }

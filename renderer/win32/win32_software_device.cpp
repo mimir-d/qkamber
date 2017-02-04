@@ -98,23 +98,32 @@ void Win32RenderDevice::swap_buffers()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Helper methods
+// Low-level drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::draw_tri_wireframe(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32RenderDevice::draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2)
+{
+    const SolidBrush hb(Color(150, 0, 200));
+
+    m_graphics->FillEllipse(&hb, x0, y0, 5.0f, 5.0f);
+    m_graphics->FillEllipse(&hb, x1, y1, 5.0f, 5.0f);
+    m_graphics->FillEllipse(&hb, x2, y2, 5.0f, 5.0f);
+}
+
+void Win32RenderDevice::draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2)
 {
     const Pen p(Color(255, 150, 0, 255));
     const PointF points[] =
     {
-        {x0, y0}, {x1, y1},
-        {x0, y0}, {x2, y2},
-        {x1, y1}, {x2, y2}
+        {x0, y0},
+        {x1, y1},
+        {x2, y2}
     };
     const size_t count = sizeof(points) / sizeof(points[0]);
 
     m_graphics->DrawPolygon(&p, points, count);
 }
 
-void Win32RenderDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32RenderDevice::draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2)
 {
     const SolidBrush hb(Color(150, 0, 200));
     const PointF points[] = {
