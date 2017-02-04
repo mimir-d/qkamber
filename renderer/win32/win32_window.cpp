@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "app.h"
 #include "win32_window.h"
-#include "win32_render_device.h"
+#include "win32_software_device.h"
 using namespace std;
 using namespace Gdiplus;
 

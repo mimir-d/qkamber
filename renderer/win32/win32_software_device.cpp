@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "win32_render_device.h"
+#include "win32_software_device.h"
 
 #include "render_primitive.h"
 #include "render_buffers.h"
