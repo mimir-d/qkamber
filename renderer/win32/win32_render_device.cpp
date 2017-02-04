@@ -3,6 +3,7 @@
 #include "win32_render_device.h"
 
 #include "render_primitive.h"
+#include "render_buffers.h"
 
 using namespace std;
 using namespace Gdiplus;
@@ -47,39 +48,6 @@ void Win32RenderDevice::win32_shutdown()
 ///////////////////////////////////////////////////////////////////////////////
 // Drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::draw_primitive(const RenderPrimitive& primitive)
-{
-    /*
-    const VertexBuffer& vb = primitive.vertices;
-    const IndexBuffer& ib = primitive.indices;
-
-    //for (auto& decl : v
-    for (int i = 0; i < ib.get_count(); i += 3)
-    {
-
-    }*/
-    auto& mvp = m_mvp_matrix.get();
-
-    vec4 v0(1, -0.5, 0, 1);
-    vec4 v1(0, 0.5, 0, 1);
-    vec4 v2(-1, -0.5, 0, 1);
-
-    v0 = mvp * v0;
-    v0 *= 1.0f / v0.w();
-
-    v1 = mvp * v1;
-    v1 *= 1.0f / v1.w();
-
-    v2 = mvp * v2;
-    v2 *= 1.0f / v2.w();
-
-    vec3 sv0 = m_clip_matrix * v0;
-    vec3 sv1 = m_clip_matrix * v1;
-    vec3 sv2 = m_clip_matrix * v2;
-
-    draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
-}
-
 void Win32RenderDevice::draw_text(const std::string& text, float x, float y)
 {
     Font font(L"TimesNewRoman", 12);

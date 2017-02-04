@@ -16,30 +16,44 @@ using namespace Gdiplus;
 class MyApplication : public Application
 {
 public:
+    void on_create() override;
+
     void update(float abs_time, float elapsed_time) override;
     void render(float abs_time, float elapsed_time) override;
 
 private:
-    Mesh m_mesh;
-    mat4 m_world_matrix;
+    unique_ptr<Mesh> m_mesh;
+    mat4 m_world_matrix[3];
 };
+
+void MyApplication::on_create()
+{
+    m_mesh = make_unique<Mesh>(m_renderer.get_device());
+}
 
 void MyApplication::update(float abs_time, float elapsed_time)
 {
     // TODO: check paren identation formatting
     // scene stuff
-    m_world_matrix = mat4::rotate(
-        1.0f * abs_time,
-        5.8f * abs_time,
-        3.0f * abs_time
-    ) * mat4::scale(
-        3.0f + abs(4.0f * sin(11.6f * abs_time)),
-        3.0f + abs(4.0f * cos(11.6f * abs_time)),
-        1.0f
-    );
 
     auto& q = m_renderer.get_queue();
-    q.add(m_world_matrix, m_mesh);
+    for (int i = 0; i < 3; i++)
+    {
+        m_world_matrix[i] = mat4::translate(
+            (i - 1) * 3.5f,
+            0,
+            0
+        );
+        //m_world_matrix[i] *= mat4::rotate(
+        //    (i+1) * abs_time,
+        //    (i+1) * abs_time,
+        //    (i+1) * abs_time
+        //);
+        m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
+        m_world_matrix[i] *= mat4::scale(1.0f, 1.0f, 1.0f);
+
+        q.add(m_world_matrix[i], *m_mesh);
+    }
 
     // m_scene.update();
 }
@@ -89,16 +103,7 @@ int main()
 // zbuffer/scanline-tri; display lists + sorting
 // scene tree
 //
-#include "mesh.h"
-int mainx()
-{
-    Mesh m;
 
-    auto p = m.get_primitive();
-    float x = *reinterpret_cast<float*>(p.vertices.lock());
-    x = *reinterpret_cast<float*>(p.vertices.lock() + 12);
-    return 0;
-}
 /*
 renderer draws primitives
     primitive has a vdata and idata
@@ -121,3 +126,4 @@ scene has scene nodes
 
 // scene has a renderer ref
 // find visible objects, put in render queue
+// TODO: rename win32_render_device to win32_software_device

@@ -27,6 +27,8 @@ void Engine::run(Application& app)
     auto& renderer = app.get_renderer();
     renderer.init(&m_global_timer);
 
+    app.on_create();
+
     std::unique_ptr<Window> window = AppWindowFactory::create();
     window->init(&app, &m_global_timer);
     window->mainloop();
@@ -34,3 +36,6 @@ void Engine::run(Application& app)
     renderer.shutdown();
     m_exit_code = window->shutdown();
 }
+
+// todo: keep entity system here + subsystems
+// timing is a subsystem?
