@@ -1,6 +1,7 @@
 #pragma once
 
 #include "window.h"
+#include "win32_input_system.h"
 
 class Application;
 class Renderer;
@@ -16,6 +17,7 @@ private:
     void init_class();
     void init_window();
     void init_render_device();
+    void init_inputs();
 
     void on_paint();
     void on_resize();

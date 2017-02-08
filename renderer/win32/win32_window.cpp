@@ -4,6 +4,8 @@
 #include "app.h"
 #include "win32_window.h"
 #include "win32_software_device.h"
+#include "win32_input_system.h"
+
 using namespace std;
 
 constexpr char* WINDOW_TITLE = "my little renderererererer";
@@ -18,6 +20,7 @@ void Win32Window::init(Application* app, Timer* timer)
 
     init_class();
     init_window();
+    init_inputs();
 
     m_paused = false;
 }
@@ -76,6 +79,32 @@ void Win32Window::init_class()
     wcex.lpfnWndProc    = [](HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) -> LRESULT
     {
         Win32Window* window = reinterpret_cast<Win32Window*>(GetWindowLong(hWnd, GWL_USERDATA));
+
+        // get input
+        // TODO: this should probably have its own method
+        if (message == WM_INPUT)
+        {
+            HRAWINPUT raw_handle = reinterpret_cast<HRAWINPUT>(lParam);
+            RAWINPUT input;
+            UINT raw_data_size = sizeof(input);
+
+            GetRawInputData(raw_handle, RID_INPUT, &input, &raw_data_size, sizeof(RAWINPUTHEADER));
+
+            auto& is = InputSystem::get_inst();
+            switch (input.header.dwType)
+            {
+                case RIM_TYPEMOUSE:
+                    static_cast<Win32MouseDevice&>(is.get_mouse()).feed_input(input.data.mouse);
+                    break;
+
+                case RIM_TYPEKEYBOARD:
+                    static_cast<Win32KeyboardDevice&>(is.get_keyboard()).feed_input(input.data.keyboard);
+                    break;
+            }
+
+            return 0;
+        }
+
         return window->wnd_proc(hWnd, message, wParam, lParam);
     };
 
@@ -125,6 +154,18 @@ void Win32Window::init_render_device()
     // init win32 specific render device
     auto& dev = m_app->get_renderer().get_device();
     static_cast<Win32RenderDevice&>(dev).win32_init(m_window_handle);
+}
+
+void Win32Window::init_inputs()
+{
+    flog();
+
+    auto& is = InputSystem::get_inst();
+    auto& mouse = static_cast<Win32MouseDevice&>(is.get_mouse());
+    auto& keyboard = static_cast<Win32KeyboardDevice&>(is.get_keyboard());
+
+    mouse.win32_init(m_window_handle);
+    keyboard.win32_init(m_window_handle);
 }
 
 void Win32Window::on_paint()

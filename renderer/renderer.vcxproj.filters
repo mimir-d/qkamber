@@ -91,8 +91,11 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="input_system.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win32\win32_input_system.h">
+      <Filter>Header Files\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +143,12 @@
     </ClCompile>
     <ClCompile Include="win32\win32_software_device.cpp">
       <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\win32_input_system.cpp">
+      <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="input_device.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
