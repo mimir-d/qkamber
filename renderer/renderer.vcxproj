@@ -91,6 +91,7 @@
     <ClInclude Include="render_buffers.h" />
     <ClInclude Include="render_primitive.h" />
     <ClInclude Include="render_queue.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="software\software_buffers.h" />
     <ClInclude Include="software\software_device.h" />
     <ClInclude Include="stdafx.h" />
@@ -119,6 +120,12 @@
     <ClCompile Include="win32\win32_software_device.cpp" />
     <ClCompile Include="win32\win32_window.cpp" />
     <ClCompile Include="window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="renderer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="renderer.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
