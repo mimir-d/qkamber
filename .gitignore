@@ -5,3 +5,4 @@ ipch
 Debug
 Release
 *.vcxproj.user
+*.aps

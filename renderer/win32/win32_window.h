@@ -12,22 +12,25 @@ public:
     void mainloop() override;
     int shutdown() override;
 
-    void on_key_pressed(int key_code);
+private:
+    void init_class();
+    void init_window();
+    void init_render_device();
+
     void on_paint();
     void on_resize();
+    LRESULT wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-private:
     template <typename Func>
     void paused(Func fun);
 
 private:
-    static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-    MSG m_msg;
-
     RECT m_client_rect;
     int m_window_state;
-    HWND m_window_handle;
     bool m_paused;
+
+    HWND m_window_handle;
+    int m_exit_code;
 };
 
 template <typename Func>
