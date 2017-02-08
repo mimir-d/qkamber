@@ -83,6 +83,7 @@
     <ClInclude Include="app.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="input_system.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="math3.h" />
     <ClInclude Include="mesh.h" />
@@ -97,6 +98,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="viewport.h" />
+    <ClInclude Include="win32\win32_input_system.h" />
     <ClInclude Include="win32\win32_software_device.h" />
     <ClInclude Include="win32\win32_window.h" />
     <ClInclude Include="window.h" />
@@ -117,6 +119,8 @@
     </ClCompile>
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="viewport.cpp" />
+    <ClCompile Include="input_device.cpp" />
+    <ClCompile Include="win32\win32_input_system.cpp" />
     <ClCompile Include="win32\win32_software_device.cpp" />
     <ClCompile Include="win32\win32_window.cpp" />
     <ClCompile Include="window.cpp" />

@@ -104,6 +104,24 @@ protected:
     std::array<T, N> m_data;
 };
 
+// TODO: make vec2 typed
+class vec2 : public vec<float, 2>
+{
+public:
+    using vec<float, 2>::vec;
+
+    vec2() : vec<float, 2>() {}
+    vec2(const vec2& rhs) : vec<float, 2>(rhs) {}
+    vec2(const vec<float, 2>& rhs) : vec<float, 2>(rhs) {}
+
+    // TODO: move these in vec?
+    float& x() { return m_data[0]; }
+    float& y() { return m_data[1]; }
+
+    float x() const { return m_data[0]; }
+    float y() const { return m_data[1]; }
+};
+
 class vec3 : public vec<float, 3>
 {
 public:

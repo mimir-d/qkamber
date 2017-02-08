@@ -14,6 +14,7 @@ using namespace Gdiplus;
 #include "camera.h"
 #include "viewport.h"
 #include "mesh.h"
+#include "input_system.h"
 
 class MyApplication : public Application
 {
@@ -56,6 +57,9 @@ void MyApplication::on_resize(int width, int height)
 
 void MyApplication::update(float abs_time, float elapsed_time)
 {
+    auto& keyboard = InputSystem::get_inst().get_keyboard();
+    if (keyboard.get_key_pressed('A'))
+        dlog("pressed A");
     // TODO: check paren identation formatting
     // scene stuff
 
