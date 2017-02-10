@@ -88,7 +88,7 @@ unique_ptr<RenderDevice> RenderDeviceFactory::create()
 {
 #ifdef WIN32
     dlog("RenderDeviceFactory creating a Win32RenderDevice...");
-    return unique_ptr<RenderDevice>(new Win32RenderDevice);
+    return unique_ptr<RenderDevice>(new Win32SoftwareDevice);
 #endif
     return nullptr;
 }

@@ -43,8 +43,6 @@ public:
     typedef std::vector<Element>::const_iterator iterator;
 
 public:
-    VertexDecl() {}
-
     void add(size_t offset, VertexType type, VertexSemantic semantic);
     iterator begin() const;
     iterator end() const;

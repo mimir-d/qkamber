@@ -5,8 +5,7 @@
 #include "window.h"
 #include "app.h"
 
-Engine::Engine() :
-    m_exit_code(0)
+Engine::Engine()
 {
     flog();
     // init logging

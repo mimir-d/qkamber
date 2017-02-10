@@ -9,9 +9,9 @@ class Renderer;
 class Win32Window : public Window
 {
 public:
-    void init(Application* app, Timer* timer) override;
-    void mainloop() override;
-    int shutdown() override;
+    void init(Application* app, Timer* timer) final;
+    void mainloop() final;
+    int shutdown() final;
 
 private:
     void init_class();
