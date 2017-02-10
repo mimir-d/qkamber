@@ -21,11 +21,14 @@ namespace detail
     };
 };
 
-inline float frand()
-{
-    static detail::RealGenerator<float> gen;
-    return gen();
-}
+constexpr float PI      = 3.141592653f;
+constexpr float PI_2    = 1.570796326f;
+constexpr float PI_4    = 0.785398163f;
+
+inline float frand();
+
+template <typename T>
+inline T clamp(T value, T min_value, T max_value);
 
 // TODO: rename or move to namespace?
 struct no_init_tag {};
@@ -33,6 +36,7 @@ struct no_init_tag {};
 ///////////////////////////////////////////////////////////////////////////////
 // vector types
 ///////////////////////////////////////////////////////////////////////////////
+// TODO: change N to size_t
 template <typename T, int N>
 class vec
 {
@@ -48,13 +52,15 @@ public:
     vec(Args&&... args);
     vec(no_init_tag) {}
 
-    T len() const;
+    T length() const;
+    T length_sq() const;
     vec normalize() const;
 
     T& operator[](size_t index);
     T operator[](size_t index) const;
 
     vec& operator=(const vec& rhs);
+    vec& operator=(float rhs);
 
     vec& operator+=(const vec& rhs);
     vec& operator-=(const vec& rhs);
@@ -73,6 +79,7 @@ private:
     struct eq_op
     {
         void operator()(vec& out, const vec& rhs) const;
+        void operator()(vec& out, float rhs) const;
     };
     template <int I>
     struct add_op
@@ -130,6 +137,8 @@ public:
     vec3() : vec<float, 3>() {}
     vec3(const vec3& rhs) : vec<float, 3>(rhs) {}
     vec3(const vec<float, 3>& rhs) : vec<float, 3>(rhs) {}
+
+    using vec::operator=;
 
     float& x() { return m_data[0]; }
     float& y() { return m_data[1]; }
@@ -306,6 +315,7 @@ protected:
     std::array<T, D0 * D1> m_data;
 };
 
+using mat3 = mat<float, 3>;
 using mat3x4 = mat<float, 3, 4>;
 
 class mat4 : public mat<float, 4>
@@ -342,6 +352,22 @@ template <typename T>
 inline T detail::RealGenerator<T>::operator()()
 {
     return m_dist(m_gen);
+}
+
+inline float frand()
+{
+    static detail::RealGenerator<float> gen;
+    return gen();
+}
+
+template <typename T>
+inline T clamp(T value, T min_value, T max_value)
+{
+    if (value > max_value)
+        return max_value;
+    if (value < min_value)
+        return min_value;
+    return value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -389,19 +415,34 @@ inline vec<T, N>::vec(Args&&... args) :
 {}
 
 template <typename T, int N>
-inline T vec<T, N>::len() const
+inline T vec<T, N>::length() const
+{
+    return static_cast<T>(sqrt(length_sq()));
+}
+
+template <typename T, int N>
+inline T vec<T, N>::length_sq() const
 {
     T len2 = 0;
     detail::iterate1<N, dot_op>()(len2, *this, *this);
-    return static_cast<T>(sqrt(len2));
+    return len2;
 }
 
 template <typename T, int N>
 inline vec<T, N> vec<T, N>::normalize() const
 {
     vec ret;
-    const float factor = 1.0f / len();
-    return detail::iterate1<N, mul_op>()(ret, *this, factor);
+
+    T len = length();
+#ifdef WIN32
+    // RANT: windows.h defines min/max as macros
+    if (len > (std::numeric_limits<float>::min)())
+#else
+    if (len > std::numeric_limits<float>::min())
+#endif
+        return detail::iterate1<N, mul_op>()(ret, *this, 1.0f / len);
+
+    return ret;
 }
 
 template <typename T, int N>
@@ -418,6 +459,12 @@ inline T vec<T, N>::operator[](size_t index) const
 
 template <typename T, int N>
 inline vec<T, N>& vec<T, N>::operator=(const vec& rhs)
+{
+    return detail::iterate1<N, eq_op>()(*this, rhs);
+}
+
+template <typename T, int N>
+inline vec<T, N>& vec<T, N>::operator=(float rhs)
 {
     return detail::iterate1<N, eq_op>()(*this, rhs);
 }
@@ -483,6 +530,13 @@ template <int I>
 inline void vec<T, N>::eq_op<I>::operator()(vec& out, const vec& rhs) const
 {
     out.m_data[I] = rhs.m_data[I];
+}
+
+template <typename T, int N>
+template <int I>
+inline void vec<T, N>::eq_op<I>::operator()(vec& out, float rhs) const
+{
+    out.m_data[I] = rhs;
 }
 
 template <typename T, int N>

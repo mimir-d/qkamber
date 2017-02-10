@@ -90,6 +90,10 @@ void Win32Window::init_class()
 
             GetRawInputData(raw_handle, RID_INPUT, &input, &raw_data_size, sizeof(RAWINPUTHEADER));
 
+            // discard any input while paused
+            if (window->m_paused)
+                return 0;
+
             auto& is = InputSystem::get_inst();
             switch (input.header.dwType)
             {

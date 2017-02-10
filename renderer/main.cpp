@@ -26,7 +26,8 @@ public:
     void render(float abs_time, float elapsed_time) override;
 
 private:
-    FpsCamera m_camera;
+    FpsCamera m_camera { { 0, 0, 10 } };
+
     Viewport m_viewport;
 
     unique_ptr<Mesh> m_mesh;
@@ -35,11 +36,6 @@ private:
 
 void MyApplication::on_create()
 {
-    m_camera.set_params(
-        { 0, 0, 10 },
-        { 0, 0, 0 },
-        { 0, 1, 0 }
-    );
     m_renderer.set_camera(&m_camera);
     m_renderer.set_viewport(&m_viewport);
 
@@ -57,9 +53,8 @@ void MyApplication::on_resize(int width, int height)
 
 void MyApplication::update(float abs_time, float elapsed_time)
 {
-    auto& keyboard = InputSystem::get_inst().get_keyboard();
-    if (keyboard.get_key_pressed('A'))
-        dlog("pressed A");
+    m_camera.update(abs_time, elapsed_time);
+
     // TODO: check paren identation formatting
     // scene stuff
 
@@ -81,7 +76,6 @@ void MyApplication::update(float abs_time, float elapsed_time)
 
         q.add(m_world_matrix[i], *m_mesh);
     }
-
     // m_scene.update();
 }
 
@@ -90,16 +84,6 @@ void MyApplication::render(float abs_time, float elapsed_time)
     // m_scene.render();
 
     m_renderer.render();
-
-
-
-
-    //m_dev->draw_line(100.f, 100.f, 100.f + 50.f * sin(abs_time*2), 100.f + 50.f * cos(abs_time*2));
-    //m_dev->draw_tri(
-    //    150 + 50*sin(abs_time*2), 150 + 150*cos(abs_time),
-    //    150 + 50*sin(abs_time*2), 250-50*sin(abs_time),
-    //    350 - 150*cos(abs_time*2), 150 + 150*cos(abs_time)
-    //);
 }
 
 int main()

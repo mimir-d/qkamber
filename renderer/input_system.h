@@ -5,7 +5,7 @@
 class MouseDevice
 {
 public:
-    virtual vec2 get_delta() = 0;
+    virtual vec2 get_position() = 0;
 };
 
 class KeyboardDevice
