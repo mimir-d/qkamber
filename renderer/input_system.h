@@ -5,6 +5,9 @@
 class MouseDevice
 {
 public:
+    enum Button { LMB, RMB };
+
+    virtual bool get_button_pressed(Button button) = 0;
     virtual vec2 get_position() = 0;
 };
 

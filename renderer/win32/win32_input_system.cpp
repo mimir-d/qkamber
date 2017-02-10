@@ -24,6 +24,16 @@ void Win32MouseDevice::win32_init(HWND window_handle)
 
 // http://en.cppreference.com/w/cpp/language/final
 // TODO: final methods can be inlined ?
+bool Win32MouseDevice::get_button_pressed(Button button)
+{
+    switch (button)
+    {
+        case MouseDevice::LMB: return m_buttons[0];
+        case MouseDevice::RMB: return m_buttons[1];
+    }
+    return false;
+}
+
 vec2 Win32MouseDevice::get_position()
 {
     return m_mouse_abs;
@@ -33,6 +43,16 @@ void Win32MouseDevice::feed_input(const RAWMOUSE& raw_input)
 {
     m_mouse_abs.x() += static_cast<float>(raw_input.lLastX);
     m_mouse_abs.y() += static_cast<float>(raw_input.lLastY);
+
+    if (raw_input.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN)
+        m_buttons[0] = true;
+    else if (raw_input.usButtonFlags & RI_MOUSE_BUTTON_1_UP)
+        m_buttons[0] = false;
+
+    if (raw_input.usButtonFlags & RI_MOUSE_BUTTON_2_DOWN)
+        m_buttons[1] = true;
+    else if (raw_input.usButtonFlags & RI_MOUSE_BUTTON_2_UP)
+        m_buttons[1] = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
