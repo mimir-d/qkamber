@@ -16,11 +16,13 @@ public:
     void feed_input(const RAWMOUSE& raw_input);
 
 public:
-    // TODO: make this final
+    // TODO: make these final
+    bool get_button_pressed(Button button) override;
     vec2 get_position() override;
 
 private:
     vec2 m_mouse_abs = { 0, 0 };
+    bool m_buttons[2] = { 0 };
 };
 
 class Win32KeyboardDevice : public KeyboardDevice

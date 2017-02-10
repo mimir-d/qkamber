@@ -26,6 +26,9 @@ public:
     void render(float abs_time, float elapsed_time) override;
 
 private:
+    PolygonMode m_poly_mode = PolygonMode::Line;
+    bool m_poly_mode_changed = false;
+
     FpsCamera m_camera { { 0, 0, 10 } };
 
     Viewport m_viewport;
@@ -40,7 +43,7 @@ void MyApplication::on_create()
     m_renderer.set_viewport(&m_viewport);
 
     auto& dev = m_renderer.get_device();
-    dev.set_polygon_mode(PolygonMode::Line);
+    dev.set_polygon_mode(m_poly_mode);
 
     m_mesh = make_unique<Mesh>(dev);
 }
@@ -53,6 +56,28 @@ void MyApplication::on_resize(int width, int height)
 
 void MyApplication::update(float abs_time, float elapsed_time)
 {
+    auto& mouse = InputSystem::get_inst().get_mouse();
+    // TODO: should encode button transitions somehow
+    if (mouse.get_button_pressed(MouseDevice::RMB))
+    {
+        if (!m_poly_mode_changed)
+        {
+            switch (m_poly_mode)
+            {
+                case PolygonMode::Point: m_poly_mode = PolygonMode::Line; break;
+                case PolygonMode::Line:  m_poly_mode = PolygonMode::Fill; break;
+                case PolygonMode::Fill:  m_poly_mode = PolygonMode::Point; break;
+            }
+            m_renderer.get_device().set_polygon_mode(m_poly_mode);
+
+            m_poly_mode_changed = true;
+        }
+    }
+    else
+    {
+        m_poly_mode_changed = false;
+    }
+
     m_camera.update(abs_time, elapsed_time);
 
     // TODO: check paren identation formatting
