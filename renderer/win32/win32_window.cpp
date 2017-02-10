@@ -34,13 +34,14 @@ void Win32Window::mainloop()
     {
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_QUIT)
+            {
+                m_exit_code = msg.wParam;
+                return;
+            }
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        }
-        if (msg.message == WM_QUIT)
-        {
-            m_exit_code = msg.wParam;
-            break;
         }
 
         if (m_paused)
@@ -179,6 +180,11 @@ void Win32Window::on_paint()
 
     m_app->update(abs_time, diff_time);
     m_app->render(abs_time, diff_time);
+
+//     const float frame_time = 1.0f / 15.0f;
+//     const float ctime = m_timer->get_abs_time() - abs_time;
+//     if (ctime < frame_time)
+//         Sleep((DWORD)((frame_time - ctime) * 1000.0f));
 }
 
 void Win32Window::on_resize()
