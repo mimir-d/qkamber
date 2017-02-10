@@ -16,11 +16,11 @@ public:
     void feed_input(const RAWMOUSE& raw_input);
 
 public:
-    vec2 get_delta() override;
+    // TODO: make this final
+    vec2 get_position() override;
 
 private:
     vec2 m_mouse_abs = { 0, 0 };
-    vec2 m_mouse_last = { 0, 0 };
 };
 
 class Win32KeyboardDevice : public KeyboardDevice

@@ -19,13 +19,14 @@ void Win32MouseDevice::win32_init(HWND window_handle)
     ridev[0].dwFlags = RIDEV_INPUTSINK;
     ridev[0].hwndTarget = window_handle;
     RegisterRawInputDevices(ridev, 1, sizeof(ridev[0]));
+    // TODO: impl shutdown with unregistering
 }
 
-vec2 Win32MouseDevice::get_delta()
+// http://en.cppreference.com/w/cpp/language/final
+// TODO: final methods can be inlined ?
+vec2 Win32MouseDevice::get_position()
 {
-    vec2 ret = m_mouse_abs - m_mouse_last;
-    m_mouse_last = m_mouse_abs;
-    return ret;
+    return m_mouse_abs;
 }
 
 void Win32MouseDevice::feed_input(const RAWMOUSE& raw_input)
