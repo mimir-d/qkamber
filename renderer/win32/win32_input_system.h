@@ -16,9 +16,8 @@ public:
     void feed_input(const RAWMOUSE& raw_input);
 
 public:
-    // TODO: make these final
-    bool get_button_pressed(Button button) override;
-    vec2 get_position() override;
+    bool get_button_pressed(Button button) final;
+    vec2 get_position() final;
 
 private:
     vec2 m_mouse_abs = { 0, 0 };
@@ -32,7 +31,7 @@ public:
     void feed_input(const RAWKEYBOARD& raw_input);
 
 public:
-    bool get_key_pressed(int key_code) override;
+    bool get_key_pressed(int key_code) final;
 
 private:
     bool m_keymap[256] = { 0 };

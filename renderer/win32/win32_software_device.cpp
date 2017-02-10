@@ -8,12 +8,7 @@
 using namespace std;
 using namespace Gdiplus;
 
-Win32RenderDevice::Win32RenderDevice() :
-    m_backbuffer(static_cast<HDC>(INVALID_HANDLE_VALUE)),
-    m_backbuffer_bitmap(static_cast<HBITMAP>(INVALID_HANDLE_VALUE))
-{}
-
-void Win32RenderDevice::win32_init(HWND window_handle)
+void Win32SoftwareDevice::win32_init(HWND window_handle)
 {
     flog();
     m_window_handle = window_handle;
@@ -29,7 +24,7 @@ void Win32RenderDevice::win32_init(HWND window_handle)
     win32_resize(&rc);
 }
 
-void Win32RenderDevice::win32_shutdown()
+void Win32SoftwareDevice::win32_shutdown()
 {
     flog();
     // delete backbuffer
@@ -42,7 +37,7 @@ void Win32RenderDevice::win32_shutdown()
     GdiplusShutdown(m_gdiplus_token);
 }
 
-void Win32RenderDevice::win32_resize(PRECT client_rect)
+void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 {
     if (m_backbuffer_bitmap != INVALID_HANDLE_VALUE)
     {
@@ -66,7 +61,7 @@ void Win32RenderDevice::win32_resize(PRECT client_rect)
 ///////////////////////////////////////////////////////////////////////////////
 // Drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::draw_text(const std::string& text, float x, float y)
+void Win32SoftwareDevice::draw_text(const std::string& text, float x, float y)
 {
     Font font(L"TimesNewRoman", 12);
     SolidBrush hb(Color(150, 0, 200));
@@ -79,14 +74,14 @@ void Win32RenderDevice::draw_text(const std::string& text, float x, float y)
 ///////////////////////////////////////////////////////////////////////////////
 // Frame methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::clear()
+void Win32SoftwareDevice::clear()
 {
     RECT rc;
     GetClientRect(m_window_handle, &rc);
     FillRect(m_backbuffer, &rc, m_backbuffer_brush);
 }
 
-void Win32RenderDevice::swap_buffers()
+void Win32SoftwareDevice::swap_buffers()
 {
     BitBlt(m_frontbuffer,
         m_rect.left, m_rect.top,
@@ -100,7 +95,7 @@ void Win32RenderDevice::swap_buffers()
 ///////////////////////////////////////////////////////////////////////////////
 // Low-level drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32RenderDevice::draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32SoftwareDevice::draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2)
 {
     const SolidBrush hb(Color(150, 0, 200));
 
@@ -109,7 +104,7 @@ void Win32RenderDevice::draw_tri_point(float x0, float y0, float x1, float y1, f
     m_graphics->FillEllipse(&hb, x2, y2, 5.0f, 5.0f);
 }
 
-void Win32RenderDevice::draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32SoftwareDevice::draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2)
 {
     const Pen p(Color(255, 150, 0, 255));
     const PointF points[] =
@@ -123,7 +118,7 @@ void Win32RenderDevice::draw_tri_line(float x0, float y0, float x1, float y1, fl
     m_graphics->DrawPolygon(&p, points, count);
 }
 
-void Win32RenderDevice::draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32SoftwareDevice::draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2)
 {
     const SolidBrush hb(Color(150, 0, 200));
     const PointF points[] = {

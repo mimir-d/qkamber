@@ -13,6 +13,7 @@ public:
 
 private:
 	bool m_running;
+    // TODO: use std::chrono
 	LARGE_INTEGER m_start_time, m_last_count;
 	LARGE_INTEGER m_freq;
 };

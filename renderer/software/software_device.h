@@ -24,24 +24,20 @@ namespace detail
 class SoftwareDevice : public RenderDevice
 {
 public:
-    SoftwareDevice();
-    ~SoftwareDevice() = default;
-
-public:
     // drawing methods
-    void draw_primitive(const RenderPrimitive& primitive) override;
+    void draw_primitive(const RenderPrimitive& primitive) final;
 
     // device state methods
-    void set_world_matrix(mat4 world_matrix) override;
-    void set_view_matrix(mat4 view_matrix) override;
-    void set_proj_matrix(mat4 proj_matrix) override;
-    void set_clip_matrix(mat3x4 clip_matrix) override;
+    void set_world_matrix(mat4 world_matrix) final;
+    void set_view_matrix(mat4 view_matrix) final;
+    void set_proj_matrix(mat4 proj_matrix) final;
+    void set_clip_matrix(mat3x4 clip_matrix) final;
 
-    void set_polygon_mode(PolygonMode mode) override;
+    void set_polygon_mode(PolygonMode mode) final;
 
     // resource management methods
-    std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) override;
-    std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) override;
+    std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
+    std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) final;
 
 protected:
     virtual void draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
@@ -56,15 +52,10 @@ private:
     mat3x4 m_clip_matrix;
 
     // computed stuff
-    dirty_t<mat4, detail::make_mvp> m_mvp_matrix;
+    dirty_t<mat4, detail::make_mvp> m_mvp_matrix = { m_world_matrix, m_view_matrix, m_proj_matrix };
 
-    PolygonMode m_poly_mode;
+    PolygonMode m_poly_mode = PolygonMode::Fill;
 };
-
-inline SoftwareDevice::SoftwareDevice() :
-    m_mvp_matrix(m_world_matrix, m_view_matrix, m_proj_matrix),
-    m_poly_mode(PolygonMode::Fill)
-{}
 
 inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
 {

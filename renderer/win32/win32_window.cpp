@@ -158,7 +158,7 @@ void Win32Window::init_render_device()
 
     // init win32 specific render device
     auto& dev = m_app->get_renderer().get_device();
-    static_cast<Win32RenderDevice&>(dev).win32_init(m_window_handle);
+    static_cast<Win32SoftwareDevice&>(dev).win32_init(m_window_handle);
 }
 
 void Win32Window::init_inputs()
@@ -199,7 +199,7 @@ void Win32Window::on_resize()
         paused([&]()
         {
             auto& dev = m_app->get_renderer().get_device();
-            static_cast<Win32RenderDevice&>(dev).win32_resize(&rc);
+            static_cast<Win32SoftwareDevice&>(dev).win32_resize(&rc);
 
             m_app->on_resize(width, height);
         });

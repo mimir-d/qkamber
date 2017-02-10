@@ -23,8 +23,8 @@ public:
     SoftwareVertexBuffer(std::unique_ptr<VertexDecl> decl, size_t count);
 
     // TODO: figure out how to remove this dup code
-    uint8_t* lock() override;
-    void unlock() override;
+    uint8_t* lock() final;
+    void unlock() final;
 };
 
 class SoftwareIndexBuffer : public detail::BufferStorage, public IndexBuffer
@@ -32,8 +32,8 @@ class SoftwareIndexBuffer : public detail::BufferStorage, public IndexBuffer
 public:
     SoftwareIndexBuffer(size_t count);
 
-    uint8_t* lock() override;
-    void unlock() override;
+    uint8_t* lock() final;
+    void unlock() final;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
