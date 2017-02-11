@@ -63,4 +63,6 @@ inline const mat4& Camera::get_proj() const
 ///////////////////////////////////////////////////////////////////////////////
 inline FpsCamera::FpsCamera(const vec3& position) :
     m_position(position)
-{}
+{
+    flog("id = %#x", this);
+}

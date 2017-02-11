@@ -10,6 +10,8 @@
 
 Mesh::Mesh(RenderDevice& dev)
 {
+    flog("id = %#x", this);
+
     // hardcode a cube for now
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
     decl->add(0, VDET_FLOAT3, VDES_POSITION);

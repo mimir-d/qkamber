@@ -14,7 +14,7 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 void Renderer::init(Timer* timer)
 {
-    flog();
+    flog("id = %#x", this);
     m_timer = timer;
 
     m_dev = RenderDeviceFactory::create();
@@ -87,7 +87,7 @@ void Renderer::end_frame()
 unique_ptr<RenderDevice> RenderDeviceFactory::create()
 {
 #ifdef WIN32
-    dlog("RenderDeviceFactory creating a Win32RenderDevice...");
+    log_info("RenderDeviceFactory creating a Win32RenderDevice...");
     return unique_ptr<RenderDevice>(new Win32SoftwareDevice);
 #endif
     return nullptr;

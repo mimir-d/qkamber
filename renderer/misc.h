@@ -1,5 +1,9 @@
 #pragma once
 
+#define __FILE_SHORT__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#define __CONCAT(x, y) x ## y
+#define __LINE_VARNAME(prefix) __CONCAT(prefix, __LINE__)
+
 namespace detail
 {
     template <typename Func, typename R, typename Arg, typename... Rest>
@@ -102,3 +106,112 @@ namespace detail
 
 template <typename T, std::size_t N>
 using repeat_t = typename detail::repeat_type<T, N>::type;
+
+///////////////////////////////////////////////////////////////////////////////
+// app_clock
+///////////////////////////////////////////////////////////////////////////////
+namespace detail
+{
+    template <typename _ = void>
+    class app_clock_impl
+    {
+    public:
+        using duration   = std::chrono::milliseconds;
+        using rep        = duration::rep;
+        using period     = duration::period;
+        using time_point = std::chrono::time_point<app_clock_impl>;
+        constexpr static bool is_steady = true;
+
+        static time_point now() noexcept
+        {
+            return time_point { std::chrono::duration_cast<duration>(std::chrono::steady_clock::now() - start) };
+        }
+
+    private:
+        static std::chrono::steady_clock::time_point start;
+    };
+
+    // NOTE: initializes the clock on static variable construction
+    // This essentially creates a 0 epoch on application start
+    template <typename _>
+    std::chrono::steady_clock::time_point app_clock_impl<_>::start = std::chrono::steady_clock::now();
+}
+
+using app_clock = detail::app_clock_impl<>;
+
+// NOTE: stolen from http://stackoverflow.com/questions/42138599/how-to-format-stdchrono-durations
+template <typename... Durations, class DurationIn>
+inline std::tuple<Durations...> duration_parts(DurationIn d)
+{
+    std::tuple<Durations...> ret;
+    using swallow = int[];
+    (void)swallow
+    {
+        0,
+        (void((
+            (std::get<Durations>(ret) = std::chrono::duration_cast<Durations>(d)),
+            (d -= std::chrono::duration_cast<DurationIn>(std::get<Durations>(ret)))
+        )), 0)...
+    };
+    return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// print_fmt
+///////////////////////////////////////////////////////////////////////////////
+namespace detail
+{
+    /*
+    // TODO: impl type safety and other stuff
+    inline void print_fmt_impl(std::ostream& os, const char* fmt)
+    {
+        while (*fmt)
+        {
+            if (*fmt == '%')
+            {
+                if (*(fmt + 1) == '%')
+                {
+                    ++fmt;
+                }
+                else
+                {
+                    throw std::exception("print_fmt invalid format string: missing arguments");
+                }
+            }
+            os << *fmt++;
+        }
+    }
+
+    template <typename T, typename... Args>
+    inline void print_fmt_impl(std::ostream& os, const char* fmt, const T& value, const Args&... args)
+    {
+        while (*fmt)
+        {
+            if (*fmt == '%')
+            {
+                if (*(fmt + 1) == '%')
+                {
+                    ++fmt;
+                }
+                else
+                {
+                    os << value;
+                    print_fmt_impl(os, fmt + 2, args...);
+                    return;
+                }
+            }
+            os << *fmt++;
+        }
+        throw std::exception("print_fmt invalid format string: extra arguments");
+    }
+    */
+}
+
+template <typename... Args>
+inline std::string print_fmt(const std::string& fmt, const Args&... args)
+{
+    int size = snprintf(nullptr, 0, fmt.c_str(), args...);
+    std::unique_ptr<char[]> buf(new char[size + 1]);
+    snprintf(buf.get(), size + 1, fmt.c_str(), args...);
+    return std::string(buf.get());
+}

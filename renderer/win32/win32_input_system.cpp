@@ -11,7 +11,7 @@ constexpr USHORT HID_USAGE_GENERIC_KEYBOARD = 0x06;
 ///////////////////////////////////////////////////////////////////////////////
 void Win32MouseDevice::win32_init(HWND window_handle)
 {
-    flog();
+    flog("on hwnd = %#x", window_handle);
 
     RAWINPUTDEVICE ridev[1];
     ridev[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
@@ -60,7 +60,7 @@ void Win32MouseDevice::feed_input(const RAWMOUSE& raw_input)
 ///////////////////////////////////////////////////////////////////////////////
 void Win32KeyboardDevice::win32_init(HWND window_handle)
 {
-    flog();
+    flog("on hwnd = %#x", window_handle);
 
     RAWINPUTDEVICE ridev[1];
     ridev[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
