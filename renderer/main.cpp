@@ -29,12 +29,12 @@ private:
     PolygonMode m_poly_mode = PolygonMode::Line;
     bool m_poly_mode_changed = false;
 
-    FpsCamera m_camera { { 0, 0, 10 } };
+    FpsCamera m_camera { { 0, 0, 15 } };
 
     Viewport m_viewport;
 
     unique_ptr<Mesh> m_mesh;
-    mat4 m_world_matrix[3];
+    mat4 m_world_matrix[3][3];
 };
 
 void MyApplication::on_create()
@@ -86,20 +86,23 @@ void MyApplication::update(float abs_time, float elapsed_time)
     auto& q = m_renderer.get_queue();
     for (int i = 0; i < 3; i++)
     {
-        m_world_matrix[i] = mat4::translate(
-            (i - 1) * 3.5f,
-            0,
-            0
-        );
-        m_world_matrix[i] *= mat4::rotate(
-            (i+1) * abs_time,
-            (i+1) * abs_time,
-            (i+1) * abs_time
-        );
-        //m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
-        m_world_matrix[i] *= mat4::scale(1.0f, 1.0f, 1.0f);
+        for (int j = 0; j < 3; j++)
+        {
+            m_world_matrix[i][j] = mat4::translate(
+                (i - 1) * 3.5f,
+                (j - 1) * 3.5f,
+                0
+            );
+            m_world_matrix[i][j] *= mat4::rotate(
+                (i + j + 1) * abs_time,
+                (i + j + 1) * abs_time,
+                (i + j + 1) * abs_time
+            );
+            //m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
+            //m_world_matrix[i][j] *= mat4::scale(1.0f, 1.0f, 1.0f);
 
-        q.add(m_world_matrix[i], *m_mesh);
+            q.add(m_world_matrix[i][j], *m_mesh);
+        }
     }
     // m_scene.update();
 }
@@ -132,8 +135,6 @@ int main()
 
 // TODO:
 // refactoir happlication
-// vertex buffer (vec3) + decl + model + index buffer
-// inherit app and override update/render, renderer is created by app
 // zbuffer/scanline-tri; display lists + sorting
 // scene tree
 //

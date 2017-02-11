@@ -11,7 +11,6 @@ class IndexBuffer;
 
 namespace detail
 {
-    // TODO: would like to use a lambda here, but no idea how atm
     struct make_mvp
     {
         mat4 operator()(const mat4& world, const mat4& view, const mat4& proj) const
