@@ -9,7 +9,7 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 void Window::init(Application* app, Timer* timer)
 {
-	flog();
+    flog();
     m_app = app;
     m_timer = timer;
 }
@@ -30,7 +30,7 @@ unique_ptr<Window> AppWindowFactory::create()
 {
 	// switch on platform
 #ifdef WIN32
-	dlog("AppWindowFactory creating a Win32AppWindow...");
+	log_info("AppWindowFactory creating a Win32AppWindow...");
 	return unique_ptr<Window>(new Win32Window);
 #endif
     return nullptr;

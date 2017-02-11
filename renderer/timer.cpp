@@ -2,9 +2,10 @@
 #include "stdafx.h"
 #include "timer.h"
 
-Timer::Timer() :
-	m_running(false)
+Timer::Timer()
 {
+    flog("id = %#x", this);
+
 	m_start_time.QuadPart = 0;
 	m_last_count.QuadPart = 0;
 	QueryPerformanceFrequency(&m_freq);

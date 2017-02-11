@@ -15,7 +15,7 @@ constexpr char* WINDOW_CLASS = "WIN32_RENDERER";
 
 void Win32Window::init(Application* app, Timer* timer)
 {
-    flog();
+    flog("id = %#x", this);
     Window::init(app, timer);
 
     init_class();
@@ -138,6 +138,7 @@ void Win32Window::init_window()
 
     if (!m_window_handle)
         throw exception("Call to CreateWindow failed!");
+    dlog("Created hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
 
     // save this pointer for wndproc
     SetWindowLong(m_window_handle, GWL_USERDATA, reinterpret_cast<LONG>(this));
@@ -148,8 +149,6 @@ void Win32Window::init_window()
     ShowWindow(m_window_handle, SW_SHOW);
     UpdateWindow(m_window_handle);
     m_window_state = SIZE_RESTORED;
-
-    dlog("Created window %#x: %s", m_window_handle, WINDOW_TITLE);
 }
 
 void Win32Window::init_render_device()

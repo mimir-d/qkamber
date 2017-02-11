@@ -113,8 +113,6 @@ void MyApplication::render(float abs_time, float elapsed_time)
 
 int main()
 {
-    flog();
-
     Engine engine;
     try
     {

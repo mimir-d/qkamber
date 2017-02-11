@@ -7,8 +7,10 @@
 
 Engine::Engine()
 {
+    // NOTE: this has to be inited _before_ any logging usage
+    Logger::get().set_output_file("qukamber.log");
+
     flog();
-    // init logging
     // init subsystems?
 
     m_global_timer.start();

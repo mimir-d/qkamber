@@ -10,7 +10,7 @@ using namespace Gdiplus;
 
 void Win32SoftwareDevice::win32_init(HWND window_handle)
 {
-    flog();
+    flog("on hwnd = %#x", window_handle);
     m_window_handle = window_handle;
 
     GdiplusStartupInput gdip_startup;
@@ -26,7 +26,8 @@ void Win32SoftwareDevice::win32_init(HWND window_handle)
 
 void Win32SoftwareDevice::win32_shutdown()
 {
-    flog();
+    flog("on hwnd = %#x", m_window_handle);
+
     // delete backbuffer
     DeleteObject(m_backbuffer_brush);
 
