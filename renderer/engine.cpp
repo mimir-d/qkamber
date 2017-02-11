@@ -13,7 +13,7 @@ Engine::Engine()
     flog();
     // init subsystems?
 
-    m_global_timer.start();
+    m_global_timer.resume();
 }
 
 Engine::~Engine()

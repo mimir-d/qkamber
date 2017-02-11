@@ -4,8 +4,9 @@ class Timer
 {
 public:
 	Timer();
+    ~Timer() = default;
 
-	void start();
+	void resume();
 	void stop();
 
 	float get_abs_time();
@@ -13,7 +14,10 @@ public:
 
 private:
 	bool m_running = false;
-    // TODO: use std::chrono
-	LARGE_INTEGER m_start_time, m_last_count;
-	LARGE_INTEGER m_freq;
+    app_clock::time_point m_last = app_clock::now();
 };
+
+inline Timer::Timer()
+{
+    flog("id = %#x", this);
+}

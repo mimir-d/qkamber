@@ -115,26 +115,28 @@ namespace detail
     template <typename _ = void>
     class app_clock_impl
     {
+        using BaseClock = std::chrono::high_resolution_clock;
+
     public:
-        using duration   = std::chrono::milliseconds;
+        using duration   = BaseClock::duration;
         using rep        = duration::rep;
         using period     = duration::period;
         using time_point = std::chrono::time_point<app_clock_impl>;
-        constexpr static bool is_steady = true;
+        constexpr static bool is_steady = BaseClock::is_steady;
 
         static time_point now() noexcept
         {
-            return time_point { std::chrono::duration_cast<duration>(std::chrono::steady_clock::now() - start) };
+            return time_point { std::chrono::duration_cast<duration>(BaseClock::now() - start) };
         }
 
     private:
-        static std::chrono::steady_clock::time_point start;
+        static BaseClock::time_point start;
     };
 
     // NOTE: initializes the clock on static variable construction
     // This essentially creates a 0 epoch on application start
     template <typename _>
-    std::chrono::steady_clock::time_point app_clock_impl<_>::start = std::chrono::steady_clock::now();
+    app_clock_impl<_>::BaseClock::time_point app_clock_impl<_>::start = app_clock_impl::BaseClock::now();
 }
 
 using app_clock = detail::app_clock_impl<>;
