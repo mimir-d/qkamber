@@ -32,7 +32,6 @@ template <typename T, typename Func, typename FuncArgs = all_arg_t<Func>>
 class dirty_t
 {
 public:
-    // TODO: check neg case
     template <
         typename... Args,
         typename = std::enable_if_t<

@@ -16,7 +16,7 @@ void FpsCamera::update(float abs_time, float elapsed_time)
     m_rotation += get_rotation_delta();
     m_rotation.x() = clamp(m_rotation.x(), -PI_2, PI_2);
 
-    // TODO: also fix this
+    // TODO: also fix this, template rotate to produce matN
     const mat4 r4 = mat4::rotate(m_rotation.x(), m_rotation.y(), 0.0f);
     const mat3 rotation {
         r4[0][0], r4[0][1], r4[0][2],

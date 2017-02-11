@@ -22,8 +22,6 @@ void Win32MouseDevice::win32_init(HWND window_handle)
     // TODO: impl shutdown with unregistering
 }
 
-// http://en.cppreference.com/w/cpp/language/final
-// TODO: final methods can be inlined ?
 bool Win32MouseDevice::get_button_pressed(Button button)
 {
     switch (button)
