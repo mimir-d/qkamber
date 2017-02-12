@@ -48,7 +48,7 @@ private:
     void refresh(std::index_sequence<I...>);
 
 private:
-    bool m_dirty;
+    bool m_dirty = true;
     T m_data;
     FuncArgs m_args;
 };
@@ -56,7 +56,6 @@ private:
 template <typename T, typename Func, typename FuncArgs>
 template <typename... Args, typename>
 inline dirty_t<T, Func, FuncArgs>::dirty_t(const Args&... args) :
-    m_dirty(false),
     m_args { args... }
 {}
 

@@ -19,28 +19,28 @@ Mesh::Mesh(RenderDevice& dev)
 
     vec3 vertices[] =
     {
-        vec3(-1.0f,  1.0f,  1.0f),
-        vec3( 1.0f,  1.0f,  1.0f),
-        vec3(-1.0f, -1.0f,  1.0f),
-        vec3( 1.0f, -1.0f,  1.0f),
+        { -1.0f,  1.0f,  1.0f },
+        {  1.0f,  1.0f,  1.0f },
+        { -1.0f, -1.0f,  1.0f },
+        {  1.0f, -1.0f,  1.0f },
 
-        vec3(-1.0f,  1.0f, -1.0f),
-        vec3( 1.0f,  1.0f, -1.0f),
-        vec3(-1.0f, -1.0f, -1.0f),
-        vec3( 1.0f, -1.0f, -1.0f)
+        { -1.0f,  1.0f, -1.0f },
+        {  1.0f,  1.0f, -1.0f },
+        { -1.0f, -1.0f, -1.0f },
+        {  1.0f, -1.0f, -1.0f }
     };
 
     vec3 colors[] =
     {
-        vec3(0.5f, 0.0f, 0.0f),
-        vec3(0.0f, 0.5f, 0.0f),
-        vec3(0.0f, 0.0f, 0.5f),
-        vec3(0.0f, 0.0f, 0.0f),
+        { 0.5f, 0.0f, 0.0f },
+        { 0.0f, 0.5f, 0.0f },
+        { 0.0f, 0.0f, 0.5f },
+        { 0.0f, 0.0f, 0.0f },
 
-        vec3(0.8f, 0.0f, 0.0f),
-        vec3(0.0f, 0.8f, 0.0f),
-        vec3(0.0f, 0.0f, 0.8f),
-        vec3(0.3f, 0.3f, 0.3f)
+        { 0.8f, 0.0f, 0.0f },
+        { 0.0f, 0.8f, 0.0f },
+        { 0.0f, 0.0f, 0.8f },
+        { 0.3f, 0.3f, 0.3f }
     };
 
     const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
@@ -86,15 +86,14 @@ Mesh::Mesh(RenderDevice& dev)
 /*
 Mesh::Mesh(RenderDevice& dev)
 {
-    // hardcode a cube for now
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
     decl->add(0, VDET_FLOAT3, VDES_POSITION);
 
     vec3 vertices[] =
     {
-        {  1, -0.5, 0 },
-        {  0,  0.5, 0 },
-        { -1, -0.5, 0 }
+        { -1.0f, -0.5773f, 0.0f },
+        { 0.0f,   1.1547f, 0.0f },
+        { 1.0f,  -0.5773f, 0.0f }
     };
 
     const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
@@ -112,7 +111,7 @@ Mesh::Mesh(RenderDevice& dev)
     });
 
     const uint16_t indices[] = {
-        0, 1, 2
+        0, 2, 1
     };
     const size_t index_count = sizeof(indices) / sizeof(indices[0]);
 
