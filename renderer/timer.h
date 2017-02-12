@@ -9,12 +9,14 @@ public:
 	void resume();
 	void stop();
 
-	float get_abs_time();
+	float get_abs_time() const;
 	float get_diff_time();
 
 private:
 	bool m_running = false;
-    app_clock::time_point m_last = app_clock::now();
+    float m_total_abs = 0;
+    app_clock::time_point m_last_abs;
+    app_clock::time_point m_last_diff;
 };
 
 inline Timer::Timer()
