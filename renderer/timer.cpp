@@ -9,29 +9,47 @@ void Timer::resume()
 	if (m_running)
 		return;
 
-    m_last = app_clock::now();
+    // restart a new absolute period increment and diff increment
+    m_last_abs = app_clock::now();
+    m_last_diff = app_clock::now();
+
 	m_running = true;
 	dlog("Timer resumed");
 }
 
 void Timer::stop()
 {
-	m_running = false;
+    if (!m_running)
+        return;
+
+    // append the last running period duration to total
+    auto microsec = duration_cast<microseconds>(app_clock::now() - m_last_abs);
+    m_total_abs += static_cast<float>(microsec.count() * 1e-6);
+
+    m_running = false;
 	dlog("Timer stopped");
 }
 
-float Timer::get_abs_time()
+float Timer::get_abs_time() const
 {
-    // TODO: dont flow abs time if timer is stopped
-    auto microsec = duration_cast<microseconds>(app_clock::now().time_since_epoch());
-    return static_cast<float>(microsec.count() * 1e-6);
+    if (!m_running)
+        return m_total_abs;
+
+    // get total time since start of last running period and append to total time
+    auto microsec = duration_cast<microseconds>(app_clock::now() - m_last_abs);
+    return m_total_abs + static_cast<float>(microsec.count() * 1e-6);
 }
 
 float Timer::get_diff_time()
 {
+    if (!m_running)
+        return 0;
+
+    // get duration since last diff call and update time_point
     auto now = app_clock::now();
-    auto microsec = duration_cast<microseconds>(now - m_last);
-    m_last = now;
+    auto microsec = duration_cast<microseconds>(now - m_last_diff);
+    m_last_diff = now;
+
     return static_cast<float>(microsec.count() * 1e-6);
 }
 
