@@ -23,22 +23,23 @@ private:
     void on_resize();
     LRESULT wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+    void pause(bool enable);
     template <typename Func>
     void paused(Func fun);
 
 private:
     RECT m_client_rect;
     int m_window_state;
-    bool m_paused;
+    bool m_paused = false;
 
     HWND m_window_handle;
-    int m_exit_code;
+    int m_exit_code = 0;
 };
 
 template <typename Func>
 inline void Win32Window::paused(Func fun)
 {
-    m_paused = true;
+    pause(true);
     fun();
-    m_paused = false;
+    pause(false);
 }

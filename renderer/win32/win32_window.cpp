@@ -215,7 +215,7 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     switch (message)
     {
         case WM_ACTIVATEAPP:
-            m_paused = !wParam;
+            pause(!wParam);
             break;
 
         case WM_PAINT:
@@ -250,7 +250,7 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             switch (wParam)
             {
                 case SIZE_MINIMIZED:
-                    m_paused = true;
+                    pause(true);
                     break;
 
                 case SIZE_MAXIMIZED:
@@ -258,7 +258,7 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     if (m_window_state == SIZE_MINIMIZED)
                     {
                         // unpause since window was minimized and now restored
-                        m_paused = false;
+                        pause(false);
                     }
                     on_resize();
                     break;
@@ -275,4 +275,19 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     }
 
     return 0;
+}
+
+void Win32Window::pause(bool enabled)
+{
+    if (enabled)
+    {
+        m_timer->stop();
+        dlog("Render stopped");
+    }
+    else
+    {
+        m_timer->resume();
+        dlog("Render resumed");
+    }
+    m_paused = enabled;
 }
