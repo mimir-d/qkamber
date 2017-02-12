@@ -46,7 +46,7 @@ vec2 FpsCamera::get_rotation_delta()
     const float smooth_factor = 1.0f / m_rotation_smooth_frames;
     m_mouse_delta = m_mouse_delta * (1.0f - smooth_factor) + delta * smooth_factor;
 
-    return vec2 { m_mouse_delta.y(), -m_mouse_delta.x() } * m_rotation_scaler;
+    return vec2 { -m_mouse_delta.y(), -m_mouse_delta.x() } * m_rotation_scaler;
 }
 
 vec3 FpsCamera::get_position_delta(float elapsed_time)
