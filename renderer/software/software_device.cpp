@@ -12,58 +12,80 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 {
+    auto& mv = m_mv_matrix.get();
     auto& mvp = m_mvp_matrix.get();
+
     auto& vb = static_cast<const SoftwareVertexBuffer&>(primitive.vertices);
     auto& ib = static_cast<const SoftwareIndexBuffer&>(primitive.indices);
 
-    size_t pos_offset, pos_size;
-    size_t color_offset, color_incr;
-
     // go thru declaration and figure out the offsets and data size
+    size_t pos_offset, color_offset;
     for (auto& di : vb.get_declaration())
     {
         switch (di.semantic)
         {
-            case VDES_POSITION:
-                pos_offset = di.offset;
-                pos_size = VertexDecl::get_elem_size(di.type);
-                break;
-
-            case VDES_COLOR:
-                color_offset = di.offset;
-                color_incr = VertexDecl::get_elem_size(di.type);
-                break;
+            case VDES_POSITION: pos_offset = di.offset;     break;
+            case VDES_COLOR:    color_offset = di.offset;   break;
         }
     }
     size_t vertex_size = vb.get_declaration().get_vertex_size();
 
     // TODO: this will need to change when index size is != uint16_t
     const uint16_t* ib_ptr = reinterpret_cast<const uint16_t*>(ib.data());
+//
+//     mat4 n_mat4 = mv.transpose().invert();
+//     mat3 nmat = {
+//         n_mat4[0][0], n_mat4[0][1], n_mat4[0][2],
+//         n_mat4[1][0], n_mat4[1][1], n_mat4[1][2],
+//         n_mat4[2][0], n_mat4[2][1], n_mat4[2][2]
+//     };
 
-    for (size_t i = 0; i < ib.get_count(); i += 3)
+    // TODO: performance, push these to display lists and parallel process
+    for (size_t i = 0; i < ib.get_count(); i += 3, ib_ptr += 3)
     {
         const float* p0 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[0] * vertex_size);
         const float* p1 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[1] * vertex_size);
         const float* p2 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[2] * vertex_size);
 
+        // TODO: make a ptr-based vec3
+        // transform to view-space
+        vec4 v0v = mv * vec4 { p0[0], p0[1], p0[2], 1.0f };
+        vec4 v1v = mv * vec4 { p1[0], p1[1], p1[2], 1.0f };
+        vec4 v2v = mv * vec4 { p2[0], p2[1], p2[2], 1.0f };
+
+        // TODO: make a vecN to vecM ctor
+        vec3 v0v_3 = { v0v[0], v0v[1], v0v[2] };
+        vec3 v1v_3 = { v1v[0], v1v[1], v1v[2] };
+        vec3 v2v_3 = { v2v[0], v2v[1], v2v[2] };
+
+        // compute view-space normal
+        vec3 dv1 = (v2v_3 - v0v_3);
+        vec3 dv2 = (v1v_3 - v0v_3);
+        // TODO: fix cross operator to work with temporaries
+        vec3 vnv = (dv1 ^ dv2).normalize();
+
+        if (v0v_3 * vnv < 0)
+        {
+            // discard back-facing triangle
+            continue;
+        }
+
         // transform to clip-space
-        vec4 v0 = mvp * vec4 { p0[0], p0[1], p0[2], 1.0f };
-        vec4 v1 = mvp * vec4 { p1[0], p1[1], p1[2], 1.0f };
-        vec4 v2 = mvp * vec4 { p2[0], p2[1], p2[2], 1.0f };
+        vec4 v0c = mvp * vec4 { p0[0], p0[1], p0[2], 1.0f };
+        vec4 v1c = mvp * vec4 { p1[0], p1[1], p1[2], 1.0f };
+        vec4 v2c = mvp * vec4 { p2[0], p2[1], p2[2], 1.0f };
 
         // perspective division
-        v0 *= 1.0f / v0.w();
-        v1 *= 1.0f / v1.w();
-        v2 *= 1.0f / v2.w();
+        v0c *= 1.0f / v0c.w();
+        v1c *= 1.0f / v1c.w();
+        v2c *= 1.0f / v2c.w();
 
         // transform to device space
-        vec3 sv0 = m_clip_matrix * v0;
-        vec3 sv1 = m_clip_matrix * v1;
-        vec3 sv2 = m_clip_matrix * v2;
+        vec3 v0d = m_clip_matrix * v0c;
+        vec3 v1d = m_clip_matrix * v1c;
+        vec3 v2d = m_clip_matrix * v2c;
 
-        draw_tri(sv0.x(), sv0.y(), sv1.x(), sv1.y(), sv2.x(), sv2.y());
-
-        ib_ptr += 3;
+        draw_tri(v0d.x(), v0d.y(), v1d.x(), v1d.y(), v2d.x(), v2d.y());
     }
 }
 

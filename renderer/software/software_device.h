@@ -18,6 +18,14 @@ namespace detail
             return proj * view * world;
         }
     };
+
+    struct make_mv
+    {
+        mat4 operator()(const mat4& world, const mat4& view) const
+        {
+            return view * world;
+        }
+    };
 }
 
 class SoftwareDevice : public RenderDevice
@@ -51,6 +59,7 @@ private:
     mat3x4 m_clip_matrix;
 
     // computed stuff
+    dirty_t<mat4, detail::make_mv> m_mv_matrix = { m_world_matrix, m_view_matrix };
     dirty_t<mat4, detail::make_mvp> m_mvp_matrix = { m_world_matrix, m_view_matrix, m_proj_matrix };
 
     PolygonMode m_poly_mode = PolygonMode::Fill;
@@ -59,19 +68,23 @@ private:
 inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
 {
     m_world_matrix = world_matrix;
+    // TODO: encode the set_dirty inside operator=
     m_mvp_matrix.set_dirty();
+    m_mv_matrix.set_dirty();
 }
 
 inline void SoftwareDevice::set_view_matrix(mat4 view_matrix)
 {
     m_view_matrix = view_matrix;
     m_mvp_matrix.set_dirty();
+    m_mv_matrix.set_dirty();
 }
 
 inline void SoftwareDevice::set_proj_matrix(mat4 proj_matrix)
 {
     m_proj_matrix = proj_matrix;
     m_mvp_matrix.set_dirty();
+    m_mv_matrix.set_dirty();
 }
 
 inline void SoftwareDevice::set_clip_matrix(mat3x4 clip_matrix)
