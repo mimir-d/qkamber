@@ -31,10 +31,13 @@ void Renderer::shutdown()
 	flog();
 }
 
+void Renderer::begin_frame()
+{
+    m_dev->clear();
+}
+
 void Renderer::render()
 {
-    begin_frame();
-
     // set camera and viewport just once
     m_dev->set_view_matrix(m_camera->get_view());
     m_dev->set_proj_matrix(m_camera->get_proj());
@@ -45,13 +48,11 @@ void Renderer::render()
         m_dev->set_world_matrix(qi.world_matrix);
         m_dev->draw_primitive(qi.mesh.get_primitive());
     }
-
-    end_frame();
 }
 
-void Renderer::begin_frame()
+void Renderer::render_text(const std::string& text, int x, int y)
 {
-    m_dev->clear();
+    m_dev->draw_text(text, x, y);
 }
 
 void Renderer::end_frame()
@@ -60,9 +61,7 @@ void Renderer::end_frame()
     m_queue.clear();
 
     // TODO: i get the feeling fps is engine state
-    ostringstream ostr;
-    ostr << "fps: " << fixed << setprecision(2) << m_fps << ends;
-    m_dev->draw_text(ostr.str(), 3, 3);
+    m_dev->draw_text(print_fmt("fps: %.2f", m_fps), 3, 3);
 
     // count fps
     m_frame_number ++;

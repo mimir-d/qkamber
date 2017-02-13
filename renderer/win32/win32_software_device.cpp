@@ -62,14 +62,15 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 ///////////////////////////////////////////////////////////////////////////////
 // Drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32SoftwareDevice::draw_text(const std::string& text, float x, float y)
+void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 {
-    Font font(L"TimesNewRoman", 12);
-    SolidBrush hb(Color(150, 0, 200));
+    const Font font(L"Consolas", 10);
+    const SolidBrush hb(Color(150, 0, 200));
+    const PointF p(static_cast<float>(x), static_cast<float>(y));
 
     unique_ptr<wchar_t[]> wcbuf(new wchar_t[text.size() + 1]);
-    mbstowcs_s(nullptr, wcbuf.get(), text.size(), text.c_str(), text.size());
-    m_graphics->DrawString(wcbuf.get(), text.size(), &font, PointF(3, 3), &hb);
+    mbstowcs_s(nullptr, wcbuf.get(), text.size() + 1, text.c_str(), text.size());
+    m_graphics->DrawString(wcbuf.get(), text.size(), &font, p, &hb);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

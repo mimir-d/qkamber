@@ -6,8 +6,10 @@
 #include "render_buffers.h"
 #include "math3.h"
 
-// TODO: source with dep inj?
+#define MESH_CUBE
 
+// TODO: source with dep inj?
+#ifdef MESH_CUBE
 Mesh::Mesh(RenderDevice& dev)
 {
     flog("id = %#x", this);
@@ -83,7 +85,7 @@ Mesh::Mesh(RenderDevice& dev)
         }
     });
 }
-/*
+#elif defined MESH_TRI
 Mesh::Mesh(RenderDevice& dev)
 {
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
@@ -125,7 +127,49 @@ Mesh::Mesh(RenderDevice& dev)
         }
     });
 }
-*/
+#else
+Mesh::Mesh(RenderDevice& dev)
+{
+    std::unique_ptr<VertexDecl> decl(new VertexDecl);
+    decl->add(0, VDET_FLOAT3, VDES_POSITION);
+
+    vec3 vertices[] =
+    {
+        { 0.0f, 0.0f, 0.0f },
+        { 2.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f }
+    };
+
+    const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
+
+    m_vertices = dev.create_vertex_buffer(std::move(decl), vertex_count);
+    lock_buffer(m_vertices.get(), [&vertices, &vertex_count](float* ptr)
+    {
+        for (size_t i = 0; i < vertex_count; i++)
+        {
+            ptr[0] = vertices[i].x();
+            ptr[1] = vertices[i].y();
+            ptr[2] = vertices[i].z();
+            ptr += 3;
+        }
+    });
+
+    const uint16_t indices[] = {
+        0, 1, 2
+    };
+    const size_t index_count = sizeof(indices) / sizeof(indices[0]);
+
+    m_indices = dev.create_index_buffer(index_count);
+    lock_buffer(m_indices.get(), [&indices, &index_count](uint16_t* ptr)
+    {
+        for (size_t i = 0; i < index_count; i++)
+        {
+            *ptr = indices[i];
+            ptr ++;
+        }
+    });
+}
+#endif
 RenderPrimitive Mesh::get_primitive() const
 {
     return RenderPrimitive(*m_vertices, *m_indices);
