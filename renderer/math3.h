@@ -902,7 +902,7 @@ inline void mat<T, D0, D1>::transform_op<I, 0>::operator()(vec<T, D0>& out, cons
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// matrices impl
+// matrices impl -- right hand math
 ///////////////////////////////////////////////////////////////////////////////
 inline mat4 mat4::identity()
 {
@@ -951,26 +951,27 @@ inline mat4 mat4::scale(float x, float y, float z)
 
 inline mat4 mat4::lookat(const vec3& eye, const vec3& at, const vec3& up)
 {
-    vec3 z = (at - eye).normalize();
-    vec3 x = (z ^ up).normalize();
-    vec3 y = x ^ z;
+    vec3 cz = (eye - at).normalize();
+    vec3 cx = (up ^ cz).normalize();
+    vec3 cy = cz ^ cx;
 
     return mat4 {
-         x[0],  x[1],  x[2], -x * eye,
-         y[0],  y[1],  y[2], -y * eye,
-        -z[0], -z[1], -z[2],  z * eye,
+        cx.x(), cx.y(), cx.z(), -cx * eye,
+        cy.x(), cy.y(), cy.z(), -cy * eye,
+        cz.x(), cz.y(), cz.z(), -cz * eye,
         0, 0, 0, 1
     };
 }
 
 inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
 {
-    const float ti = 1.0f / tan(fov / 2);
+    const float h = 1.0f / tan(fov / 2);
+    const float r = f / (n - f);
 
     return mat4 {
-        ti / aspect, 0, 0, 0,
-        0, ti, 0, 0,
-        0, 0, f / (n-f), n * f / (n-f),
+        h / aspect, 0, 0, 0,
+        0, h, 0, 0,
+        0, 0, r, r * n,
         0, 0, -1, 0
     };
 }
