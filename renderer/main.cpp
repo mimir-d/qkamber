@@ -111,7 +111,15 @@ void MyApplication::render(float abs_time, float elapsed_time)
 {
     // m_scene.render();
 
+    m_renderer.begin_frame();
     m_renderer.render();
+
+    vec3 p = m_camera.get_position();
+    vec2 r = m_camera.get_rotation() * (180.0f / PI);
+    m_renderer.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
+    m_renderer.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
+
+    m_renderer.end_frame();
 }
 
 int main()

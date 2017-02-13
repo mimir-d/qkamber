@@ -12,7 +12,7 @@ public:
     void win32_resize(PRECT client_rect);
 
     // drawing methods
-    void draw_text(const std::string& text, float x, float y) final;
+    void draw_text(const std::string& text, int x, int y) final;
 
     // framebuffer methods
     void clear() final;

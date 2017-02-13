@@ -20,7 +20,7 @@ class RenderDevice
 public:
     // drawing methods
     virtual void draw_primitive(const RenderPrimitive& primitive) = 0;
-    virtual void draw_text(const std::string& text, float x, float y) = 0;
+    virtual void draw_text(const std::string& text, int x, int y) = 0;
 
     // device state methods
     virtual void set_world_matrix(mat4 world_matrix) = 0;
@@ -45,7 +45,11 @@ public:
 	void init(Timer* timer);
 	void shutdown();
 
+    void begin_frame();
     void render();
+    // TODO: temp until some gui happens
+    void render_text(const std::string& text, int x, int y);
+    void end_frame();
 
     RenderDevice& get_device();
     RenderQueue& get_queue();
@@ -54,10 +58,6 @@ public:
     void set_viewport(Viewport* viewport);
 
     float get_fps() const;
-
-private:
-    void begin_frame();
-    void end_frame();
 
 protected:
     std::unique_ptr<RenderDevice> m_dev;

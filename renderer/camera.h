@@ -24,6 +24,9 @@ public:
     void set_proj_params(int width, int height);
     void update(float abs_time, float elapsed_time);
 
+    const vec3& get_position() const;
+    const vec2& get_rotation() const;
+
 private:
     vec2 get_rotation_delta();
     vec3 get_position_delta(float elapsed_time);
@@ -65,4 +68,14 @@ inline FpsCamera::FpsCamera(const vec3& position) :
     m_position(position)
 {
     flog("id = %#x", this);
+}
+
+inline const vec3& FpsCamera::get_position() const
+{
+    return m_position;
+}
+
+inline const vec2& FpsCamera::get_rotation() const
+{
+    return m_rotation;
 }
