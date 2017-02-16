@@ -150,14 +150,16 @@ void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint
 
     m_graphics->DrawPolygon(&p, points, count);
 }
-
-inline float half_space(float x0, float y0, float x1, float y1, float x2, float y2)
-{
-    return (x0 - x1) * (y2 - y0) - (y0 - y1) * (x2 - x0);
-}
+//
+// inline float half_space(float x0, float y0, float x1, float y1, float x2, float y2)
+// {
+//     return (x0 - x1) * (y2 - y0) - (y0 - y1) * (x2 - x0);
+// }
 
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
+    // NOTE: shamelessly stolen from http://forum.devmaster.net/t/advanced-rasterization/6145
+    // TODO: read this http://www.cs.unc.edu/~olano/papers/2dh-tri/
     const float x0 = p0.position.x();
     const float x1 = p1.position.x();
     const float x2 = p2.position.x();
@@ -167,24 +169,54 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const float y2 = p2.position.y();
 
     // min bounding box
-    int min_x = static_cast<int>(::min(x0, x1, x2));
-    int max_x = static_cast<int>(::max(x0, x1, x2));
-    int min_y = static_cast<int>(::min(y0, y1, y2));
-    int max_y = static_cast<int>(::max(y0, y1, y2));
+    const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
+    const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), static_cast<int>(m_rect.right - m_rect.left));
+    const int min_y = ::max(static_cast<int>(::min(y0, y1, y2)), 0);
+    const int max_y = ::min(static_cast<int>(::max(y0, y1, y2)), static_cast<int>(m_rect.bottom - m_rect.top));
+
+    // deltas
+    const float dx01 = x0 - x1;
+    const float dx12 = x1 - x2;
+    const float dx20 = x2 - x0;
+
+    const float dy01 = y0 - y1;
+    const float dy12 = y1 - y2;
+    const float dy20 = y2 - y0;
+
+    // constant part of half-edge functions
+    const float c0 = dy01 * x0 - dx01 * y0;
+    const float c1 = dy12 * x1 - dx12 * y1;
+    const float c2 = dy20 * x2 - dx20 * y2;
+
+    // running half-edge values
+    float he_y0 = c0 + dx01 * min_y - dy01 * min_x;
+    float he_y1 = c1 + dx12 * min_y - dy12 * min_x;
+    float he_y2 = c2 + dx20 * min_y - dy20 * min_x;
 
     DWORD* color_ptr = m_backbuffer_bits + min_y * m_backbuffer_stride;
 
     for (int y = min_y; y <= max_y; y++)
     {
+        // Start value for horizontal scan
+        float he_x0 = he_y0;
+        float he_x1 = he_y1;
+        float he_x2 = he_y2;
+
         for (int x = min_x; x <= max_x; x++)
         {
-            if (half_space(x0, y0, x1, y1, static_cast<float>(x), static_cast<float>(y)) > 0 &&
-                half_space(x1, y1, x2, y2, static_cast<float>(x), static_cast<float>(y)) > 0 &&
-                half_space(x2, y2, x0, y0, static_cast<float>(x), static_cast<float>(y)) > 0
-            ) {
+            if (he_x0 > 0 && he_x1 > 0 && he_x2 > 0)
+            {
                 color_ptr[x] = 0x00FF0000;
             }
+
+            he_x0 -= dy01;
+            he_x1 -= dy12;
+            he_x2 -= dy20;
         }
+
+        he_y0 += dx01;
+        he_y1 += dx12;
+        he_y2 += dx20;
         color_ptr += m_backbuffer_stride;
     }
 }
