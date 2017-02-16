@@ -30,6 +30,14 @@ namespace detail
 
 class SoftwareDevice : public RenderDevice
 {
+protected:
+    struct DevicePoint
+    {
+        vec3 position;
+        vec3 color;
+        //vec2 tex_coords;
+    };
+
 public:
     // drawing methods
     void draw_primitive(const RenderPrimitive& primitive) final;
@@ -47,12 +55,10 @@ public:
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) final;
 
 protected:
-    virtual void draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
-    virtual void draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
-    virtual void draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2) = 0;
+    virtual void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) = 0;
 
-private:
-    void draw_tri(float x0, float y0, float x1, float y1, float x2, float y2);
+protected:
+    PolygonMode m_poly_mode = PolygonMode::Fill;
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -61,10 +67,9 @@ private:
     // computed stuff
     dirty_t<mat4, detail::make_mv> m_mv_matrix = { m_world_matrix, m_view_matrix };
     dirty_t<mat4, detail::make_mvp> m_mvp_matrix = { m_world_matrix, m_view_matrix, m_proj_matrix };
-
-    PolygonMode m_poly_mode = PolygonMode::Fill;
 };
 
+// TODO: move this to a RenderContext
 inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
 {
     m_world_matrix = world_matrix;

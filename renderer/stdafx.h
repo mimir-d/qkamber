@@ -12,6 +12,9 @@
 #   include <ntddkbd.h>
 #   include <objidl.h>
 #   include <gdiplus.h>
+// NOTE: these are defined by winapi and shadow std::min/max
+#   undef min
+#   undef max
 #endif
 
 #include <iostream>

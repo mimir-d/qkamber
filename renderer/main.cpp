@@ -26,7 +26,7 @@ public:
     void render(float abs_time, float elapsed_time) override;
 
 private:
-    PolygonMode m_poly_mode = PolygonMode::Line;
+    PolygonMode m_poly_mode = PolygonMode::Fill;
     bool m_poly_mode_changed = false;
 
     FpsCamera m_camera { { 0, 0, 15 } };

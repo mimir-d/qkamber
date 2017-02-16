@@ -24,13 +24,13 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     auto& ib = static_cast<const SoftwareIndexBuffer&>(primitive.indices);
 
     // go thru declaration and figure out the offsets and data size
-    size_t pos_offset, color_offset;
+    size_t position_offset, color_offset;
     for (auto& di : vb.get_declaration())
     {
         switch (di.semantic)
         {
-            case VDES_POSITION: pos_offset = di.offset;     break;
-            case VDES_COLOR:    color_offset = di.offset;   break;
+            case VDES_POSITION: position_offset = di.offset; break;
+            case VDES_COLOR:    color_offset = di.offset;    break;
         }
     }
     size_t vertex_size = vb.get_declaration().get_vertex_size();
@@ -48,15 +48,26 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     // TODO: performance, push these to display lists and parallel process
     for (size_t i = 0; i < ib.get_count(); i += 3, ib_ptr += 3)
     {
-        const float* p0 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[0] * vertex_size);
-        const float* p1 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[1] * vertex_size);
-        const float* p2 = reinterpret_cast<const float*>(vb.data() + pos_offset + ib_ptr[2] * vertex_size);
+        // vertex color computations
+        const float* p_c0 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[0] * vertex_size);
+        const float* p_c1 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[1] * vertex_size);
+        const float* p_c2 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[2] * vertex_size);
+
+        // TODO: make a ptr-based vec3
+        vec3 c0 { p_c0[0], p_c0[1], p_c0[2] };
+        vec3 c1 { p_c1[0], p_c1[1], p_c1[2] };
+        vec3 c2 { p_c2[0], p_c2[1], p_c2[2] };
+
+        // vertex position computations
+        const float* p_p0 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[0] * vertex_size);
+        const float* p_p1 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[1] * vertex_size);
+        const float* p_p2 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[2] * vertex_size);
 
         // TODO: make a ptr-based vec3
         // transform to view-space
-        vec4 v0v = mv * vec4 { p0[0], p0[1], p0[2], 1.0f };
-        vec4 v1v = mv * vec4 { p1[0], p1[1], p1[2], 1.0f };
-        vec4 v2v = mv * vec4 { p2[0], p2[1], p2[2], 1.0f };
+        vec4 v0v = mv * vec4 { p_p0[0], p_p0[1], p_p0[2], 1.0f };
+        vec4 v1v = mv * vec4 { p_p1[0], p_p1[1], p_p1[2], 1.0f };
+        vec4 v2v = mv * vec4 { p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
         // TODO: make a vecN to vecM ctor
         vec3 v0v_3 = { v0v[0], v0v[1], v0v[2] };
@@ -76,9 +87,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         }
 
         // transform to clip-space
-        vec4 v0c = mvp * vec4 { p0[0], p0[1], p0[2], 1.0f };
-        vec4 v1c = mvp * vec4 { p1[0], p1[1], p1[2], 1.0f };
-        vec4 v2c = mvp * vec4 { p2[0], p2[1], p2[2], 1.0f };
+        vec4 v0c = mvp * vec4 { p_p0[0], p_p0[1], p_p0[2], 1.0f };
+        vec4 v1c = mvp * vec4 { p_p1[0], p_p1[1], p_p1[2], 1.0f };
+        vec4 v2c = mvp * vec4 { p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
         // infinity transition when any vertices of the triangles are on +plane and the other on -plane
         int s0 = sgn(v0c.w());
@@ -115,7 +126,11 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         vec3 v1d = m_clip_matrix * v1c;
         vec3 v2d = m_clip_matrix * v2c;
 
-        draw_tri(v0d.x(), v0d.y(), v1d.x(), v1d.y(), v2d.x(), v2d.y());
+        const DevicePoint dp0 { { v0d.x(), v0d.y(), v0c.z() }, c0 };
+        const DevicePoint dp1 { { v1d.x(), v1d.y(), v1c.z() }, c1 };
+        const DevicePoint dp2 { { v2d.x(), v2d.y(), v2c.z() }, c2 };
+
+        draw_tri(dp0, dp1, dp2);
     }
 }
 
@@ -134,23 +149,4 @@ unique_ptr<IndexBuffer> SoftwareDevice::create_index_buffer(size_t count)
     auto ret = unique_ptr<IndexBuffer>(new SoftwareIndexBuffer(count));
     dlog("Created index buffer %#x", ret.get());
     return ret;
-}
-
-void SoftwareDevice::draw_tri(float x0, float y0, float x1, float y1, float x2, float y2)
-{
-    // TODO: refactor this for speed
-    switch (m_poly_mode)
-    {
-        case PolygonMode::Point:
-            draw_tri_point(x0, y0, x1, y1, x2, y2);
-            break;
-
-        case PolygonMode::Line:
-            draw_tri_line(x0, y0, x1, y1, x2, y2);
-            break;
-
-        case PolygonMode::Fill:
-            draw_tri_fill(x0, y0, x1, y1, x2, y2);
-            break;
-    }
 }

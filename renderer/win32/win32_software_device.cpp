@@ -49,11 +49,32 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
     CopyRect(&m_rect, client_rect);
     GetClientRect(m_window_handle, &m_rect);
     m_backbuffer = CreateCompatibleDC(m_frontbuffer);
-    m_backbuffer_bitmap = CreateCompatibleBitmap(
+
+    if (GetDeviceCaps(m_frontbuffer, BITSPIXEL) != 32)
+    {
+        // TODO: fix this with forcing the window bpp thru wgl
+        throw exception("window needs to be 32bpp");
+    }
+
+    BITMAPINFO bi = { 0 };
+    BITMAPINFOHEADER& bmi = bi.bmiHeader;
+    bmi.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.biPlanes = GetDeviceCaps(m_frontbuffer, PLANES);
+    bmi.biBitCount = GetDeviceCaps(m_frontbuffer, BITSPIXEL);
+    // limit to 1920x1080 because of fixed point math (2048x2048 max)
+    bmi.biWidth = max(client_rect->right - client_rect->left, 1920L);
+    bmi.biHeight = -max(client_rect->bottom - client_rect->top, 1080L);
+    bmi.biCompression = BI_RGB;
+
+    m_backbuffer_bitmap = CreateDIBSection(
         m_frontbuffer,
-        client_rect->right - client_rect->left,
-        client_rect->bottom - client_rect->top
+        &bi,
+        DIB_RGB_COLORS,
+        reinterpret_cast<PVOID*>(&m_backbuffer_bits),
+        nullptr, 0
     );
+
+    m_backbuffer_stride = ((bmi.biWidth * bmi.biBitCount + 31) / 32);
 
     SelectObject(m_backbuffer, m_backbuffer_bitmap);
     m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
@@ -97,38 +118,73 @@ void Win32SoftwareDevice::swap_buffers()
 ///////////////////////////////////////////////////////////////////////////////
 // Low-level drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void Win32SoftwareDevice::draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32SoftwareDevice::draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
+{
+    switch (m_poly_mode)
+    {
+        case PolygonMode::Point: draw_tri_point(p0, p1, p2); break;
+        case PolygonMode::Line:  draw_tri_line(p0, p1, p2);  break;
+        case PolygonMode::Fill:  draw_tri_fill(p0, p1, p2);  break;
+    }
+}
+
+void Win32SoftwareDevice::draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     const SolidBrush hb(Color(150, 0, 200));
 
-    m_graphics->FillEllipse(&hb, x0, y0, 5.0f, 5.0f);
-    m_graphics->FillEllipse(&hb, x1, y1, 5.0f, 5.0f);
-    m_graphics->FillEllipse(&hb, x2, y2, 5.0f, 5.0f);
+    m_graphics->FillEllipse(&hb, p0.position.x(), p0.position.y(), 5.0f, 5.0f);
+    m_graphics->FillEllipse(&hb, p1.position.x(), p1.position.y(), 5.0f, 5.0f);
+    m_graphics->FillEllipse(&hb, p2.position.x(), p2.position.y(), 5.0f, 5.0f);
 }
 
-void Win32SoftwareDevice::draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2)
+void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     const Pen p(Color(255, 150, 0, 255));
     const PointF points[] =
     {
-        {x0, y0},
-        {x1, y1},
-        {x2, y2}
+        {p0.position.x(), p0.position.y()},
+        {p1.position.x(), p1.position.y()},
+        {p2.position.x(), p2.position.y()}
     };
     const size_t count = sizeof(points) / sizeof(points[0]);
 
     m_graphics->DrawPolygon(&p, points, count);
 }
 
-void Win32SoftwareDevice::draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2)
+inline float half_space(float x0, float y0, float x1, float y1, float x2, float y2)
 {
-    const SolidBrush hb(Color(150, 0, 200));
-    const PointF points[] = {
-        { x0, y0 },
-        { x1, y1 },
-        { x2, y2 }
-    };
-    const size_t count = sizeof(points) / sizeof(points[0]);
+    return (x0 - x1) * (y2 - y0) - (y0 - y1) * (x2 - x0);
+}
 
-    m_graphics->FillPolygon(&hb, points, count);
+void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
+{
+    const float x0 = p0.position.x();
+    const float x1 = p1.position.x();
+    const float x2 = p2.position.x();
+
+    const float y0 = p0.position.y();
+    const float y1 = p1.position.y();
+    const float y2 = p2.position.y();
+
+    // min bounding box
+    int min_x = static_cast<int>(::min(x0, x1, x2));
+    int max_x = static_cast<int>(::max(x0, x1, x2));
+    int min_y = static_cast<int>(::min(y0, y1, y2));
+    int max_y = static_cast<int>(::max(y0, y1, y2));
+
+    DWORD* color_ptr = m_backbuffer_bits + min_y * m_backbuffer_stride;
+
+    for (int y = min_y; y <= max_y; y++)
+    {
+        for (int x = min_x; x <= max_x; x++)
+        {
+            if (half_space(x0, y0, x1, y1, static_cast<float>(x), static_cast<float>(y)) > 0 &&
+                half_space(x1, y1, x2, y2, static_cast<float>(x), static_cast<float>(y)) > 0 &&
+                half_space(x2, y2, x0, y0, static_cast<float>(x), static_cast<float>(y)) > 0
+            ) {
+                color_ptr[x] = 0x00FF0000;
+            }
+        }
+        color_ptr += m_backbuffer_stride;
+    }
 }
