@@ -27,6 +27,19 @@ constexpr float PI_4    = 0.785398163f;
 
 inline float frand();
 
+// variadic min/max
+template <
+    typename T, typename... Args,
+    typename = std::enable_if_t<std::is_same<repeat_t<T, sizeof...(Args)>, std::tuple<Args...>>::value>
+>
+inline const T& min(const T& a, const Args&... args);
+
+template <
+    typename T, typename... Args,
+    typename = std::enable_if_t<std::is_same<repeat_t<T, sizeof...(Args)>, std::tuple<Args...>>::value>
+>
+inline const T& max(const T& a, const Args&... args);
+
 template <typename T>
 inline T clamp(T value, T min_value, T max_value);
 
@@ -432,6 +445,46 @@ inline float frand()
     return gen();
 }
 
+namespace detail
+{
+    template <typename T>
+    inline const T& min_impl(const T& a)
+    {
+        return a;
+    }
+
+    template <typename T, typename... Args>
+    inline const T& min_impl(const T& a, const T& b, const Args&... args)
+    {
+        return min_impl(a < b ? a : b, args...);
+    }
+
+    template <typename T>
+    inline const T& max_impl(const T& a)
+    {
+        return a;
+    }
+
+    template <typename T, typename... Args>
+    inline const T& max_impl(const T& a, const T& b, const Args&... args)
+    {
+        return max_impl(a > b ? a : b, args...);
+    }
+}
+
+// variadic min/max with min 1 arg
+template <typename T, typename... Args, typename>
+inline const T& min(const T& a, const Args&... args)
+{
+    return detail::min_impl(a, args...);
+}
+
+template <typename T, typename... Args, typename>
+inline const T& max(const T& a, const Args&... args)
+{
+    return detail::max_impl(a, args...);
+}
+
 template <typename T>
 inline T clamp(T value, T min_value, T max_value)
 {
@@ -506,12 +559,7 @@ inline vec<T, N> vec<T, N>::normalize() const
     vec ret;
 
     T len = length();
-#ifdef WIN32
-    // RANT: windows.h defines min/max as macros
-    if (len > (std::numeric_limits<float>::min)())
-#else
     if (len > std::numeric_limits<float>::min())
-#endif
         return detail::iterate1<N, mul_op>()(ret, *this, 1.0f / len);
 
     return ret;

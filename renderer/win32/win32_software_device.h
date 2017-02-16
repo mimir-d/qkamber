@@ -19,9 +19,12 @@ public:
     void swap_buffers() final;
 
 protected:
-    void draw_tri_point(float x0, float y0, float x1, float y1, float x2, float y2) final;
-    void draw_tri_line(float x0, float y0, float x1, float y1, float x2, float y2) final;
-    void draw_tri_fill(float x0, float y0, float x1, float y1, float x2, float y2) final;
+    void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) final;
+
+private:
+    void draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
+    void draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
+    void draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
 
 private:
     RECT m_rect;
@@ -29,7 +32,11 @@ private:
 
     HBRUSH m_backbuffer_brush;
     HDC m_backbuffer = static_cast<HDC>(INVALID_HANDLE_VALUE);
+
     HBITMAP m_backbuffer_bitmap = static_cast<HBITMAP>(INVALID_HANDLE_VALUE);
+    // TODO: extract to a RenderTarget
+    DWORD* m_backbuffer_bits;
+    DWORD m_backbuffer_stride;
 
     ULONG_PTR m_gdiplus_token;
     HWND m_window_handle;
