@@ -93,11 +93,11 @@ void MyApplication::update(float abs_time, float elapsed_time)
                 (j - 1) * 3.5f,
                 0
             );
-            m_world_matrix[i][j] *= mat4::rotate(
-                (i + j + 1) * abs_time,
-                (i + j + 1) * abs_time,
-                (i + j + 1) * abs_time
-            );
+            //m_world_matrix[i][j] *= mat4::rotate(
+            //    (i + j + 1) * abs_time,
+            //    (i + j + 1) * abs_time,
+            //    (i + j + 1) * abs_time
+            //);
             //m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
             //m_world_matrix[i][j] *= mat4::scale(1.0f, 1.0f, 1.0f);
 

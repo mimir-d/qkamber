@@ -1,0 +1,44 @@
+-- this file is used for rasterization math computation optimizing
+
+hypothesis: a point is inside the triangle if the 3 halfedge functions are positive wrt triangle edges
+
+half-edge p0, p1, p2 := (x0-x1) * (y2-y0) - (y0-y1) * (x2-x0)
+
+for p = x,y inside the min_y, min_x to max_y, max_x
+{
+    he_x0 = x0, x1, p
+    (x0-x1) * (y-y0) - (y0-y1) * (x-x0)
+    dx01 * (y-y0) - dy01 * (x-x0) = dx01 * y - dy01 * x + (dy01 * x0 - dx01 * y0) = c0 + dx01 * y - dy01 * x
+
+    he_x0 = x1, x2, p
+    (x1-x2) * (y-y1) - (y1-y2) * (x-x1)
+    dx12 * (y-y1) - dy12 * (x-x1) = dx12 * y - dy12 * x + (dy12 * x1 - dx12 * y1) = c1 + dx12 * y - dy12 * x
+
+    he_x0 = x2, x0, p
+    (x2-x0) * (y-y2) - (y2-y0) * (x-x2)
+    dx20 * (y-y2) - dy20 * (x-x2) = dx20 * y - dy20 * x + (dy20 * x2 - dx20 * y2) = c2 + dx20 * y - dy20 * x
+}
+
+# incremental
+
+he_0 = c0 + dx01 * (ymin+y) - dy01 * (xmin+x); dx = dx01, dy = -dy01
+he_1 = c1 + dx12 * (ymin+y) - dy12 * (xmin+x); dx = dx12, dy = -dy12
+he_2 = c2 + dx20 * (ymin+y) - dy20 * (xmin+x); dx = dx20, dy = -dy20
+
+# interpolation
+
+A = he_x0 + he_x1 + he_x2
+A = dx01 * dy20 - dy01 * dx20
+
+lerp_p = p2 * (A0 / A) + p0 * (A1 / A) + p1 * (A2 / A) = (p2 * A0 + p0 * A1 + p1 * A2) / A;
+lerp_p = 1/A * (
+    p2 * (c0 + dx01 * (ymin+y) - dy01 * (xmin+x)) +
+    p0 * (c1 + dx12 * (ymin+y) - dy12 * (xmin+x)) +
+    p1 * (c2 + dx20 * (ymin+y) - dy20 * (xmin+x))
+)
+
+lerp_c = -1/A = -1.0f / (dx01 * dy20 - dy01 * dx20)
+
+lerp_p0 = 1/A * (p2 * he_0 + p0 * he_1 + p1 * he_2)
+dp_dy = -1/A * (p2 * dy01 + p0 * dy12 + p1 * dy20) * lerp_c
+dp_dx =  1/A * (p2 * dx01 + p0 * dx12 + p1 * dx20) * lerp_c
