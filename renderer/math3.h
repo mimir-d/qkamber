@@ -43,6 +43,15 @@ inline const T& max(const T& a, const Args&... args);
 template <typename T>
 inline T clamp(T value, T min_value, T max_value);
 
+// integer fixed point math
+template <
+    typename T, size_t Digits,
+    typename = std::enable_if_t<std::is_integral<T>::value>
+>
+inline T to_fixedpoint(float x);
+
+inline int to_fp4(float x);
+
 // TODO: rename or move to namespace?
 struct no_init_tag {};
 
@@ -493,6 +502,27 @@ inline T clamp(T value, T min_value, T max_value)
     if (value < min_value)
         return min_value;
     return value;
+}
+
+template <typename T, size_t Digits, typename>
+inline T to_fixedpoint(float x)
+{
+    const float shifted_x = static_cast<float>(1 << Digits) * x;
+    T t;
+
+    // TODO: this might not compile on gcc/clang
+    __asm
+    {
+        fld   shifted_x
+        fistp t
+    }
+
+    return t;
+}
+
+inline int to_fp4(float x)
+{
+    return to_fixedpoint<int, 4>(x);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

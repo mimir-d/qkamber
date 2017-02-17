@@ -34,15 +34,15 @@ Mesh::Mesh(RenderDevice& dev)
 
     vec3 colors[] =
     {
-        { 0.5f, 0.0f, 0.0f },
-        { 0.0f, 0.5f, 0.0f },
-        { 0.0f, 0.0f, 0.5f },
-        { 0.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
 
-        { 0.8f, 0.0f, 0.0f },
-        { 0.0f, 0.8f, 0.0f },
-        { 0.0f, 0.0f, 0.8f },
-        { 0.3f, 0.3f, 0.3f }
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 0.5f },
+        { 0.0f, 0.5f, 0.0f },
+        { 0.5f, 0.0f, 0.0f },
     };
 
     const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
@@ -90,6 +90,7 @@ Mesh::Mesh(RenderDevice& dev)
 {
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
     decl->add(0, VDET_FLOAT3, VDES_POSITION);
+    decl->add(3 * sizeof(float), VDET_FLOAT3, VDES_COLOR);
 
     vec3 vertices[] =
     {
@@ -98,16 +99,28 @@ Mesh::Mesh(RenderDevice& dev)
         { 1.0f,  -0.5773f, 0.0f }
     };
 
+    vec3 colors[] =
+    {
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
     const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
 
     m_vertices = dev.create_vertex_buffer(std::move(decl), vertex_count);
-    lock_buffer(m_vertices.get(), [&vertices, &vertex_count](float* ptr)
+    lock_buffer(m_vertices.get(), [&vertices, &colors, &vertex_count](float* ptr)
     {
         for (size_t i = 0; i < vertex_count; i++)
         {
             ptr[0] = vertices[i].x();
             ptr[1] = vertices[i].y();
             ptr[2] = vertices[i].z();
+            ptr += 3;
+
+            ptr[0] = colors[i].x();
+            ptr[1] = colors[i].y();
+            ptr[2] = colors[i].z();
             ptr += 3;
         }
     });
@@ -132,6 +145,7 @@ Mesh::Mesh(RenderDevice& dev)
 {
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
     decl->add(0, VDET_FLOAT3, VDES_POSITION);
+    decl->add(3 * sizeof(float), VDET_FLOAT3, VDES_COLOR);
 
     vec3 vertices[] =
     {
@@ -140,16 +154,28 @@ Mesh::Mesh(RenderDevice& dev)
         { 0.0f, 1.0f, 0.0f }
     };
 
+    vec3 colors[] =
+    {
+        { 1.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
     const size_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
 
     m_vertices = dev.create_vertex_buffer(std::move(decl), vertex_count);
-    lock_buffer(m_vertices.get(), [&vertices, &vertex_count](float* ptr)
+    lock_buffer(m_vertices.get(), [&vertices, &colors, &vertex_count](float* ptr)
     {
         for (size_t i = 0; i < vertex_count; i++)
         {
             ptr[0] = vertices[i].x();
             ptr[1] = vertices[i].y();
             ptr[2] = vertices[i].z();
+            ptr += 3;
+
+            ptr[0] = colors[i].x();
+            ptr[1] = colors[i].y();
+            ptr[2] = colors[i].z();
             ptr += 3;
         }
     });
