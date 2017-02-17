@@ -71,7 +71,12 @@ vec3 FpsCamera::get_position_delta(float elapsed_time)
     else if (m_accel_time > 0)
     {
         // update velocity based on dragging acceleration
+        // NOTE: in low fps, elapsed_time can be big and this overshoots, so if the case, just 0 the velocity
+        vec3 old_velocity = m_velocity;
         m_velocity -= m_acceleration * elapsed_time;
+        if (old_velocity * m_velocity < 0)
+            m_velocity = 0.0f;
+
         m_accel_time -= elapsed_time;
     }
     else
