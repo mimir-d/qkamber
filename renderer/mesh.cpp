@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "mesh.h"
 
 #include "renderer.h"

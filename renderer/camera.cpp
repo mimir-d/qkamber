@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "camera.h"
 
 #include "input_system.h"

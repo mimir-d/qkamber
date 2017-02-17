@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "win32_software_device.h"
 
 #include "render_primitive.h"

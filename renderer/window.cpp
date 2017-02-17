@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "window.h"
 #include "win32/win32_window.h"
 using namespace std;

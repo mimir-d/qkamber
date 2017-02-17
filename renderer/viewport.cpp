@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "viewport.h"
 
 void Viewport::set_params(int width, int height)

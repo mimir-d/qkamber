@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "resource.h"
 #include "app.h"
 #include "win32_window.h"

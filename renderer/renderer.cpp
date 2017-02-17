@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "renderer.h"
 #include "render_queue.h"
 #include "render_primitive.h"

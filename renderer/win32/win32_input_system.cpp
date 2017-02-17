@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "win32_input_system.h"
 
 constexpr USHORT HID_USAGE_PAGE_GENERIC = 0x01;

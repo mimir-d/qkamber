@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "render_buffers.h"
 
 size_t VertexDecl::get_vertex_size() const

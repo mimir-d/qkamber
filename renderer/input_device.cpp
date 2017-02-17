@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "precompiled.h"
 #include "input_system.h"
 #include "win32/win32_input_system.h"
 
