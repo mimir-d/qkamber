@@ -36,7 +36,7 @@ void Win32Window::mainloop()
         {
             if (msg.message == WM_QUIT)
             {
-                m_exit_code = msg.wParam;
+                m_exit_code = static_cast<int>(msg.wParam);
                 return;
             }
 
@@ -79,7 +79,7 @@ void Win32Window::init_class()
 
     wcex.lpfnWndProc    = [](HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) -> LRESULT
     {
-        Win32Window* window = reinterpret_cast<Win32Window*>(GetWindowLong(hWnd, GWL_USERDATA));
+        Win32Window* window = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
         // get input
         // TODO: this should probably have its own method
@@ -141,7 +141,7 @@ void Win32Window::init_window()
     dlog("Created hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
 
     // save this pointer for wndproc
-    SetWindowLong(m_window_handle, GWL_USERDATA, reinterpret_cast<LONG>(this));
+    SetWindowLongPtr(m_window_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
     // need to init here because of update window
     init_render_device();
@@ -263,7 +263,7 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     on_resize();
                     break;
             }
-            m_window_state = wParam;
+            m_window_state = static_cast<int>(wParam);
             break;
 
         case WM_DESTROY:
