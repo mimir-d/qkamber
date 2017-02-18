@@ -84,6 +84,8 @@ Mesh::Mesh(RenderDevice& dev)
             ptr ++;
         }
     });
+
+    log_info("Created mesh %#x", this);
 }
 #elif defined MESH_TRI
 Mesh::Mesh(RenderDevice& dev)

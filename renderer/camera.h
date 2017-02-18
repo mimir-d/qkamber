@@ -68,6 +68,7 @@ inline FpsCamera::FpsCamera(const vec3& position) :
     m_position(position)
 {
     flog("id = %#x", this);
+    log_info("Created FpsCamera at %.3f %.3f %.3f", position.x(), position.y(), position.z());
 }
 
 inline const vec3& FpsCamera::get_position() const
