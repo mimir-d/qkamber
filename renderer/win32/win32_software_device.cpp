@@ -17,7 +17,7 @@ void Win32SoftwareDevice::win32_init(HWND window_handle)
     GdiplusStartup(&m_gdiplus_token, &gdip_startup, nullptr);
 
     m_frontbuffer = GetDC(m_window_handle);
-    m_backbuffer_brush = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+    m_backbuffer_brush = CreateSolidBrush(0);
 
     RECT rc;
     GetClientRect(m_window_handle, &rc);
@@ -31,6 +31,7 @@ void Win32SoftwareDevice::win32_shutdown()
     // delete backbuffer
     DeleteObject(m_backbuffer_brush);
 
+    delete[] m_zbuffer;
     DeleteObject(m_backbuffer_bitmap);
     DeleteDC(m_backbuffer);
     ReleaseDC(m_window_handle, m_frontbuffer);
@@ -42,6 +43,7 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 {
     if (m_backbuffer_bitmap != INVALID_HANDLE_VALUE)
     {
+        delete[] m_zbuffer;
         DeleteObject(m_backbuffer_bitmap);
         DeleteDC(m_backbuffer);
     }
@@ -74,7 +76,10 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
         nullptr, 0
     );
 
-    m_backbuffer_stride = ((bmi.biWidth * bmi.biBitCount + 31) / 32);
+    m_backbuffer_stride = sizeof(DWORD) * ((bmi.biWidth * bmi.biBitCount + 31) / 32);
+
+    // create zbuffer
+    m_zbuffer = new uint8_t[-bmi.biHeight * m_backbuffer_stride];
 
     SelectObject(m_backbuffer, m_backbuffer_bitmap);
     m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
@@ -86,7 +91,7 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 {
     const Font font(L"Consolas", 10);
-    const SolidBrush hb(Color(150, 0, 200));
+    const SolidBrush hb(Color(128, 255, 0));
     const PointF p(static_cast<float>(x), static_cast<float>(y));
 
     unique_ptr<wchar_t[]> wcbuf(new wchar_t[text.size() + 1]);
@@ -102,6 +107,13 @@ void Win32SoftwareDevice::clear()
     RECT rc;
     GetClientRect(m_window_handle, &rc);
     FillRect(m_backbuffer, &rc, m_backbuffer_brush);
+
+    // clear the zbuffer
+    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer);
+    std::fill(
+        zbuff_ptr, zbuff_ptr + (rc.bottom - rc.top) * m_backbuffer_stride / sizeof(float),
+        std::numeric_limits<float>::max()
+    );
 }
 
 void Win32SoftwareDevice::swap_buffers()
@@ -202,6 +214,10 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     vec3 c1 = p1.color * 255.f;
     vec3 c2 = p2.color * 255.f;
 
+    float z0 = p0.position.z();
+    float z1 = p1.position.z();
+    float z2 = p2.position.z();
+
     // min bounding box
     const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
     const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), static_cast<int>(m_rect.right - m_rect.left));
@@ -248,32 +264,50 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
     // running color interpolation values
     vec3 c_y = (
-        c2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        c0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        c1 * static_cast<float>(get<2>(he_y)) * lerp_c
-    );
+        c2 * static_cast<float>(get<0>(he_y)) +
+        c0 * static_cast<float>(get<1>(he_y)) +
+        c1 * static_cast<float>(get<2>(he_y))
+    ) * lerp_c;
     const vec3 dc_dx = (c2 * fdx01 + c0 * fdx12 + c1 * fdx20) * lerp_c;
     const vec3 dc_dy = (c2 * fdy01 + c0 * fdy12 + c1 * fdy20) * lerp_c;
 
-    DWORD* color_ptr = m_backbuffer_bits + min_y * m_backbuffer_stride;
+    // running z-value interpolation values
+    float z_y = (
+        z2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        z0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        z1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    );
+    const float dz_dx = (z2 * fdx01 + z0 * fdx12 + z1 * fdx20) * lerp_c;
+    const float dz_dy = (z2 * fdy01 + z0 * fdy12 + z1 * fdy20) * lerp_c;
+
+    DWORD* color_ptr = reinterpret_cast<DWORD*>(m_backbuffer_bits + min_y * m_backbuffer_stride);
+    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer + min_y * m_backbuffer_stride);
 
     for (int y = min_y; y < max_y; y++)
     {
         // Start value for horizontal scan
         heval he_x = he_y;
         vec3 c_x = c_y;
+        float z_x = z_y;
 
         for (int x = min_x; x < max_x; x++)
         {
-            if (he_x > 0)
+            if (z_x < zbuff_ptr[x] && he_x > 0)
+            {
                 color_ptr[x] = to_rgb(c_x);
+                zbuff_ptr[x] = z_x;
+            }
 
             he_x -= he_dy;
             c_x -= dc_dy;
+            z_x -= dz_dy;
         }
 
         he_y += he_dx;
         c_y += dc_dx;
-        color_ptr += m_backbuffer_stride;
+        z_y += dz_dx;
+
+        reinterpret_cast<uint8_t*&>(color_ptr) += m_backbuffer_stride;
+        reinterpret_cast<uint8_t*&>(zbuff_ptr) += m_backbuffer_stride;
     }
 }
