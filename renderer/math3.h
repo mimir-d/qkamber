@@ -43,17 +43,59 @@ inline const T& max(const T& a, const Args&... args);
 template <typename T>
 inline T clamp(T value, T min_value, T max_value);
 
-// integer fixed point math
-template <
-    typename T, size_t Digits,
-    typename = std::enable_if_t<std::is_integral<T>::value>
->
-inline T to_fixedpoint(float x);
-
-inline int to_fp4(float x);
-
 // TODO: rename or move to namespace?
 struct no_init_tag {};
+
+///////////////////////////////////////////////////////////////////////////////
+// FixedPoint
+///////////////////////////////////////////////////////////////////////////////
+template <typename T, size_t Digits>
+class FixedPoint
+{
+    static_assert(std::is_integral<T>::value, "FixedPoint can only accept integral types as backing");
+public:
+    //FixedPoint(const FixedPoint& rhs);
+    ~FixedPoint() = default;
+
+    // converting ctors
+    FixedPoint(T value, size_t frac_digits = Digits);
+    FixedPoint(float value);
+
+    template <size_t RhsDigits, typename = std::enable_if_t<(RhsDigits <= Digits)>>
+    FixedPoint(const FixedPoint<T, RhsDigits>& rhs);
+
+    // NOTE: explicit for narrowing conversion
+    // TODO: how to diff between first and this method in external definition
+    // template <size_t RhsDigits, typename = std::enable_if_t<(RhsDigits > Digits)>>
+    // explicit FixedPoint(const FixedPoint<T, RhsDigits>& rhs);
+
+    explicit operator T() const;
+    explicit operator float() const;
+
+    FixedPoint& operator+=(const FixedPoint& rhs);
+    FixedPoint& operator-=(const FixedPoint& rhs);
+    FixedPoint& operator*=(const FixedPoint& rhs);
+
+    FixedPoint operator+(const FixedPoint& rhs) const;
+    FixedPoint operator-(const FixedPoint& rhs) const;
+    FixedPoint operator*(const FixedPoint& rhs) const;
+
+    template <size_t RhsDigits>
+    FixedPoint<T, Digits + RhsDigits> denorm_mul(const FixedPoint<T, RhsDigits>& rhs) const;
+
+    bool operator<(const FixedPoint& rhs) const;
+    bool operator>(const FixedPoint& rhs) const;
+    bool operator==(const FixedPoint& rhs) const;
+
+private:
+    template <typename, size_t>
+    friend class FixedPoint;
+
+    T m_value;
+};
+
+using fp4 = FixedPoint<int, 4>;
+using fp8 = FixedPoint<int, 8>;
 
 ///////////////////////////////////////////////////////////////////////////////
 // vector types
@@ -504,15 +546,117 @@ inline T clamp(T value, T min_value, T max_value)
     return value;
 }
 
-template <typename T, size_t Digits, typename>
-inline T to_fixedpoint(float x)
+///////////////////////////////////////////////////////////////////////////////
+// FixedPoint
+///////////////////////////////////////////////////////////////////////////////
+//template <typename T, size_t Digits>
+//inline FixedPoint<T, Digits>::FixedPoint(const FixedPoint& rhs)
+//{
+//    m_value = rhs.m_value;
+//}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>::FixedPoint(T value, size_t frac_digits) :
+    m_value(value << frac_digits)
+{}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>::FixedPoint(float value)
 {
-    return static_cast<T>(x * static_cast<float>(1 << Digits));
+    m_value = static_cast<T>(value * static_cast<float>(1 << Digits));
 }
 
-inline int to_fp4(float x)
+template <typename T, size_t Digits>
+template <size_t RhsDigits, typename>
+inline FixedPoint<T, Digits>::FixedPoint(const FixedPoint<T, RhsDigits>& rhs)
 {
-    return to_fixedpoint<int, 4>(x);
+    m_value = rhs.m_value << (Digits - RhsDigits);
+}
+
+// template <typename T, size_t Digits>
+// template <size_t RhsDigits, typename>
+// inline FixedPoint<T, Digits>::FixedPoint(const FixedPoint<T, RhsDigits>& rhs)
+// {
+//     m_value = static_cast<T>(rhs) << (RhsDigits - Digits);
+// }
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>::operator T() const
+{
+    const T rounding = (1 << Digits) - 1;
+    return (m_value + rounding) >> Digits;
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>::operator float() const
+{
+    const float f = 1.0f / (1 << Digits);
+    return m_value * f;
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>& FixedPoint<T, Digits>::operator+=(const FixedPoint& rhs)
+{
+    m_value += rhs.m_value;
+    return *this;
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>& FixedPoint<T, Digits>::operator-=(const FixedPoint& rhs)
+{
+    m_value -= rhs.m_value;
+    return *this;
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits>& FixedPoint<T, Digits>::operator*=(const FixedPoint& rhs)
+{
+    m_value = (m_value * rhs.m_value) >> Digits;
+    return *this;
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits> FixedPoint<T, Digits>::operator+(const FixedPoint& rhs) const
+{
+    return { m_value + rhs.m_value, 0 };
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits> FixedPoint<T, Digits>::operator-(const FixedPoint& rhs) const
+{
+    return { m_value - rhs.m_value, 0 };
+}
+
+template <typename T, size_t Digits>
+inline FixedPoint<T, Digits> FixedPoint<T, Digits>::operator*(const FixedPoint& rhs) const
+{
+    return { (m_value * rhs.m_value) >> Digits, 0 };
+}
+
+template <typename T, size_t Digits>
+template <size_t RhsDigits>
+inline FixedPoint<T, Digits + RhsDigits>
+FixedPoint<T, Digits>::denorm_mul(const FixedPoint<T, RhsDigits>& rhs) const
+{
+    return { m_value * rhs.m_value, 0 };
+}
+
+template <typename T, size_t Digits>
+inline bool FixedPoint<T, Digits>::operator<(const FixedPoint& rhs) const
+{
+    return m_value < rhs.m_value;
+}
+
+template <typename T, size_t Digits>
+inline bool FixedPoint<T, Digits>::operator>(const FixedPoint& rhs) const
+{
+    return m_value > rhs.m_value;
+}
+
+template <typename T, size_t Digits>
+inline bool FixedPoint<T, Digits>::operator==(const FixedPoint& rhs) const
+{
+    return m_value == rhs.m_value;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
