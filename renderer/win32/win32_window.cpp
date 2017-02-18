@@ -8,8 +8,8 @@
 
 using namespace std;
 
-constexpr char* WINDOW_TITLE = "my little renderererererer";
-constexpr char* WINDOW_CLASS = "WIN32_RENDERER";
+constexpr char* WINDOW_TITLE = "Qukamber renderer";
+constexpr char* WINDOW_CLASS = "WIN32_QK_RENDERER";
 
 #pragma warning(disable:4302)
 
@@ -23,6 +23,7 @@ void Win32Window::init(Application* app, Timer* timer)
     init_inputs();
 
     m_paused = false;
+    log_info("Created Win32Window");
 }
 
 void Win32Window::mainloop()
@@ -58,6 +59,8 @@ int Win32Window::shutdown()
     flog();
 
     Window::shutdown();
+
+    log_info("Shutdown Win32Window");
     return m_exit_code;
 }
 
@@ -138,7 +141,7 @@ void Win32Window::init_window()
 
     if (!m_window_handle)
         throw exception("Call to CreateWindow failed!");
-    dlog("Created hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
+    log_info("Created hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
 
     // save this pointer for wndproc
     SetWindowLongPtr(m_window_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -233,6 +236,13 @@ LRESULT Win32Window::wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 case VK_ESCAPE:
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
+                    break;
+
+                case 'F':
+                    if (m_window_state != SIZE_MAXIMIZED)
+                        ShowWindow(hWnd, SW_MAXIMIZE);
+                    else
+                        ShowWindow(hWnd, SW_RESTORE);
                     break;
             }
             break;

@@ -22,6 +22,8 @@ void Win32SoftwareDevice::win32_init(HWND window_handle)
     RECT rc;
     GetClientRect(m_window_handle, &rc);
     win32_resize(&rc);
+
+    log_info("Created Win32SoftwareDevice on hwnd = %#x", window_handle);
 }
 
 void Win32SoftwareDevice::win32_shutdown()

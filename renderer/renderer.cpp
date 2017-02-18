@@ -25,10 +25,13 @@ void Renderer::init(Timer* timer)
 
     m_target_fps = 60;
     m_fps = 0;
+
+    log_info("Initialized renderer");
 }
 void Renderer::shutdown()
 {
 	flog();
+    log_info("Shutdown renderer");
 }
 
 void Renderer::begin_frame()

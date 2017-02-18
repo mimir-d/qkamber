@@ -14,12 +14,15 @@ Engine::Engine()
     // init subsystems?
 
     m_global_timer.resume();
+    log_info("Created Qukamber engine instance");
 }
 
 Engine::~Engine()
 {
     flog();
     m_global_timer.stop();
+
+    log_info("Destroyed engine instance");
 }
 
 void Engine::run(Application& app)
