@@ -157,101 +157,122 @@ namespace
     {
         return (static_cast<DWORD>(c.x()) << 16) + (static_cast<DWORD>(c.y()) << 8) + static_cast<DWORD>(c.z());
     }
+
+    struct heval : repeat_t<fp8, 3>
+    {
+        heval(fp8 a, fp8 b, fp8 c) : repeat_t<fp8, 3>(a, b, c)
+        {}
+
+        heval& operator+=(const heval& rhs)
+        {
+            get<0>(*this) += get<0>(rhs);
+            get<1>(*this) += get<1>(rhs);
+            get<2>(*this) += get<2>(rhs);
+            return *this;
+        }
+
+        heval& operator-=(const heval& rhs)
+        {
+            get<0>(*this) -= get<0>(rhs);
+            get<1>(*this) -= get<1>(rhs);
+            get<2>(*this) -= get<2>(rhs);
+            return *this;
+        }
+
+        bool operator>(fp8 value)
+        {
+            return get<0>(*this) > value && get<1>(*this) > value && get<2>(*this) > value;
+        }
+    };
 }
 
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     // NOTE: shamelessly stolen from http://forum.devmaster.net/t/advanced-rasterization/6145
     // TODO: read this http://www.cs.unc.edu/~olano/papers/2dh-tri/
-    const int x0 = to_fp4(p0.position.x());
-    const int x1 = to_fp4(p1.position.x());
-    const int x2 = to_fp4(p2.position.x());
+    const fp4 x0 = p0.position.x();
+    const fp4 x1 = p1.position.x();
+    const fp4 x2 = p2.position.x();
 
-    const int y0 = to_fp4(p0.position.y());
-    const int y1 = to_fp4(p1.position.y());
-    const int y2 = to_fp4(p2.position.y());
+    const fp4 y0 = p0.position.y();
+    const fp4 y1 = p1.position.y();
+    const fp4 y2 = p2.position.y();
 
     vec3 c0 = p0.color * 255.f;
     vec3 c1 = p1.color * 255.f;
     vec3 c2 = p2.color * 255.f;
 
     // min bounding box
-    const int min_x = ::max((::min(x0, x1, x2) + 0xf) >> 4, 0);
-    const int max_x = ::min((::max(x0, x1, x2) + 0xf) >> 4, static_cast<int>(m_rect.right - m_rect.left));
-    const int min_y = ::max((::min(y0, y1, y2) + 0xf) >> 4, 0);
-    const int max_y = ::min((::max(y0, y1, y2) + 0xf) >> 4, static_cast<int>(m_rect.bottom - m_rect.top));
+    const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
+    const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), static_cast<int>(m_rect.right - m_rect.left));
+    const int min_y = ::max(static_cast<int>(::min(y0, y1, y2)), 0);
+    const int max_y = ::min(static_cast<int>(::max(y0, y1, y2)), static_cast<int>(m_rect.bottom - m_rect.top));
 
-    const int fp4_min_x = min_x << 4;
-    const int fp4_min_y = min_y << 4;
+    const fp4 fp4_min_x = min_x;
+    const fp4 fp4_min_y = min_y;
 
-    // deltas
-    const int dx01 = x0 - x1;
-    const int dx12 = x1 - x2;
-    const int dx20 = x2 - x0;
+    // fp4 deltas
+    const fp4 dx01 = x0 - x1;
+    const fp4 dx12 = x1 - x2;
+    const fp4 dx20 = x2 - x0;
 
-    const int dy01 = y0 - y1;
-    const int dy12 = y1 - y2;
-    const int dy20 = y2 - y0;
+    const fp4 dy01 = y0 - y1;
+    const fp4 dy12 = y1 - y2;
+    const fp4 dy20 = y2 - y0;
 
-    const float fdx01 = 0.0625f * dx01;
-    const float fdx12 = 0.0625f * dx12;
-    const float fdx20 = 0.0625f * dx20;
+    // float lerp
+    const float fdx01 = static_cast<float>(dx01);
+    const float fdx12 = static_cast<float>(dx12);
+    const float fdx20 = static_cast<float>(dx20);
 
-    const float fdy01 = 0.0625f * dy01;
-    const float fdy12 = 0.0625f * dy12;
-    const float fdy20 = 0.0625f * dy20;
+    const float fdy01 = static_cast<float>(dy01);
+    const float fdy12 = static_cast<float>(dy12);
+    const float fdy20 = static_cast<float>(dy20);
 
     const float lerp_c = 1.0f / (fdx01 * fdy20 - fdx20 * fdy01);
-    const vec3 dc_dx = (c2 * fdx01 + c0 * fdx12 + c1 * fdx20) * lerp_c;
-    const vec3 dc_dy = (c2 * fdy01 + c0 * fdy12 + c1 * fdy20) * lerp_c;
 
     // constant part of half-edge functions + fill correction (left sides are filled on +1, right sides are not)
-    const int fp8_c0 = dy01 * x0 - dx01 * y0 + (dy01 < 0 || (dy01 == 0 && dx01 > 0));
-    const int fp8_c1 = dy12 * x1 - dx12 * y1 + (dy12 < 0 || (dy12 == 0 && dx12 > 0));
-    const int fp8_c2 = dy20 * x2 - dx20 * y2 + (dy20 < 0 || (dy20 == 0 && dx20 > 0));
+    const fp8 he_c0 = dy01.denorm_mul(x0) - dx01.denorm_mul(y0) + (dy01 < 0 || (dy01 == 0 && dx01 > 0));
+    const fp8 he_c1 = dy12.denorm_mul(x1) - dx12.denorm_mul(y1) + (dy12 < 0 || (dy12 == 0 && dx12 > 0));
+    const fp8 he_c2 = dy20.denorm_mul(x2) - dx20.denorm_mul(y2) + (dy20 < 0 || (dy20 == 0 && dx20 > 0));
 
     // running half-edge values, all in fixed-point 8 frac digits
-    int he_y0 = fp8_c0 + dx01 * fp4_min_y - dy01 * fp4_min_x;
-    int he_y1 = fp8_c1 + dx12 * fp4_min_y - dy12 * fp4_min_x;
-    int he_y2 = fp8_c2 + dx20 * fp4_min_y - dy20 * fp4_min_x;
+    heval he_y =
+    {
+        he_c0 + dx01.denorm_mul(fp4_min_y) - dy01.denorm_mul(fp4_min_x),
+        he_c1 + dx12.denorm_mul(fp4_min_y) - dy12.denorm_mul(fp4_min_x),
+        he_c2 + dx20.denorm_mul(fp4_min_y) - dy20.denorm_mul(fp4_min_x)
+    };
+    const heval he_dx = { dx01, dx12, dx20 };
+    const heval he_dy = { dy01, dy12, dy20 };
 
-    float fhe_y0 = 0.00390625f * he_y0;
-    float fhe_y1 = 0.00390625f * he_y1;
-    float fhe_y2 = 0.00390625f * he_y2;
-    vec3 c_y = (c2 * fhe_y0 + c0 * fhe_y1 + c1 * fhe_y2) * lerp_c;
-
-    const int fp8_dx01 = dx01 << 4;
-    const int fp8_dx12 = dx12 << 4;
-    const int fp8_dx20 = dx20 << 4;
-
-    const int fp8_dy01 = dy01 << 4;
-    const int fp8_dy12 = dy12 << 4;
-    const int fp8_dy20 = dy20 << 4;
+    // running color interpolation values
+    vec3 c_y = (
+        c2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        c0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        c1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    );
+    const vec3 dc_dx = (c2 * fdx01 + c0 * fdx12 + c1 * fdx20) * lerp_c;
+    const vec3 dc_dy = (c2 * fdy01 + c0 * fdy12 + c1 * fdy20) * lerp_c;
 
     DWORD* color_ptr = m_backbuffer_bits + min_y * m_backbuffer_stride;
 
     for (int y = min_y; y < max_y; y++)
     {
         // Start value for horizontal scan
-        int he_x0 = he_y0;
-        int he_x1 = he_y1;
-        int he_x2 = he_y2;
+        heval he_x = he_y;
         vec3 c_x = c_y;
 
         for (int x = min_x; x < max_x; x++)
         {
-            if (he_x0 > 0 && he_x1 > 0 && he_x2 > 0)
+            if (he_x > 0)
                 color_ptr[x] = to_rgb(c_x);
 
-            he_x0 -= fp8_dy01;
-            he_x1 -= fp8_dy12;
-            he_x2 -= fp8_dy20;
+            he_x -= he_dy;
             c_x -= dc_dy;
         }
 
-        he_y0 += fp8_dx01;
-        he_y1 += fp8_dx12;
-        he_y2 += fp8_dx20;
+        he_y += he_dx;
         c_y += dc_dx;
         color_ptr += m_backbuffer_stride;
     }
