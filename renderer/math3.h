@@ -507,17 +507,7 @@ inline T clamp(T value, T min_value, T max_value)
 template <typename T, size_t Digits, typename>
 inline T to_fixedpoint(float x)
 {
-    const float shifted_x = static_cast<float>(1 << Digits) * x;
-    T t;
-
-    // TODO: this might not compile on gcc/clang
-    __asm
-    {
-        fld   shifted_x
-        fistp t
-    }
-
-    return t;
+    return static_cast<T>(x * static_cast<float>(1 << Digits));
 }
 
 inline int to_fp4(float x)
