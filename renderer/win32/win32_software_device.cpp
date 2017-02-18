@@ -34,6 +34,8 @@ void Win32SoftwareDevice::win32_shutdown()
     DeleteObject(m_backbuffer_brush);
 
     delete[] m_zbuffer;
+    delete[] m_zbuffer_clear;
+
     DeleteObject(m_backbuffer_bitmap);
     DeleteDC(m_backbuffer);
     ReleaseDC(m_window_handle, m_frontbuffer);
@@ -46,6 +48,8 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
     if (m_backbuffer_bitmap != INVALID_HANDLE_VALUE)
     {
         delete[] m_zbuffer;
+        delete[] m_zbuffer_clear;
+
         DeleteObject(m_backbuffer_bitmap);
         DeleteDC(m_backbuffer);
     }
@@ -78,10 +82,18 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
         nullptr, 0
     );
 
-    m_backbuffer_stride = sizeof(DWORD) * ((bmi.biWidth * bmi.biBitCount + 31) / 32);
+    const size_t stride = ((bmi.biWidth * bmi.biBitCount + 31) / 32);
+    m_backbuffer_stride = sizeof(DWORD) * stride;
 
-    // create zbuffer
-    m_zbuffer = new uint8_t[-bmi.biHeight * m_backbuffer_stride];
+    // create zbuffer and initialization buffer because it's faster to memcpy that
+    m_zbuffer = new uint8_t[-bmi.biHeight * stride * sizeof(float)];
+    m_zbuffer_clear = new uint8_t[-bmi.biHeight * stride * sizeof(float)];
+
+    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer_clear);
+    std::fill(
+        zbuff_ptr, zbuff_ptr + (-bmi.biHeight * m_backbuffer_stride) / sizeof(float),
+        std::numeric_limits<float>::max()
+    );
 
     SelectObject(m_backbuffer, m_backbuffer_bitmap);
     m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
@@ -106,21 +118,17 @@ void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 ///////////////////////////////////////////////////////////////////////////////
 void Win32SoftwareDevice::clear()
 {
-    RECT rc;
-    GetClientRect(m_window_handle, &rc);
-    FillRect(m_backbuffer, &rc, m_backbuffer_brush);
+    const size_t height = static_cast<size_t>(m_rect.bottom - m_rect.top);
+    FillRect(m_backbuffer, &m_rect, m_backbuffer_brush);
 
     // clear the zbuffer
-    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer);
-    std::fill(
-        zbuff_ptr, zbuff_ptr + (rc.bottom - rc.top) * m_backbuffer_stride / sizeof(float),
-        std::numeric_limits<float>::max()
-    );
+    memcpy(m_zbuffer, m_zbuffer_clear, height * m_backbuffer_stride);
 }
 
 void Win32SoftwareDevice::swap_buffers()
 {
-    BitBlt(m_frontbuffer,
+    BitBlt(
+        m_frontbuffer,
         m_rect.left, m_rect.top,
         m_rect.right - m_rect.left, m_rect.bottom - m_rect.top,
         m_backbuffer,
@@ -294,6 +302,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
         for (int x = min_x; x < max_x; x++)
         {
+            // TODO: there's some zbuff fighting at 50+ distance
             if (z_x < zbuff_ptr[x] && he_x > 0)
             {
                 color_ptr[x] = to_rgb(c_x);
