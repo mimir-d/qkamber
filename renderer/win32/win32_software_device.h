@@ -35,7 +35,8 @@ private:
 
     HBITMAP m_backbuffer_bitmap = static_cast<HBITMAP>(INVALID_HANDLE_VALUE);
     // TODO: extract to a RenderTarget
-    DWORD* m_backbuffer_bits;
+    uint8_t* m_backbuffer_bits;
+    uint8_t* m_zbuffer;
     DWORD m_backbuffer_stride;
 
     ULONG_PTR m_gdiplus_token;
