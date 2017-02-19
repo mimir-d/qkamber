@@ -41,9 +41,6 @@ void Renderer::begin_frame()
 
 void Renderer::render()
 {
-    // TODO: f-it, just remove this
-    GdiFlush();
-
     // set camera and viewport just once
     m_dev->set_view_matrix(m_camera->get_view());
     m_dev->set_proj_matrix(m_camera->get_proj());

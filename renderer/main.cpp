@@ -3,7 +3,6 @@
 
 #include "precompiled.h"
 using namespace std;
-using namespace Gdiplus;
 
 #include "engine.h"
 #include "app.h"
