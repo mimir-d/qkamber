@@ -40,8 +40,9 @@ private:
     uint8_t* m_zbuffer;
     uint8_t* m_zbuffer_clear;
 
-    ULONG_PTR m_gdiplus_token;
-    HWND m_window_handle;
+    HFONT m_font;
+    HPEN m_line_pen;
+    HBRUSH m_fill_brush;
 
-    std::unique_ptr<Gdiplus::Graphics> m_graphics;
+    HWND m_window_handle;
 };

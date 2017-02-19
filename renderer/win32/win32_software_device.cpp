@@ -6,22 +6,32 @@
 #include "render_buffers.h"
 
 using namespace std;
-using namespace Gdiplus;
 
 void Win32SoftwareDevice::win32_init(HWND window_handle)
 {
     flog("on hwnd = %#x", window_handle);
     m_window_handle = window_handle;
 
-    GdiplusStartupInput gdip_startup;
-    GdiplusStartup(&m_gdiplus_token, &gdip_startup, nullptr);
-
     m_frontbuffer = GetDC(m_window_handle);
-    m_backbuffer_brush = CreateSolidBrush(0);
 
     RECT rc;
     GetClientRect(m_window_handle, &rc);
     win32_resize(&rc);
+
+    // create brushes
+    m_backbuffer_brush = CreateSolidBrush(0);
+    m_fill_brush = CreateSolidBrush(0x009600c8);
+    m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
+
+    // create font
+    LOGFONT font_desc = { 0 };
+
+    font_desc.lfHeight = -MulDiv(9, GetDeviceCaps(m_backbuffer, LOGPIXELSY), 72);
+    font_desc.lfQuality = ANTIALIASED_QUALITY;
+    font_desc.lfPitchAndFamily = MONO_FONT;
+    strcpy_s(font_desc.lfFaceName, LF_FACESIZE, "Courier New");
+
+    m_font = CreateFontIndirect(&font_desc);
 
     log_info("Created Win32SoftwareDevice on hwnd = %#x", window_handle);
 }
@@ -30,7 +40,9 @@ void Win32SoftwareDevice::win32_shutdown()
 {
     flog("on hwnd = %#x", m_window_handle);
 
-    // delete backbuffer
+    DeleteObject(m_font);
+    DeleteObject(m_line_pen);
+    DeleteObject(m_fill_brush);
     DeleteObject(m_backbuffer_brush);
 
     delete[] m_zbuffer;
@@ -39,8 +51,6 @@ void Win32SoftwareDevice::win32_shutdown()
     DeleteObject(m_backbuffer_bitmap);
     DeleteDC(m_backbuffer);
     ReleaseDC(m_window_handle, m_frontbuffer);
-
-    GdiplusShutdown(m_gdiplus_token);
 }
 
 void Win32SoftwareDevice::win32_resize(PRECT client_rect)
@@ -95,8 +105,14 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
         std::numeric_limits<float>::max()
     );
 
+    // set up backbuffer objects
     SelectObject(m_backbuffer, m_backbuffer_bitmap);
-    m_graphics = unique_ptr<Graphics>(new Graphics(m_backbuffer));
+    SelectObject(m_backbuffer, m_font);
+    SelectObject(m_backbuffer, m_fill_brush);
+    SelectObject(m_backbuffer, m_line_pen);
+
+    SetBkMode(m_backbuffer, TRANSPARENT);
+    SetTextColor(m_backbuffer, 0x0040FF00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,13 +120,7 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 ///////////////////////////////////////////////////////////////////////////////
 void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 {
-    const Font font(L"Consolas", 10);
-    const SolidBrush hb(Color(128, 255, 0));
-    const PointF p(static_cast<float>(x), static_cast<float>(y));
-
-    unique_ptr<wchar_t[]> wcbuf(new wchar_t[text.size() + 1]);
-    mbstowcs_s(nullptr, wcbuf.get(), text.size() + 1, text.c_str(), text.size());
-    m_graphics->DrawString(wcbuf.get(), static_cast<INT>(text.size()), &font, p, &hb);
+    TextOut(m_backbuffer, x, y, text.c_str(), static_cast<int>(text.size()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -152,25 +162,26 @@ void Win32SoftwareDevice::draw_tri(const DevicePoint& p0, const DevicePoint& p1,
 
 void Win32SoftwareDevice::draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
-    const SolidBrush hb(Color(150, 0, 200));
+    const int r = 3;
+    const int x0 = static_cast<int>(p0.position.x()), y0 = static_cast<int>(p0.position.y());
+    const int x1 = static_cast<int>(p1.position.x()), y1 = static_cast<int>(p1.position.y());
+    const int x2 = static_cast<int>(p2.position.x()), y2 = static_cast<int>(p2.position.y());
 
-    m_graphics->FillEllipse(&hb, p0.position.x(), p0.position.y(), 5.0f, 5.0f);
-    m_graphics->FillEllipse(&hb, p1.position.x(), p1.position.y(), 5.0f, 5.0f);
-    m_graphics->FillEllipse(&hb, p2.position.x(), p2.position.y(), 5.0f, 5.0f);
+    Ellipse(m_backbuffer, x0 - r, y0 - r, x0 + r, y0 + r);
+    Ellipse(m_backbuffer, x1 - r, y1 - r, x1 + r, y1 + r);
+    Ellipse(m_backbuffer, x2 - r, y2 - r, x2 + r, y2 + r);
 }
 
 void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
-    const Pen p(Color(255, 150, 0, 255));
-    const PointF points[] =
-    {
-        {p0.position.x(), p0.position.y()},
-        {p1.position.x(), p1.position.y()},
-        {p2.position.x(), p2.position.y()}
-    };
-    const size_t count = sizeof(points) / sizeof(points[0]);
+    const int x0 = static_cast<int>(p0.position.x()), y0 = static_cast<int>(p0.position.y());
+    const int x1 = static_cast<int>(p1.position.x()), y1 = static_cast<int>(p1.position.y());
+    const int x2 = static_cast<int>(p2.position.x()), y2 = static_cast<int>(p2.position.y());
 
-    m_graphics->DrawPolygon(&p, points, count);
+    MoveToEx(m_backbuffer, x0, y0, nullptr);
+    LineTo(m_backbuffer, x1, y1);
+    LineTo(m_backbuffer, x2, y2);
+    LineTo(m_backbuffer, x0, y0);
 }
 
 namespace
@@ -210,6 +221,9 @@ namespace
 
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
+    // NOTE: flush any gdi calls before drawing to backbuffer directly
+    GdiFlush();
+
     // NOTE: shamelessly stolen from http://forum.devmaster.net/t/advanced-rasterization/6145
     // TODO: read this http://www.cs.unc.edu/~olano/papers/2dh-tri/
     const fp4 x0 = p0.position.x();
