@@ -2,7 +2,44 @@
 
 #include "software/software_device.h"
 #include "renderer.h"
+#include "render_buffers.h"
 #include "misc.h"
+
+class Win32ColorBuffer : public ColorBuffer
+{
+public:
+    Win32ColorBuffer(HDC surface);
+    ~Win32ColorBuffer() = default;
+
+    HDC get_dc();
+
+    DWORD* get_data();
+    size_t get_stride();
+
+    void resize(int width, int height);
+
+private:
+    HDC m_surface_dc;
+
+    HDC m_dc;
+    HBITMAP m_bitmap = reinterpret_cast<HBITMAP>(INVALID_HANDLE_VALUE);
+
+    DWORD* m_data_ptr;
+    size_t m_stride;
+};
+
+class Win32DepthBuffer : public DepthBuffer
+{
+public:
+    float* get_data();
+    size_t get_stride();
+
+    void resize(int width, int height);
+
+private:
+    std::unique_ptr<float[]> m_data;
+    size_t m_stride;
+};
 
 class Win32SoftwareDevice : public SoftwareDevice
 {
@@ -13,6 +50,9 @@ public:
 
     // drawing methods
     void draw_text(const std::string& text, int x, int y) final;
+
+    // resource management methods
+    std::unique_ptr<RenderTarget> create_render_target() final;
 
     // framebuffer methods
     void clear() final;
@@ -28,21 +68,46 @@ private:
 
 private:
     RECT m_rect;
-    HDC m_frontbuffer;
+    HDC m_surface;
 
-    HBRUSH m_backbuffer_brush;
-    HDC m_backbuffer = static_cast<HDC>(INVALID_HANDLE_VALUE);
-
-    HBITMAP m_backbuffer_bitmap = static_cast<HBITMAP>(INVALID_HANDLE_VALUE);
-    // TODO: extract to a RenderTarget
-    size_t m_backbuffer_stride;
-    uint8_t* m_backbuffer_bits;
-    uint8_t* m_zbuffer;
-    uint8_t* m_zbuffer_clear;
+    HBRUSH m_clear_brush;
+    std::unique_ptr<float[]> m_zbuffer_clear;
 
     HFONT m_font;
     HPEN m_line_pen;
     HBRUSH m_fill_brush;
 
     HWND m_window_handle;
+    std::unique_ptr<RenderTarget> m_default_target;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32RenderTarget impl
+///////////////////////////////////////////////////////////////////////////////
+inline HDC Win32ColorBuffer::get_dc()
+{
+    return m_dc;
+}
+
+inline DWORD* Win32ColorBuffer::get_data()
+{
+    return m_data_ptr;
+}
+
+inline size_t Win32ColorBuffer::get_stride()
+{
+    return m_stride;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32DepthBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+inline float* Win32DepthBuffer::get_data()
+{
+    return m_data.get();
+}
+
+inline size_t Win32DepthBuffer::get_stride()
+{
+    return m_stride;
+}

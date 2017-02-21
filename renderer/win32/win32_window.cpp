@@ -16,7 +16,7 @@ constexpr char* WINDOW_CLASS = "WIN32_QK_RENDERER";
 void Win32Window::init(Application* app, Timer* timer)
 {
     flog("id = %#x", this);
-    Window::init(app, timer);
+    RenderWindow::init(app, timer);
 
     init_class();
     init_window();
@@ -58,7 +58,7 @@ int Win32Window::shutdown()
 {
     flog();
 
-    Window::shutdown();
+    RenderWindow::shutdown();
 
     log_info("Shutdown Win32Window");
     return m_exit_code;

@@ -6,7 +6,7 @@ using namespace std;
 
 #include "engine.h"
 #include "app.h"
-#include "window.h"
+#include "render_window.h"
 #include "renderer.h"
 #include "timer.h"
 #include "math3.h"

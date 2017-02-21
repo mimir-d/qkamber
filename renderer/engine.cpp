@@ -2,7 +2,7 @@
 #include "precompiled.h"
 #include "engine.h"
 
-#include "window.h"
+#include "render_window.h"
 #include "app.h"
 
 Engine::Engine()
@@ -33,7 +33,7 @@ void Engine::run(Application& app)
 
     app.on_create();
 
-    std::unique_ptr<Window> window = AppWindowFactory::create();
+    std::unique_ptr<RenderWindow> window = AppWindowFactory::create();
     window->init(&app, &m_global_timer);
     window->mainloop();
 
