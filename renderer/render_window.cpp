@@ -1,23 +1,23 @@
 
 #include "precompiled.h"
-#include "window.h"
+#include "render_window.h"
 #include "win32/win32_window.h"
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AppWindow
 ///////////////////////////////////////////////////////////////////////////////
-void Window::init(Application* app, Timer* timer)
+void RenderWindow::init(Application* app, Timer* timer)
 {
     flog();
     m_app = app;
     m_timer = timer;
 }
 
-void Window::mainloop()
+void RenderWindow::mainloop()
 {}
 
-int Window::shutdown()
+int RenderWindow::shutdown()
 {
 	flog();
 	return 0;
@@ -26,12 +26,12 @@ int Window::shutdown()
 ///////////////////////////////////////////////////////////////////////////////
 // AppWindowFactory
 ///////////////////////////////////////////////////////////////////////////////
-unique_ptr<Window> AppWindowFactory::create()
+unique_ptr<RenderWindow> AppWindowFactory::create()
 {
 	// switch on platform
 #ifdef WIN32
 	log_info("AppWindowFactory creating a Win32AppWindow...");
-	return unique_ptr<Window>(new Win32Window);
+	return unique_ptr<RenderWindow>(new Win32Window);
 #endif
     return nullptr;
 }

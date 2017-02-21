@@ -3,7 +3,7 @@
 class Timer;
 class Application;
 
-class Window
+class RenderWindow
 {
 public:
     // TODO: move these to ctor (create platform.h, copy all factories there and template
@@ -19,5 +19,5 @@ protected:
 class AppWindowFactory
 {
 public:
-	static std::unique_ptr<Window> create();
+	static std::unique_ptr<RenderWindow> create();
 };

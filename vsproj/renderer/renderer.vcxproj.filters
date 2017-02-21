@@ -43,7 +43,7 @@
     <ClInclude Include="$(src)\win32\win32_window.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>
-    <ClInclude Include="$(src)\window.h">
+    <ClInclude Include="$(src)\render_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="$(src)\math3.h">
@@ -114,7 +114,7 @@
     <ClCompile Include="$(src)\win32\win32_window.cpp">
       <Filter>Source Files\win32</Filter>
     </ClCompile>
-    <ClCompile Include="$(src)\window.cpp">
+    <ClCompile Include="$(src)\render_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="$(src)\mesh.cpp">

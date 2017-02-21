@@ -49,6 +49,7 @@ public:
     void set_clip_matrix(mat3x4 clip_matrix) final;
 
     void set_polygon_mode(PolygonMode mode) final;
+    void set_render_target(RenderTarget* target) final;
 
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
@@ -59,6 +60,7 @@ protected:
 
 protected:
     PolygonMode m_poly_mode = PolygonMode::Fill;
+    RenderTarget* m_render_target = nullptr;
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -100,4 +102,9 @@ inline void SoftwareDevice::set_clip_matrix(mat3x4 clip_matrix)
 inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
 {
     m_poly_mode = mode;
+}
+
+inline void SoftwareDevice::set_render_target(RenderTarget* target)
+{
+    m_render_target = target;
 }

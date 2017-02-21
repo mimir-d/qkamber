@@ -7,26 +7,86 @@
 
 using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////
+// Win32RenderTarget impl
+///////////////////////////////////////////////////////////////////////////////
+Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc) :
+    m_surface_dc(surface_dc)
+{
+    m_dc = CreateCompatibleDC(surface_dc);
+    if (GetDeviceCaps(surface_dc, BITSPIXEL) != 32)
+    {
+        // TODO: fix this with forcing the window bpp thru wgl
+        throw exception("window needs to be 32bpp");
+    }
+}
+
+void Win32ColorBuffer::resize(int width, int height)
+{
+    if (m_bitmap != INVALID_HANDLE_VALUE)
+        DeleteObject(m_bitmap);
+
+    BITMAPINFO bi = { 0 };
+    BITMAPINFOHEADER& bmi = bi.bmiHeader;
+    bmi.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.biPlanes = GetDeviceCaps(m_surface_dc, PLANES);
+    bmi.biBitCount = GetDeviceCaps(m_surface_dc, BITSPIXEL);
+    // limit to 1920x1080 because of fixed point math (2048x2048 max)
+    bmi.biWidth = min(width, 1920);
+    bmi.biHeight = -min(height, 1080);
+    bmi.biCompression = BI_RGB;
+
+    m_bitmap = CreateDIBSection(
+        m_surface_dc,
+        &bi,
+        DIB_RGB_COLORS,
+        reinterpret_cast<PVOID*>(&m_data_ptr),
+        nullptr, 0
+    );
+
+    m_stride = (bmi.biWidth * bmi.biBitCount + 0x1f) >> 5;
+
+    SelectObject(m_dc, m_bitmap);
+
+    SetBkMode(m_dc, TRANSPARENT);
+    SetTextColor(m_dc, 0x0040FF00);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32DepthBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+void Win32DepthBuffer::resize(int width, int height)
+{
+    m_stride = width;
+    m_data.reset(new float[height * m_stride]);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32SoftwareDevice
+///////////////////////////////////////////////////////////////////////////////
 void Win32SoftwareDevice::win32_init(HWND window_handle)
 {
     flog("on hwnd = %#x", window_handle);
     m_window_handle = window_handle;
 
-    m_frontbuffer = GetDC(m_window_handle);
+    m_surface = GetDC(m_window_handle);
+    GetClientRect(m_window_handle, &m_rect);
 
-    RECT rc;
-    GetClientRect(m_window_handle, &rc);
-    win32_resize(&rc);
+    // always create a default render target, but leave the option to be set
+    m_default_target = create_render_target();
+    m_render_target = m_default_target.get();
+
+    win32_resize(&m_rect);
 
     // create brushes
-    m_backbuffer_brush = CreateSolidBrush(0);
+    m_clear_brush = CreateSolidBrush(RGB(0, 0, 0));
     m_fill_brush = CreateSolidBrush(0x009600c8);
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
     // create font
     LOGFONT font_desc = { 0 };
 
-    font_desc.lfHeight = -MulDiv(9, GetDeviceCaps(m_backbuffer, LOGPIXELSY), 72);
+    font_desc.lfHeight = -MulDiv(9, GetDeviceCaps(m_surface, LOGPIXELSY), 72);
     font_desc.lfQuality = ANTIALIASED_QUALITY;
     font_desc.lfPitchAndFamily = MONO_FONT;
     strcpy_s(font_desc.lfFaceName, LF_FACESIZE, "Courier New");
@@ -43,76 +103,40 @@ void Win32SoftwareDevice::win32_shutdown()
     DeleteObject(m_font);
     DeleteObject(m_line_pen);
     DeleteObject(m_fill_brush);
-    DeleteObject(m_backbuffer_brush);
+    DeleteObject(m_clear_brush);
 
-    delete[] m_zbuffer;
-    delete[] m_zbuffer_clear;
-
-    DeleteObject(m_backbuffer_bitmap);
-    DeleteDC(m_backbuffer);
-    ReleaseDC(m_window_handle, m_frontbuffer);
+    ReleaseDC(m_window_handle, m_surface);
 }
 
 void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 {
-    if (m_backbuffer_bitmap != INVALID_HANDLE_VALUE)
-    {
-        delete[] m_zbuffer;
-        delete[] m_zbuffer_clear;
-
-        DeleteObject(m_backbuffer_bitmap);
-        DeleteDC(m_backbuffer);
-    }
-
     CopyRect(&m_rect, client_rect);
-    GetClientRect(m_window_handle, &m_rect);
-    m_backbuffer = CreateCompatibleDC(m_frontbuffer);
 
-    if (GetDeviceCaps(m_frontbuffer, BITSPIXEL) != 32)
-    {
-        // TODO: fix this with forcing the window bpp thru wgl
-        throw exception("window needs to be 32bpp");
-    }
+    const int width = client_rect->right - client_rect->left;
+    const int height = client_rect->bottom - client_rect->top;
 
-    BITMAPINFO bi = { 0 };
-    BITMAPINFOHEADER& bmi = bi.bmiHeader;
-    bmi.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.biPlanes = GetDeviceCaps(m_frontbuffer, PLANES);
-    bmi.biBitCount = GetDeviceCaps(m_frontbuffer, BITSPIXEL);
-    // limit to 1920x1080 because of fixed point math (2048x2048 max)
-    bmi.biWidth = max(client_rect->right - client_rect->left, 1920L);
-    bmi.biHeight = -max(client_rect->bottom - client_rect->top, 1080L);
-    bmi.biCompression = BI_RGB;
+    m_render_target->set_width(width);
+    m_render_target->set_height(height);
 
-    m_backbuffer_bitmap = CreateDIBSection(
-        m_frontbuffer,
-        &bi,
-        DIB_RGB_COLORS,
-        reinterpret_cast<PVOID*>(&m_backbuffer_bits),
-        nullptr, 0
-    );
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    color_buf.resize(width, height);
 
-    const size_t stride = ((bmi.biWidth * bmi.biBitCount + 31) / 32);
-    m_backbuffer_stride = sizeof(DWORD) * stride;
+    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
+    depth_buf.resize(width, height);
 
     // create zbuffer and initialization buffer because it's faster to memcpy that
-    m_zbuffer = new uint8_t[-bmi.biHeight * stride * sizeof(float)];
-    m_zbuffer_clear = new uint8_t[-bmi.biHeight * stride * sizeof(float)];
-
-    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer_clear);
+    m_zbuffer_clear.reset(new float[height * depth_buf.get_stride()]);
+    float* zbuff_ptr = m_zbuffer_clear.get();
     std::fill(
-        zbuff_ptr, zbuff_ptr + (-bmi.biHeight * m_backbuffer_stride) / sizeof(float),
+        zbuff_ptr, zbuff_ptr + height * depth_buf.get_stride(),
         std::numeric_limits<float>::max()
     );
 
     // set up backbuffer objects
-    SelectObject(m_backbuffer, m_backbuffer_bitmap);
-    SelectObject(m_backbuffer, m_font);
-    SelectObject(m_backbuffer, m_fill_brush);
-    SelectObject(m_backbuffer, m_line_pen);
-
-    SetBkMode(m_backbuffer, TRANSPARENT);
-    SetTextColor(m_backbuffer, 0x0040FF00);
+    HDC backbuffer = color_buf.get_dc();
+    SelectObject(backbuffer, m_font);
+    SelectObject(backbuffer, m_fill_brush);
+    SelectObject(backbuffer, m_line_pen);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,7 +144,20 @@ void Win32SoftwareDevice::win32_resize(PRECT client_rect)
 ///////////////////////////////////////////////////////////////////////////////
 void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 {
-    TextOut(m_backbuffer, x, y, text.c_str(), static_cast<int>(text.size()));
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    TextOut(color_buf.get_dc(), x, y, text.c_str(), static_cast<int>(text.size()));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Resource management methods
+///////////////////////////////////////////////////////////////////////////////
+std::unique_ptr<RenderTarget> Win32SoftwareDevice::create_render_target()
+{
+    return std::make_unique<RenderTarget>(
+        m_rect.right - m_rect.left, m_rect.bottom - m_rect.top,
+        std::unique_ptr<ColorBuffer>{ new Win32ColorBuffer{ m_surface } },
+        std::unique_ptr<DepthBuffer>{ new Win32DepthBuffer }
+    );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,20 +165,26 @@ void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 ///////////////////////////////////////////////////////////////////////////////
 void Win32SoftwareDevice::clear()
 {
-    const size_t height = static_cast<size_t>(m_rect.bottom - m_rect.top);
-    FillRect(m_backbuffer, &m_rect, m_backbuffer_brush);
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    RECT rc = { 0, 0, m_render_target->get_width(), m_render_target->get_height() };
+    FillRect(color_buf.get_dc(), &rc, m_clear_brush);
 
     // clear the zbuffer
-    memcpy(m_zbuffer, m_zbuffer_clear, height * m_backbuffer_stride);
+    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
+    memcpy(
+        depth_buf.get_data(), m_zbuffer_clear.get(),
+        m_render_target->get_height() * depth_buf.get_stride() * sizeof(float)
+    );
 }
 
 void Win32SoftwareDevice::swap_buffers()
 {
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
     BitBlt(
-        m_frontbuffer,
+        m_surface,
         m_rect.left, m_rect.top,
         m_rect.right - m_rect.left, m_rect.bottom - m_rect.top,
-        m_backbuffer,
+        color_buf.get_dc(),
         0, 0,
         SRCCOPY
     );
@@ -167,9 +210,12 @@ void Win32SoftwareDevice::draw_tri_point(const DevicePoint& p0, const DevicePoin
     const int x1 = static_cast<int>(p1.position.x()), y1 = static_cast<int>(p1.position.y());
     const int x2 = static_cast<int>(p2.position.x()), y2 = static_cast<int>(p2.position.y());
 
-    Ellipse(m_backbuffer, x0 - r, y0 - r, x0 + r, y0 + r);
-    Ellipse(m_backbuffer, x1 - r, y1 - r, x1 + r, y1 + r);
-    Ellipse(m_backbuffer, x2 - r, y2 - r, x2 + r, y2 + r);
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    HDC dc = color_buf.get_dc();
+
+    Ellipse(dc, x0 - r, y0 - r, x0 + r, y0 + r);
+    Ellipse(dc, x1 - r, y1 - r, x1 + r, y1 + r);
+    Ellipse(dc, x2 - r, y2 - r, x2 + r, y2 + r);
 }
 
 void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
@@ -178,19 +224,17 @@ void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint
     const int x1 = static_cast<int>(p1.position.x()), y1 = static_cast<int>(p1.position.y());
     const int x2 = static_cast<int>(p2.position.x()), y2 = static_cast<int>(p2.position.y());
 
-    MoveToEx(m_backbuffer, x0, y0, nullptr);
-    LineTo(m_backbuffer, x1, y1);
-    LineTo(m_backbuffer, x2, y2);
-    LineTo(m_backbuffer, x0, y0);
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    HDC dc = color_buf.get_dc();
+
+    MoveToEx(dc, x0, y0, nullptr);
+    LineTo(dc, x1, y1);
+    LineTo(dc, x2, y2);
+    LineTo(dc, x0, y0);
 }
 
 namespace
 {
-    inline DWORD to_rgb(vec3 c)
-    {
-        return (static_cast<DWORD>(c.x()) << 16) + (static_cast<DWORD>(c.y()) << 8) + static_cast<DWORD>(c.z());
-    }
-
     struct heval : repeat_t<fp8, 3>
     {
         heval(fp8 a, fp8 b, fp8 c) : repeat_t<fp8, 3>(a, b, c)
@@ -304,8 +348,14 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const float dz_dx = (z2 * fdx01 + z0 * fdx12 + z1 * fdx20) * lerp_c;
     const float dz_dy = (z2 * fdy01 + z0 * fdy12 + z1 * fdy20) * lerp_c;
 
-    DWORD* color_ptr = reinterpret_cast<DWORD*>(m_backbuffer_bits + min_y * m_backbuffer_stride);
-    float* zbuff_ptr = reinterpret_cast<float*>(m_zbuffer + min_y * m_backbuffer_stride);
+    // buffers
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    const size_t color_stride = color_buf.get_stride();
+    DWORD* color_ptr = color_buf.get_data() + min_y * color_stride;
+
+    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
+    const size_t depth_stride = depth_buf.get_stride();
+    float* depth_ptr = depth_buf.get_data() + min_y * depth_stride;
 
     for (int y = min_y; y < max_y; y++)
     {
@@ -317,10 +367,10 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
         for (int x = min_x; x < max_x; x++)
         {
             // TODO: there's some zbuff fighting at 50+ distance
-            if (z_x < zbuff_ptr[x] && he_x > 0)
+            if (z_x < depth_ptr[x] && he_x > 0)
             {
-                color_ptr[x] = to_rgb(c_x);
-                zbuff_ptr[x] = z_x;
+                color_ptr[x] = RGB(c_x.z(), c_x.y(), c_x.x());;
+                depth_ptr[x] = z_x;
             }
 
             he_x -= he_dy;
@@ -332,7 +382,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
         c_y += dc_dx;
         z_y += dz_dx;
 
-        reinterpret_cast<uint8_t*&>(color_ptr) += m_backbuffer_stride;
-        reinterpret_cast<uint8_t*&>(zbuff_ptr) += m_backbuffer_stride;
+        color_ptr += color_stride;
+        depth_ptr += depth_stride;
     }
 }

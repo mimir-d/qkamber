@@ -1,12 +1,12 @@
 #pragma once
 
-#include "window.h"
+#include "render_window.h"
 #include "win32_input_system.h"
 
 class Application;
 class Renderer;
 
-class Win32Window : public Window
+class Win32Window : public RenderWindow
 {
 public:
     void init(Application* app, Timer* timer) final;
