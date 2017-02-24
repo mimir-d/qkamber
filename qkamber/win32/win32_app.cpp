@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Win32App::Win32App(Engine::Context& context) :
+Win32App::Win32App(QkEngine::Context& context) :
     App(context)
 {
     flog("id = %#x", this);

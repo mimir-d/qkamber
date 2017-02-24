@@ -136,11 +136,11 @@ void Win32Window::register_class()
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     wcex.hInstance      = instance;
-    wcex.hIcon          = LoadIcon(instance, MAKEINTRESOURCE(IDI_RENDERER));
+    wcex.hIcon          = LoadIcon(instance, MAKEINTRESOURCE(IDI_QKAMBER));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszClassName  = WINDOW_CLASS;
-    wcex.hIconSm        = LoadIcon(instance, MAKEINTRESOURCE(IDI_RENDERER));
+    wcex.hIconSm        = LoadIcon(instance, MAKEINTRESOURCE(IDI_QKAMBER));
 
     wcex.lpfnWndProc    = [](HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) -> LRESULT
     {

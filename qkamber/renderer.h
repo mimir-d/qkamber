@@ -56,7 +56,7 @@ public:
 class Renderer
 {
 public:
-	Renderer(Engine::Context& context);
+	Renderer(QkEngine::Context& context);
 	~Renderer();
 
     void begin_frame();
@@ -85,7 +85,7 @@ protected:
     Camera* m_camera = nullptr;
     Viewport* m_viewport = nullptr;
 
-    Engine::Context& m_context;
+    QkEngine::Context& m_context;
     bool m_paused = true;
     uint64_t m_frame_number = 0;
 

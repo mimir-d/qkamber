@@ -5,7 +5,7 @@
 class Win32App : public App
 {
 public:
-    Win32App(Engine::Context& context);
+    Win32App(QkEngine::Context& context);
     ~Win32App() = default;
 
     int mainloop() final;

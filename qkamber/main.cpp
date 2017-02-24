@@ -12,7 +12,7 @@ using namespace std;
 #include "mesh.h"
 #include "input_system.h"
 
-class Context : public Engine::Context
+class Context : public QkEngine::Context
 {
 public:
     void on_create() final;
@@ -132,7 +132,7 @@ int main()
     try
     {
         Context ctx;
-        return Engine(ctx).run();
+        return QkEngine(ctx).run();
     }
     catch (exception& ex)
     {

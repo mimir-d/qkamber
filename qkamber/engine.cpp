@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Engine::Context::Context()
+QkEngine::Context::Context()
 {
     flog();
 
@@ -17,7 +17,7 @@ Engine::Context::Context()
     log_info("Finished creating engine context");
 }
 
-Engine::Context::~Context()
+QkEngine::Context::~Context()
 {
     flog();
 
@@ -28,7 +28,7 @@ Engine::Context::~Context()
     log_info("Destroyed engine context");
 }
 
-int Engine::run()
+int QkEngine::run()
 {
     flog();
 
