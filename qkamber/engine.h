@@ -3,7 +3,7 @@
 class Timer;
 class Renderer;
 
-class Engine
+class QkEngine
 {
 public:
     class Context
@@ -29,8 +29,8 @@ public:
     };
 
 public:
-    Engine(Context& context);
-    ~Engine();
+    QkEngine(Context& context);
+    ~QkEngine();
 
     int run();
 
@@ -41,24 +41,24 @@ private:
 class App
 {
 public:
-    App(Engine::Context& context);
+    App(QkEngine::Context& context);
     virtual ~App() = default;
 
     virtual int mainloop() = 0;
 
 protected:
-    Engine::Context& m_context;
+    QkEngine::Context& m_context;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Engine::Context impl
 ///////////////////////////////////////////////////////////////////////////////
-inline Renderer& Engine::Context::get_renderer()
+inline Renderer& QkEngine::Context::get_renderer()
 {
     return *m_renderer.get();
 }
 
-inline Timer& Engine::Context::get_timer()
+inline Timer& QkEngine::Context::get_timer()
 {
     return *m_timer.get();
 }
@@ -66,14 +66,14 @@ inline Timer& Engine::Context::get_timer()
 ///////////////////////////////////////////////////////////////////////////////
 // Engine impl
 ///////////////////////////////////////////////////////////////////////////////
-inline Engine::Engine(Context& context) :
+inline QkEngine::QkEngine(Context& context) :
     m_context(context)
 {
     flog();
     log_info("Created Qkamber engine instance");
 }
 
-inline Engine::~Engine()
+inline QkEngine::~QkEngine()
 {
     flog();
     log_info("Destroyed engine instance");
@@ -82,6 +82,6 @@ inline Engine::~Engine()
 ///////////////////////////////////////////////////////////////////////////////
 // App impl
 ///////////////////////////////////////////////////////////////////////////////
-inline App::App(Engine::Context& context) :
+inline App::App(QkEngine::Context& context) :
     m_context(context)
 {}

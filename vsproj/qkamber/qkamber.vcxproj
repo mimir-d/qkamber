@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BB3B3888-5F1F-434B-85C2-9B327D9F694E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>renderer</RootNamespace>
+    <RootNamespace>qkamber</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -209,10 +209,10 @@
     <ClCompile Include="$(src)\win32\win32_window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="renderer.rc" />
+    <ResourceCompile Include="qkamber.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="renderer.ico" />
+    <Image Include="qkamber.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

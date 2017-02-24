@@ -152,12 +152,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="renderer.rc">
+    <ResourceCompile Include="qkamber.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="renderer.ico">
+    <Image Include="qkamber.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
