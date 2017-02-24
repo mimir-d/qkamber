@@ -2,15 +2,16 @@
 //
 
 #include "precompiled.h"
-using namespace std;
 
 #include "engine.h"
 #include "renderer.h"
+#include "input_system.h"
 #include "math3.h"
 #include "camera.h"
 #include "viewport.h"
 #include "mesh.h"
-#include "input_system.h"
+
+using namespace std;
 
 class Context : public QkEngine::Context
 {
@@ -26,7 +27,7 @@ private:
     PolygonMode m_poly_mode = PolygonMode::Fill;
     bool m_poly_mode_changed = false;
 
-    FpsCamera m_camera { { 0, 0, 15 } };
+    FpsCamera m_camera { *this, { 0, 0, 15 } };
 
     Viewport m_viewport;
 
@@ -59,7 +60,7 @@ void Context::on_resize(int width, int height)
 void Context::on_update(float abs_time, float elapsed_time)
 {
     auto& renderer = get_renderer();
-    auto& mouse = InputSystem::get_inst().get_mouse();
+    auto& mouse = get_input().get_mouse();
     // TODO: should encode button transitions somehow
     if (mouse.get_button_pressed(MouseDevice::RMB))
     {

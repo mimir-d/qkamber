@@ -37,7 +37,7 @@ void FpsCamera::update(float abs_time, float elapsed_time)
 
 vec2 FpsCamera::get_rotation_delta()
 {
-    auto& mouse = InputSystem::get_inst().get_mouse();
+    auto& mouse = m_input.get_mouse();
     const vec2 mouse_abs = mouse.get_position();
 
     const vec2 delta = mouse_abs - m_mouse_last_abs;
@@ -52,7 +52,7 @@ vec2 FpsCamera::get_rotation_delta()
 
 vec3 FpsCamera::get_position_delta(float elapsed_time)
 {
-    auto& keyboard = InputSystem::get_inst().get_keyboard();
+    auto& keyboard = m_input.get_keyboard();
 
     const vec3 accel = vec3
     {

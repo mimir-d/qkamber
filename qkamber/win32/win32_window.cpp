@@ -103,8 +103,9 @@ void Win32DepthBuffer::resize(int width, int height)
 ///////////////////////////////////////////////////////////////////////////////
 // Win32Window impl
 ///////////////////////////////////////////////////////////////////////////////
-Win32Window::Win32Window(Renderer& renderer, int width, int height) :
-    m_renderer(renderer)
+Win32Window::Win32Window(QkEngine::Context& context, int width, int height) :
+    m_renderer(context.get_renderer()),
+    m_input(context.get_input())
 {
     flog("id = %#x", this);
 
@@ -205,9 +206,8 @@ void Win32Window::register_inputs(HWND window_handle)
 {
     flog();
 
-    auto& is = InputSystem::get_inst();
-    auto& mouse = static_cast<Win32MouseDevice&>(is.get_mouse());
-    auto& keyboard = static_cast<Win32KeyboardDevice&>(is.get_keyboard());
+    auto& mouse = static_cast<Win32MouseDevice&>(m_input.get_mouse());
+    auto& keyboard = static_cast<Win32KeyboardDevice&>(m_input.get_keyboard());
 
     mouse.win32_init(window_handle);
     keyboard.win32_init(window_handle);
@@ -225,15 +225,14 @@ bool Win32Window::on_input(HRAWINPUT raw_handle)
     if (m_renderer.is_paused())
         return 0;
 
-    auto& is = InputSystem::get_inst();
     switch (input.header.dwType)
     {
         case RIM_TYPEMOUSE:
-            static_cast<Win32MouseDevice&>(is.get_mouse()).feed_input(input.data.mouse);
+            static_cast<Win32MouseDevice&>(m_input.get_mouse()).feed_input(input.data.mouse);
             break;
 
         case RIM_TYPEKEYBOARD:
-            static_cast<Win32KeyboardDevice&>(is.get_keyboard()).feed_input(input.data.keyboard);
+            static_cast<Win32KeyboardDevice&>(m_input.get_keyboard()).feed_input(input.data.keyboard);
             break;
     }
 

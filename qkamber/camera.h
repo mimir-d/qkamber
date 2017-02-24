@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine.h"
 #include "math3.h"
 
 class Camera
@@ -18,7 +19,7 @@ protected:
 class FpsCamera : public Camera
 {
 public:
-    FpsCamera(const vec3& position);
+    FpsCamera(QkEngine::Context& context, const vec3& position);
     ~FpsCamera() = default;
 
     void set_proj_params(int width, int height);
@@ -30,6 +31,8 @@ public:
 private:
     vec2 get_rotation_delta();
     vec3 get_position_delta(float elapsed_time);
+
+    InputSystem& m_input;
 
     vec3 m_position;
     vec2 m_rotation;
@@ -64,7 +67,8 @@ inline const mat4& Camera::get_proj() const
 ///////////////////////////////////////////////////////////////////////////////
 // FpsCamera impl
 ///////////////////////////////////////////////////////////////////////////////
-inline FpsCamera::FpsCamera(const vec3& position) :
+inline FpsCamera::FpsCamera(QkEngine::Context& context, const vec3& position) :
+    m_input(context.get_input()),
     m_position(position)
 {
     flog("id = %#x", this);
