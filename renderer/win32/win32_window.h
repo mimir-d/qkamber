@@ -1,45 +1,161 @@
 #pragma once
 
+#include "render_buffers.h"
 #include "render_window.h"
-#include "win32_input_system.h"
 
-class Application;
-class Renderer;
+class Win32SoftwareDevice;
+
+class Win32ColorBuffer : public ColorBuffer
+{
+public:
+    Win32ColorBuffer(HDC surface, int width, int height);
+    ~Win32ColorBuffer() = default;
+
+    HDC get_dc();
+
+    DWORD* get_data();
+    size_t get_stride();
+
+    // TODO: should these actually be recreated instead of resized?
+    void resize(int width, int height);
+
+private:
+    HDC m_surface_dc;
+
+    HDC m_dc;
+    HBITMAP m_bitmap = reinterpret_cast<HBITMAP>(INVALID_HANDLE_VALUE);
+
+    DWORD* m_data_ptr;
+    size_t m_width = 0;
+    size_t m_height = 0;
+    size_t m_stride;
+};
+
+class Win32DepthBuffer : public DepthBuffer
+{
+public:
+    Win32DepthBuffer(int width, int height);
+    ~Win32DepthBuffer() = default;
+
+    float* get_data();
+    size_t get_stride();
+
+    void resize(int width, int height);
+
+    // TODO: should this optimization be here or somewhere else?
+    float* get_data_clear();
+
+private:
+    std::unique_ptr<float[]> m_data;
+    std::unique_ptr<float[]> m_data_clear;
+    size_t m_width = 0;
+    size_t m_height = 0;
+};
 
 class Win32Window : public RenderWindow
 {
 public:
-    void init(Application* app, Timer* timer) final;
-    void mainloop() final;
-    int shutdown() final;
+    Win32Window(Renderer& renderer, int width, int height);
+    ~Win32Window();
+
+    HDC get_dc() const;
+
+    int get_width() const final;
+    int get_height() const final;
+
+    ColorBuffer& get_color_buffer() final;
+    DepthBuffer& get_depth_buffer() final;
 
 private:
-    void init_class();
-    void init_window();
-    void init_render_device();
-    void init_inputs();
+    void register_class();
+    void unregister_class();
+    HWND create_window(int width, int height);
+    void register_inputs(HWND window_handle);
 
-    void on_paint();
-    void on_resize();
-    LRESULT wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-    void pause(bool enable);
-    template <typename Func>
-    void paused(Func fun);
+    bool on_input(HRAWINPUT raw_handle);
+    void on_resize(RECT& rc);
+    LRESULT wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 private:
-    RECT m_client_rect;
-    int m_window_state;
-    bool m_paused = false;
+    HDC m_dc;
+    RECT m_rect = { 0 };
 
-    HWND m_window_handle;
-    int m_exit_code = 0;
+    enum class WindowState : int
+    {
+        Unknown = -1,
+        Restored = SIZE_RESTORED,
+        Minimized = SIZE_MINIMIZED,
+        Maximized = SIZE_MAXIMIZED,
+        Sizing = SIZE_MAXHIDE + 1000
+    };
+    WindowState m_window_state = WindowState::Unknown;
+
+    std::unique_ptr<Win32ColorBuffer> m_color_buf;
+    std::unique_ptr<Win32DepthBuffer> m_depth_buf;
+
+    Renderer& m_renderer;
 };
 
-template <typename Func>
-inline void Win32Window::paused(Func fun)
+///////////////////////////////////////////////////////////////////////////////
+// Win32RenderTarget impl
+///////////////////////////////////////////////////////////////////////////////
+inline HDC Win32ColorBuffer::get_dc()
 {
-    pause(true);
-    fun();
-    pause(false);
+    return m_dc;
+}
+
+inline DWORD* Win32ColorBuffer::get_data()
+{
+    return m_data_ptr;
+}
+
+inline size_t Win32ColorBuffer::get_stride()
+{
+    return m_stride;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32DepthBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+inline float* Win32DepthBuffer::get_data()
+{
+    return m_data.get();
+}
+
+inline size_t Win32DepthBuffer::get_stride()
+{
+    return m_width;
+}
+
+inline float* Win32DepthBuffer::get_data_clear()
+{
+    return m_data_clear.get();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Win32Window impl
+///////////////////////////////////////////////////////////////////////////////
+inline HDC Win32Window::get_dc() const
+{
+    return m_dc;
+}
+
+inline int Win32Window::get_width() const
+{
+    return m_rect.right - m_rect.left;
+}
+
+inline int Win32Window::get_height() const
+{
+    return m_rect.bottom - m_rect.top;
+}
+
+inline ColorBuffer& Win32Window::get_color_buffer()
+{
+    return *m_color_buf.get();
+}
+
+inline DepthBuffer& Win32Window::get_depth_buffer()
+{
+    return *m_depth_buf.get();
 }

@@ -1,37 +1,31 @@
 
 #include "precompiled.h"
 #include "renderer.h"
+
+#include "engine.h"
 #include "render_queue.h"
 #include "render_primitive.h"
 #include "mesh.h"
-#include "win32/win32_software_device.h"
 #include "math3.h"
+#include "platform.h"
 
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer
 ///////////////////////////////////////////////////////////////////////////////
-void Renderer::init(Timer* timer)
+Renderer::Renderer(Engine::Context& context) :
+    m_context(context)
 {
     flog("id = %#x", this);
-    m_timer = timer;
-
-    m_dev = RenderDeviceFactory::create();
-
-    m_frame_number = 0;
-    m_fps_last_count = 0;
-    m_fps_last_timestamp = 0;
-
-    m_target_fps = 60;
-    m_fps = 0;
-
-    log_info("Initialized renderer");
+    m_dev = RenderDeviceFactory::create(*this);
+    log_info("Created renderer");
 }
-void Renderer::shutdown()
+
+Renderer::~Renderer()
 {
-	flog();
-    log_info("Shutdown renderer");
+    flog();
+    log_info("Destroyed renderer");
 }
 
 void Renderer::begin_frame()
@@ -70,7 +64,7 @@ void Renderer::end_frame()
     m_frame_number ++;
     m_fps_last_count ++;
 
-    float now = m_timer->get_abs_time();
+    float now = m_context.get_timer().get_abs_time();
     float delta = now - m_fps_last_timestamp;
     if (delta >= 1.0f)
     {
@@ -83,14 +77,28 @@ void Renderer::end_frame()
     // delay for fps
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// RenderDeviceFactory
-///////////////////////////////////////////////////////////////////////////////
-unique_ptr<RenderDevice> RenderDeviceFactory::create()
+void Renderer::resize(int width, int height)
 {
-#ifdef WIN32
-    log_info("RenderDeviceFactory creating a Win32RenderDevice...");
-    return unique_ptr<RenderDevice>(new Win32SoftwareDevice);
-#endif
-    return nullptr;
+    // TODO: not sure if this should exist
+    m_context.on_resize(width, height);
 }
+
+void Renderer::pause(bool enabled)
+{
+    if (m_paused == enabled)
+        return;
+
+    auto& timer = m_context.get_timer();
+    if (enabled)
+    {
+        timer.stop();
+        dlog("Rendering stopped");
+    }
+    else
+    {
+        timer.resume();
+        dlog("Rendering resumed");
+    }
+    m_paused = enabled;
+}
+

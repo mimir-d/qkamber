@@ -39,6 +39,10 @@ protected:
     };
 
 public:
+    SoftwareDevice();
+    ~SoftwareDevice() = default;
+
+public:
     // drawing methods
     void draw_primitive(const RenderPrimitive& primitive) final;
 
@@ -49,7 +53,7 @@ public:
     void set_clip_matrix(mat3x4 clip_matrix) final;
 
     void set_polygon_mode(PolygonMode mode) final;
-    void set_render_target(RenderTarget* target) final;
+    void set_render_target(RenderTarget* target);
 
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
@@ -60,7 +64,8 @@ protected:
 
 protected:
     PolygonMode m_poly_mode = PolygonMode::Fill;
-    RenderTarget* m_render_target = nullptr;
+    RenderTarget* m_render_target;
+    std::unique_ptr<RenderTarget> m_null_target;
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -106,5 +111,11 @@ inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
 
 inline void SoftwareDevice::set_render_target(RenderTarget* target)
 {
+    if (!target)
+    {
+        m_render_target = m_null_target.get();
+        return;
+    }
+
     m_render_target = target;
 }
