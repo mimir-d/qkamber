@@ -7,9 +7,48 @@
 
 using namespace std;
 
+namespace
+{
+    class NullTarget : public RenderTarget
+    {
+    public:
+        ColorBuffer& get_color_buffer() final;
+        DepthBuffer& get_depth_buffer() final;
+
+        int get_width() const final;
+        int get_height() const final;
+    };
+
+    inline ColorBuffer& NullTarget::get_color_buffer()
+    {
+        throw std::exception("Attempted to draw in null target");
+    }
+
+    inline DepthBuffer& NullTarget::get_depth_buffer()
+    {
+        throw std::exception("Attempted to draw in null target");
+    }
+
+    inline int NullTarget::get_width() const
+    {
+        return 0;
+    }
+
+    inline int NullTarget::get_height() const
+    {
+        return 0;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Drawing methods
 ///////////////////////////////////////////////////////////////////////////////
+SoftwareDevice::SoftwareDevice() :
+    m_null_target(new NullTarget)
+{
+    set_render_target(nullptr);
+}
+
 template <typename T> int sgn(T val)
 {
     return (T(0) < val) - (val < T(0));

@@ -24,7 +24,7 @@ public:
 
 public:
     InputSystem();
-    ~InputSystem() = default;
+    ~InputSystem();
 
     MouseDevice& get_mouse();
     KeyboardDevice& get_keyboard();
@@ -32,13 +32,6 @@ public:
 private:
     std::unique_ptr<MouseDevice> m_mouse;
     std::unique_ptr<KeyboardDevice> m_keyboard;
-};
-
-class InputDeviceFactory
-{
-public:
-    static std::unique_ptr<MouseDevice> create_mouse();
-    static std::unique_ptr<KeyboardDevice> create_keyboard();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,12 +42,6 @@ inline InputSystem& InputSystem::get_inst()
 {
     static InputSystem is;
     return is;
-}
-
-inline InputSystem::InputSystem()
-{
-    m_mouse = InputDeviceFactory::create_mouse();
-    m_keyboard = InputDeviceFactory::create_keyboard();
 }
 
 inline MouseDevice& InputSystem::get_mouse()

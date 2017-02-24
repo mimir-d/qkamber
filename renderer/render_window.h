@@ -1,23 +1,10 @@
 #pragma once
 
-class Timer;
-class Application;
+#include "renderer.h"
 
-class RenderWindow
+class RenderWindow : public RenderTarget
 {
 public:
-    // TODO: move these to ctor (create platform.h, copy all factories there and template
-	virtual void init(Application* app, Timer* timer);
-	virtual void mainloop();
-	virtual int shutdown();
-
-protected:
-    Application* m_app;
-    Timer* m_timer;
+    virtual ~RenderWindow() = default;
 };
 
-class AppWindowFactory
-{
-public:
-	static std::unique_ptr<RenderWindow> create();
-};

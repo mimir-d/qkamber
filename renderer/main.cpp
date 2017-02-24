@@ -5,26 +5,24 @@
 using namespace std;
 
 #include "engine.h"
-#include "app.h"
-#include "render_window.h"
 #include "renderer.h"
-#include "timer.h"
 #include "math3.h"
 #include "camera.h"
 #include "viewport.h"
 #include "mesh.h"
 #include "input_system.h"
 
-class MyApplication : public Application
+class Context : public Engine::Context
 {
 public:
-    void on_create() override;
-    void on_resize(int width, int height) override;
+    void on_create() final;
+    void on_resize(int width, int height) final;
 
-    void update(float abs_time, float elapsed_time) override;
-    void render(float abs_time, float elapsed_time) override;
+    void on_update(float abs_time, float elapsed_time) final;
+    void on_render(float abs_time, float elapsed_time) final;
 
 private:
+    std::unique_ptr<RenderTarget> m_target;
     PolygonMode m_poly_mode = PolygonMode::Fill;
     bool m_poly_mode_changed = false;
 
@@ -36,25 +34,31 @@ private:
     mat4 m_world_matrix[3][3];
 };
 
-void MyApplication::on_create()
+void Context::on_create()
 {
-    m_renderer.set_camera(&m_camera);
-    m_renderer.set_viewport(&m_viewport);
+    auto& renderer = get_renderer();
+    renderer.set_camera(&m_camera);
+    renderer.set_viewport(&m_viewport);
 
-    auto& dev = m_renderer.get_device();
+    // initialize a render target for the app
+    auto& dev = renderer.get_device();
+    m_target = dev.create_render_target(640, 480);
+
+    dev.set_render_target(m_target.get());
     dev.set_polygon_mode(m_poly_mode);
 
     m_mesh = make_unique<Mesh>(dev);
 }
 
-void MyApplication::on_resize(int width, int height)
+void Context::on_resize(int width, int height)
 {
     m_camera.set_proj_params(width, height);
     m_viewport.set_params(width, height);
 }
 
-void MyApplication::update(float abs_time, float elapsed_time)
+void Context::on_update(float abs_time, float elapsed_time)
 {
+    auto& renderer = get_renderer();
     auto& mouse = InputSystem::get_inst().get_mouse();
     // TODO: should encode button transitions somehow
     if (mouse.get_button_pressed(MouseDevice::RMB))
@@ -67,7 +71,7 @@ void MyApplication::update(float abs_time, float elapsed_time)
                 case PolygonMode::Line:  m_poly_mode = PolygonMode::Fill; break;
                 case PolygonMode::Fill:  m_poly_mode = PolygonMode::Point; break;
             }
-            m_renderer.get_device().set_polygon_mode(m_poly_mode);
+            renderer.get_device().set_polygon_mode(m_poly_mode);
 
             m_poly_mode_changed = true;
         }
@@ -82,7 +86,7 @@ void MyApplication::update(float abs_time, float elapsed_time)
     // TODO: check paren identation formatting
     // scene stuff
 
-    auto& q = m_renderer.get_queue();
+    auto& q = renderer.get_queue();
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
@@ -106,32 +110,29 @@ void MyApplication::update(float abs_time, float elapsed_time)
     // m_scene.update();
 }
 
-void MyApplication::render(float abs_time, float elapsed_time)
+void Context::on_render(float abs_time, float elapsed_time)
 {
+    auto& renderer = get_renderer();
     // m_scene.render();
 
-    m_renderer.begin_frame();
-    m_renderer.render();
+    // TODO: this should not be public here
+    renderer.begin_frame();
+    renderer.render();
 
     vec3 p = m_camera.get_position();
     vec2 r = m_camera.get_rotation() * (180.0f / PI);
-    m_renderer.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
-    m_renderer.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
+    renderer.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
+    renderer.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
 
-    m_renderer.end_frame();
+    renderer.end_frame();
 }
 
 int main()
 {
-    Engine engine;
     try
     {
-        MyApplication app;
-        engine.run(app);
-
-        //cout << endl << "Press enter to continue ..." << endl;
-        //cin.get();
-        return engine.get_exit_code();
+        Context ctx;
+        return Engine(ctx).run();
     }
     catch (exception& ex)
     {
@@ -142,7 +143,7 @@ int main()
 
 // TODO:
 // refactoir happlication
-// zbuffer/scanline-tri; display lists + sorting
+// display lists + sorting
 // scene tree
 //
 
@@ -168,4 +169,3 @@ scene has scene nodes
 
 // scene has a renderer ref
 // find visible objects, put in render queue
-// TODO: log dates with time and move filename to left + log cat

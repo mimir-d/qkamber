@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine.h"
 #include "render_buffers.h"
 #include "render_queue.h"
 #include "timer.h"
@@ -13,37 +14,17 @@ enum class PolygonMode
     Point, Line, Fill
 };
 
-// TODO: window should be a rendertarget-type
 class RenderTarget
 {
 public:
-    RenderTarget(
-        int width, int height,
-        std::unique_ptr<ColorBuffer> color,
-        std::unique_ptr<DepthBuffer> depth
-    );
-    ~RenderTarget() = default;
+    virtual ~RenderTarget() = default;
 
-    // TODO: this always has these 2 attachments (should provide more in the future)
-    ColorBuffer& get_color_buffer();
-    DepthBuffer& get_depth_buffer();
+    // NOTE: this always has these 2 attachments (should provide more in the future)
+    virtual ColorBuffer& get_color_buffer() = 0;
+    virtual DepthBuffer& get_depth_buffer() = 0;
 
-    void set_width(int width)
-    {
-        m_width = width;
-    }
-    void set_height(int height)
-    {
-        m_height = height;
-    }
-    int get_width() const;
-    int get_height() const;
-
-private:
-    std::unique_ptr<ColorBuffer> m_color_buffer;
-    std::unique_ptr<DepthBuffer> m_depth_buffer;
-
-    int m_width, m_height;
+    virtual int get_width() const = 0;
+    virtual int get_height() const = 0;
 };
 
 class RenderDevice
@@ -63,7 +44,7 @@ public:
     virtual void set_polygon_mode(PolygonMode mode) = 0;
 
     // resource management methods
-    virtual std::unique_ptr<RenderTarget> create_render_target() = 0;
+    virtual std::unique_ptr<RenderTarget> create_render_target(int width, int height) = 0;
     virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;
     virtual std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) = 0;
 
@@ -75,8 +56,8 @@ public:
 class Renderer
 {
 public:
-	void init(Timer* timer);
-	void shutdown();
+	Renderer(Engine::Context& context);
+	~Renderer();
 
     void begin_frame();
     void render();
@@ -90,6 +71,10 @@ public:
     void set_camera(Camera* camera);
     void set_viewport(Viewport* viewport);
 
+    void resize(int width, int height);
+    void pause(bool enabled);
+    bool is_paused() const;
+
     float get_fps() const;
 
 protected:
@@ -97,55 +82,18 @@ protected:
     RenderQueue m_queue;
 
     //TEMP:
-    Camera* m_camera;
-    Viewport* m_viewport;
+    Camera* m_camera = nullptr;
+    Viewport* m_viewport = nullptr;
 
-	Timer* m_timer;
-    uint64_t m_frame_number;
+    Engine::Context& m_context;
+    bool m_paused = true;
+    uint64_t m_frame_number = 0;
 
-    float m_target_fps, m_fps;
-    uint32_t m_fps_last_count;
-    float m_fps_last_timestamp;
+    float m_target_fps = 60;
+    float m_fps = 0;
+    uint32_t m_fps_last_count = 0;
+    float m_fps_last_timestamp = 0;
 };
-
-class RenderDeviceFactory
-{
-public:
-    static std::unique_ptr<RenderDevice> create();
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// RenderTarget impl
-///////////////////////////////////////////////////////////////////////////////
-inline RenderTarget::RenderTarget(
-    int width, int height,
-    std::unique_ptr<ColorBuffer> color,
-    std::unique_ptr<DepthBuffer> depth
-) :
-    m_width(width), m_height(height),
-    m_color_buffer(std::move(color)),
-    m_depth_buffer(std::move(depth))
-{}
-
-inline ColorBuffer& RenderTarget::get_color_buffer()
-{
-    return *m_color_buffer.get();
-}
-
-inline DepthBuffer& RenderTarget::get_depth_buffer()
-{
-    return *m_depth_buffer.get();
-}
-
-inline int RenderTarget::get_width() const
-{
-    return m_width;
-}
-
-inline int RenderTarget::get_height() const
-{
-    return m_height;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer impl
@@ -168,6 +116,11 @@ inline void Renderer::set_camera(Camera* camera)
 inline void Renderer::set_viewport(Viewport* viewport)
 {
     m_viewport = viewport;
+}
+
+inline bool Renderer::is_paused() const
+{
+    return m_paused;
 }
 
 inline float Renderer::get_fps() const

@@ -4,135 +4,58 @@
 
 #include "render_primitive.h"
 #include "render_buffers.h"
+#include "win32_window.h"
 
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Win32RenderTarget impl
-///////////////////////////////////////////////////////////////////////////////
-Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc) :
-    m_surface_dc(surface_dc)
-{
-    m_dc = CreateCompatibleDC(surface_dc);
-    if (GetDeviceCaps(surface_dc, BITSPIXEL) != 32)
-    {
-        // TODO: fix this with forcing the window bpp thru wgl
-        throw exception("window needs to be 32bpp");
-    }
-}
-
-void Win32ColorBuffer::resize(int width, int height)
-{
-    if (m_bitmap != INVALID_HANDLE_VALUE)
-        DeleteObject(m_bitmap);
-
-    BITMAPINFO bi = { 0 };
-    BITMAPINFOHEADER& bmi = bi.bmiHeader;
-    bmi.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.biPlanes = GetDeviceCaps(m_surface_dc, PLANES);
-    bmi.biBitCount = GetDeviceCaps(m_surface_dc, BITSPIXEL);
-    // limit to 1920x1080 because of fixed point math (2048x2048 max)
-    bmi.biWidth = min(width, 1920);
-    bmi.biHeight = -min(height, 1080);
-    bmi.biCompression = BI_RGB;
-
-    m_bitmap = CreateDIBSection(
-        m_surface_dc,
-        &bi,
-        DIB_RGB_COLORS,
-        reinterpret_cast<PVOID*>(&m_data_ptr),
-        nullptr, 0
-    );
-
-    m_stride = (bmi.biWidth * bmi.biBitCount + 0x1f) >> 5;
-
-    SelectObject(m_dc, m_bitmap);
-
-    SetBkMode(m_dc, TRANSPARENT);
-    SetTextColor(m_dc, 0x0040FF00);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Win32DepthBuffer impl
-///////////////////////////////////////////////////////////////////////////////
-void Win32DepthBuffer::resize(int width, int height)
-{
-    m_stride = width;
-    m_data.reset(new float[height * m_stride]);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Win32SoftwareDevice
 ///////////////////////////////////////////////////////////////////////////////
-void Win32SoftwareDevice::win32_init(HWND window_handle)
+Win32SoftwareDevice::Win32SoftwareDevice(Renderer& renderer) :
+    m_renderer(renderer),
+    m_font(reinterpret_cast<HFONT>(INVALID_HANDLE_VALUE))
 {
-    flog("on hwnd = %#x", window_handle);
-    m_window_handle = window_handle;
+    flog("id = %#x", this);
 
-    m_surface = GetDC(m_window_handle);
-    GetClientRect(m_window_handle, &m_rect);
-
-    // always create a default render target, but leave the option to be set
-    m_default_target = create_render_target();
-    m_render_target = m_default_target.get();
-
-    win32_resize(&m_rect);
-
-    // create brushes
+    // create drawing stuff
     m_clear_brush = CreateSolidBrush(RGB(0, 0, 0));
     m_fill_brush = CreateSolidBrush(0x009600c8);
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
+    log_info("Created Win32SoftwareDevice", this);
+}
+
+Win32SoftwareDevice::~Win32SoftwareDevice()
+{
+    DeleteObject(m_line_pen);
+    DeleteObject(m_fill_brush);
+    DeleteObject(m_clear_brush);
+
+    if (m_font != INVALID_HANDLE_VALUE)
+        DeleteObject(m_font);
+}
+
+void Win32SoftwareDevice::set_render_target(RenderTarget* target)
+{
+    SoftwareDevice::set_render_target(target);
+    if (!target)
+        return;
+
+    // TODO: future, target might be a texture so extract just the DC
+    auto window = static_cast<Win32Window*>(target);
+
     // create font
     LOGFONT font_desc = { 0 };
 
-    font_desc.lfHeight = -MulDiv(9, GetDeviceCaps(m_surface, LOGPIXELSY), 72);
+    font_desc.lfHeight = -MulDiv(9, GetDeviceCaps(window->get_dc(), LOGPIXELSY), 72);
     font_desc.lfQuality = ANTIALIASED_QUALITY;
     font_desc.lfPitchAndFamily = MONO_FONT;
     strcpy_s(font_desc.lfFaceName, LF_FACESIZE, "Courier New");
 
     m_font = CreateFontIndirect(&font_desc);
 
-    log_info("Created Win32SoftwareDevice on hwnd = %#x", window_handle);
-}
-
-void Win32SoftwareDevice::win32_shutdown()
-{
-    flog("on hwnd = %#x", m_window_handle);
-
-    DeleteObject(m_font);
-    DeleteObject(m_line_pen);
-    DeleteObject(m_fill_brush);
-    DeleteObject(m_clear_brush);
-
-    ReleaseDC(m_window_handle, m_surface);
-}
-
-void Win32SoftwareDevice::win32_resize(PRECT client_rect)
-{
-    CopyRect(&m_rect, client_rect);
-
-    const int width = client_rect->right - client_rect->left;
-    const int height = client_rect->bottom - client_rect->top;
-
-    m_render_target->set_width(width);
-    m_render_target->set_height(height);
-
-    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
-    color_buf.resize(width, height);
-
-    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
-    depth_buf.resize(width, height);
-
-    // create zbuffer and initialization buffer because it's faster to memcpy that
-    m_zbuffer_clear.reset(new float[height * depth_buf.get_stride()]);
-    float* zbuff_ptr = m_zbuffer_clear.get();
-    std::fill(
-        zbuff_ptr, zbuff_ptr + height * depth_buf.get_stride(),
-        std::numeric_limits<float>::max()
-    );
-
     // set up backbuffer objects
+    auto& color_buf = static_cast<Win32ColorBuffer&>(target->get_color_buffer());
     HDC backbuffer = color_buf.get_dc();
     SelectObject(backbuffer, m_font);
     SelectObject(backbuffer, m_fill_brush);
@@ -151,13 +74,10 @@ void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 ///////////////////////////////////////////////////////////////////////////////
 // Resource management methods
 ///////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<RenderTarget> Win32SoftwareDevice::create_render_target()
+std::unique_ptr<RenderTarget> Win32SoftwareDevice::create_render_target(int width, int height)
 {
-    return std::make_unique<RenderTarget>(
-        m_rect.right - m_rect.left, m_rect.bottom - m_rect.top,
-        std::unique_ptr<ColorBuffer>{ new Win32ColorBuffer{ m_surface } },
-        std::unique_ptr<DepthBuffer>{ new Win32DepthBuffer }
-    );
+    // TODO: or texture, etc..
+    return std::unique_ptr<RenderTarget>{ new Win32Window{ m_renderer, width, height } };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,18 +92,18 @@ void Win32SoftwareDevice::clear()
     // clear the zbuffer
     auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
     memcpy(
-        depth_buf.get_data(), m_zbuffer_clear.get(),
+        depth_buf.get_data(), depth_buf.get_data_clear(),
         m_render_target->get_height() * depth_buf.get_stride() * sizeof(float)
     );
 }
 
 void Win32SoftwareDevice::swap_buffers()
 {
+    HDC surface = static_cast<Win32Window*>(m_render_target)->get_dc();
     auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
     BitBlt(
-        m_surface,
-        m_rect.left, m_rect.top,
-        m_rect.right - m_rect.left, m_rect.bottom - m_rect.top,
+        surface,
+        0, 0, m_render_target->get_width(), m_render_target->get_height(),
         color_buf.get_dc(),
         0, 0,
         SRCCOPY
@@ -288,9 +208,9 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
     // min bounding box
     const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
-    const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), static_cast<int>(m_rect.right - m_rect.left));
+    const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), m_render_target->get_width());
     const int min_y = ::max(static_cast<int>(::min(y0, y1, y2)), 0);
-    const int max_y = ::min(static_cast<int>(::max(y0, y1, y2)), static_cast<int>(m_rect.bottom - m_rect.top));
+    const int max_y = ::min(static_cast<int>(::max(y0, y1, y2)), m_render_target->get_height());
 
     const fp4 fp4_min_x = min_x;
     const fp4 fp4_min_y = min_y;

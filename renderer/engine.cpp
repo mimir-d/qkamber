@@ -2,43 +2,48 @@
 #include "precompiled.h"
 #include "engine.h"
 
-#include "render_window.h"
-#include "app.h"
+#include "platform.h"
 
-Engine::Engine()
+using namespace std;
+
+Engine::Context::Context()
 {
     // NOTE: this has to be inited _before_ any logging usage
     Logger::get().set_output_file("qukamber.log");
-
     flog();
+
     // init subsystems?
+    m_timer.reset(new Timer);
+    m_renderer.reset(new Renderer(*this));
 
-    m_global_timer.resume();
-    log_info("Created Qukamber engine instance");
+    log_info("Created engine context");
 }
 
-Engine::~Engine()
+Engine::Context::~Context()
 {
     flog();
-    m_global_timer.stop();
 
-    log_info("Destroyed engine instance");
+    // i want to manually destroy systems
+    m_renderer = nullptr;
+    m_timer = nullptr;
+
+    log_info("Destroyed engine context");
 }
 
-void Engine::run(Application& app)
+int Engine::run()
 {
-    // TODO: should create renderer here as well
-    auto& renderer = app.get_renderer();
-    renderer.init(&m_global_timer);
+    flog();
 
-    app.on_create();
-
-    std::unique_ptr<RenderWindow> window = AppWindowFactory::create();
-    window->init(&app, &m_global_timer);
-    window->mainloop();
-
-    renderer.shutdown();
-    m_exit_code = window->shutdown();
+    try
+    {
+        std::unique_ptr<App> app = AppFactory::create(m_context);
+        return app->mainloop();
+    }
+    catch (exception& ex)
+    {
+        log_error(">> Exception: %s", ex.what());
+        throw;
+    }
 }
 
 // todo: keep entity system here + subsystems
