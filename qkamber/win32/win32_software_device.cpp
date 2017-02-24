@@ -11,8 +11,8 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Win32SoftwareDevice
 ///////////////////////////////////////////////////////////////////////////////
-Win32SoftwareDevice::Win32SoftwareDevice(Renderer& renderer) :
-    m_renderer(renderer),
+Win32SoftwareDevice::Win32SoftwareDevice(QkEngine::Context& context) :
+    m_context(context),
     m_font(reinterpret_cast<HFONT>(INVALID_HANDLE_VALUE))
 {
     flog("id = %#x", this);
@@ -86,7 +86,7 @@ std::unique_ptr<RenderTarget> Win32SoftwareDevice::create_render_target(int widt
 
     // TODO: or texture, etc..
     log_info("Creating win32 window render target...");
-    return std::unique_ptr<RenderTarget>{ new Win32Window{ m_renderer, width, height } };
+    return std::unique_ptr<RenderTarget>{ new Win32Window{ m_context, width, height } };
 }
 
 ///////////////////////////////////////////////////////////////////////////////

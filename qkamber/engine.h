@@ -2,6 +2,7 @@
 
 class Timer;
 class Renderer;
+class InputSystem;
 
 class QkEngine
 {
@@ -19,13 +20,15 @@ public:
         virtual void on_render(float abs_time, float elapsed_time) = 0;
 
     public:
-        Renderer& get_renderer();
         Timer& get_timer();
+        Renderer& get_renderer();
+        InputSystem& get_input();
 
     private:
         // TODO: context will be the keeper of systems
         std::unique_ptr<Timer> m_timer;
         std::unique_ptr<Renderer> m_renderer;
+        std::unique_ptr<InputSystem> m_input;
     };
 
 public:
@@ -53,14 +56,19 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // Engine::Context impl
 ///////////////////////////////////////////////////////////////////////////////
+inline Timer& QkEngine::Context::get_timer()
+{
+    return *m_timer.get();
+}
+
 inline Renderer& QkEngine::Context::get_renderer()
 {
     return *m_renderer.get();
 }
 
-inline Timer& QkEngine::Context::get_timer()
+inline InputSystem& QkEngine::Context::get_input()
 {
-    return *m_timer.get();
+    return *m_input.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

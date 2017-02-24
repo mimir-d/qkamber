@@ -20,9 +20,6 @@ public:
 class InputSystem
 {
 public:
-    static InputSystem& get_inst();
-
-public:
     InputSystem();
     ~InputSystem();
 
@@ -37,13 +34,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // Impl
 ///////////////////////////////////////////////////////////////////////////////
-// TODO: this is NOT ok, refactor when impl systems in engine
-inline InputSystem& InputSystem::get_inst()
-{
-    static InputSystem is;
-    return is;
-}
-
 inline MouseDevice& InputSystem::get_mouse()
 {
     return *m_mouse;
@@ -55,5 +45,3 @@ inline KeyboardDevice& InputSystem::get_keyboard()
 }
 
 // win32_input_device for mouse + keyboard
-// pause should also mean ignore input
-// move camera on mouse down

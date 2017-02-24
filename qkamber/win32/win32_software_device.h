@@ -1,14 +1,12 @@
 #pragma once
 
 #include "software/software_device.h"
-#include "renderer.h"
-#include "render_buffers.h"
-#include "misc.h"
+#include "engine.h"
 
 class Win32SoftwareDevice : public SoftwareDevice
 {
 public:
-    Win32SoftwareDevice(Renderer& renderer);
+    Win32SoftwareDevice(QkEngine::Context& context);
     ~Win32SoftwareDevice();
 
     void set_render_target(RenderTarget* target) final;
@@ -32,7 +30,7 @@ private:
     void draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
 
 private:
-    Renderer& m_renderer;
+    QkEngine::Context& m_context;
 
     HBRUSH m_clear_brush;
     HPEN m_line_pen;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine.h"
 #include "render_buffers.h"
 #include "render_window.h"
 
@@ -55,7 +56,7 @@ private:
 class Win32Window : public RenderWindow
 {
 public:
-    Win32Window(Renderer& renderer, int width, int height);
+    Win32Window(QkEngine::Context& context, int width, int height);
     ~Win32Window();
 
     HDC get_dc() const;
@@ -94,6 +95,7 @@ private:
     std::unique_ptr<Win32DepthBuffer> m_depth_buf;
 
     Renderer& m_renderer;
+    InputSystem& m_input;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

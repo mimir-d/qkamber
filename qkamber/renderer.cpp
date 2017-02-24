@@ -18,7 +18,7 @@ Renderer::Renderer(QkEngine::Context& context) :
     m_context(context)
 {
     flog("id = %#x", this);
-    m_dev = RenderDeviceFactory::create(*this);
+    m_dev = RenderDeviceFactory::create(context);
     log_info("Created renderer");
 }
 
