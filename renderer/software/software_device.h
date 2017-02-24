@@ -111,6 +111,8 @@ inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
 
 inline void SoftwareDevice::set_render_target(RenderTarget* target)
 {
+    flog();
+
     if (!target)
     {
         m_render_target = m_null_target.get();
@@ -118,4 +120,5 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
     }
 
     m_render_target = target;
+    log_info("Set render target %#x", target);
 }

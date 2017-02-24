@@ -20,6 +20,8 @@ constexpr int WS_SIZING = SIZE_MAXHIDE;
 Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc, int width, int height) :
     m_surface_dc(surface_dc)
 {
+    flog("id = %#x", this);
+
     m_dc = CreateCompatibleDC(surface_dc);
     if (GetDeviceCaps(surface_dc, BITSPIXEL) != 32)
     {
@@ -28,6 +30,7 @@ Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc, int width, int height) :
     }
 
     resize(width, height);
+    log_info("Created win32 color buffer");
 }
 
 void Win32ColorBuffer::resize(int width, int height)
@@ -73,7 +76,10 @@ void Win32ColorBuffer::resize(int width, int height)
 ///////////////////////////////////////////////////////////////////////////////
 Win32DepthBuffer::Win32DepthBuffer(int width, int height)
 {
+    flog("id = %#x", this);
+
     resize(width, height);
+    log_info("Created win32 depth buffer");
 }
 
 void Win32DepthBuffer::resize(int width, int height)
@@ -109,7 +115,7 @@ Win32Window::Win32Window(Renderer& renderer, int width, int height) :
     HWND window_handle = create_window(width, height);
     register_inputs(window_handle);
 
-    log_info("Created win32 window");
+    log_info("Finished creating win32 window target %#x", this);
 }
 
 Win32Window::~Win32Window()

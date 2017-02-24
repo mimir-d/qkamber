@@ -12,6 +12,9 @@
 class Win32MouseDevice : public MouseDevice
 {
 public:
+    Win32MouseDevice();
+    ~Win32MouseDevice();
+
     void win32_init(HWND window_handle);
     void feed_input(const RAWMOUSE& raw_input);
 
@@ -27,6 +30,9 @@ private:
 class Win32KeyboardDevice : public KeyboardDevice
 {
 public:
+    Win32KeyboardDevice();
+    ~Win32KeyboardDevice();
+
     void win32_init(HWND window_handle);
     void feed_input(const RAWKEYBOARD& raw_input);
 
@@ -36,3 +42,30 @@ public:
 private:
     bool m_keymap[256] = { 0 };
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// impl
+///////////////////////////////////////////////////////////////////////////////
+inline Win32MouseDevice::Win32MouseDevice()
+{
+    flog();
+    log_info("Created win32 mouse device");
+}
+
+inline Win32MouseDevice::~Win32MouseDevice()
+{
+    flog();
+    log_info("Destroyed win32 mouse device");
+}
+
+inline Win32KeyboardDevice::Win32KeyboardDevice()
+{
+    flog();
+    log_info("Created win32 keyboard device");
+}
+
+inline Win32KeyboardDevice::~Win32KeyboardDevice()
+{
+    flog();
+    log_info("Destroyed win32 keyboard device");
+}

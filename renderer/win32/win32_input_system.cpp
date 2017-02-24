@@ -21,7 +21,7 @@ void Win32MouseDevice::win32_init(HWND window_handle)
     RegisterRawInputDevices(ridev, 1, sizeof(ridev[0]));
     // TODO: impl shutdown with unregistering
 
-    log_info("Registered Win32MouseDevice on hwnd = %#x", window_handle);
+    log_info("Registered win32 mouse on hwnd = %#x", window_handle);
 }
 
 bool Win32MouseDevice::get_button_pressed(Button button)
@@ -69,7 +69,7 @@ void Win32KeyboardDevice::win32_init(HWND window_handle)
     ridev[0].hwndTarget = window_handle;
     RegisterRawInputDevices(ridev, 1, sizeof(ridev[0]));
 
-    log_info("Registered Win32KeyboardDevice on hwnd = %#x", window_handle);
+    log_info("Registered win32 keyboard on hwnd = %#x", window_handle);
 }
 
 bool Win32KeyboardDevice::get_key_pressed(int key_code)

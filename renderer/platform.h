@@ -78,6 +78,6 @@ template <typename Intf, typename Impl>
 template <typename... Args>
 inline std::unique_ptr<Intf> PlatformFactory<Intf, Impl>::create(Args&&... args)
 {
-    log_info("PlatformFactory creating a %s...", detail::PlatformTypeTraits<Impl>::name);
+    dlog("PlatformFactory creating a %s...", detail::PlatformTypeTraits<Impl>::name);
     return std::unique_ptr<Intf>{ new Impl{ std::forward<Args>(args)... } };
 }
