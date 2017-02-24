@@ -8,15 +8,13 @@ using namespace std;
 
 Engine::Context::Context()
 {
-    // NOTE: this has to be inited _before_ any logging usage
-    Logger::get().set_output_file("qukamber.log");
     flog();
 
     // init subsystems?
     m_timer.reset(new Timer);
     m_renderer.reset(new Renderer(*this));
 
-    log_info("Created engine context");
+    log_info("Finished creating engine context");
 }
 
 Engine::Context::~Context()
@@ -37,7 +35,12 @@ int Engine::run()
     try
     {
         std::unique_ptr<App> app = AppFactory::create(m_context);
-        return app->mainloop();
+
+        log_info("Starting main message loop...");
+        int rc = app->mainloop();
+        log_info("Finished main message loop");
+
+        return rc;
     }
     catch (exception& ex)
     {

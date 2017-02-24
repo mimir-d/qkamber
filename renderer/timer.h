@@ -4,12 +4,13 @@ class Timer
 {
 public:
 	Timer();
-    ~Timer() = default;
+    ~Timer();
 
 	void resume();
 	void stop();
 
 	float get_abs_time() const;
+    // TODO: this should be done once a frame when this is turned into a system
 	float get_diff_time();
 
 private:
@@ -22,4 +23,11 @@ private:
 inline Timer::Timer()
 {
     flog("id = %#x", this);
+    log_info("Created timer");
+}
+
+inline Timer::~Timer()
+{
+    flog();
+    log_info("Destroyed timer");
 }

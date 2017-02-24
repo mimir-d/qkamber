@@ -10,7 +10,7 @@ InputSystem::InputSystem()
     m_mouse = MouseDeviceFactory::create();
     m_keyboard = KeyboardDeviceFactory::create();
 
-    log_info("Created input system");
+    log_info("Finished creating input system");
 }
 
 InputSystem::~InputSystem()

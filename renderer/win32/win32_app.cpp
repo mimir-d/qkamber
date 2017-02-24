@@ -18,7 +18,7 @@ Win32App::Win32App(Engine::Context& context) :
     // on_create gets called after we get a render target and everything is ready for rendering
     m_context.on_create();
 
-    log_info("Created Win32App");
+    log_info("Created win32 application");
 }
 
 int Win32App::mainloop()

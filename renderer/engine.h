@@ -32,7 +32,6 @@ public:
     Engine(Context& context);
     ~Engine();
 
-    Context& get_context();
     int run();
 
 private:
@@ -71,18 +70,13 @@ inline Engine::Engine(Context& context) :
     m_context(context)
 {
     flog();
-    log_info("Created Qukamber engine instance");
+    log_info("Created Qkamber engine instance");
 }
 
 inline Engine::~Engine()
 {
     flog();
     log_info("Destroyed engine instance");
-}
-
-inline Engine::Context& Engine::get_context()
-{
-    return m_context;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

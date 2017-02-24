@@ -18,7 +18,7 @@ private:
 inline Viewport::Viewport()
 {
     flog("id = %#x", this);
-    log_info("Created Viewport");
+    log_info("Created viewport");
 }
 
 inline const mat3x4& Viewport::get_clip() const

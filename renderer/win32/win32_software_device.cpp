@@ -22,21 +22,27 @@ Win32SoftwareDevice::Win32SoftwareDevice(Renderer& renderer) :
     m_fill_brush = CreateSolidBrush(0x009600c8);
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
-    log_info("Created Win32SoftwareDevice", this);
+    log_info("Created win32 software device");
 }
 
 Win32SoftwareDevice::~Win32SoftwareDevice()
 {
+    flog();
+
     DeleteObject(m_line_pen);
     DeleteObject(m_fill_brush);
     DeleteObject(m_clear_brush);
 
     if (m_font != INVALID_HANDLE_VALUE)
         DeleteObject(m_font);
+
+    log_info("Destroyed win32 software device");
 }
 
 void Win32SoftwareDevice::set_render_target(RenderTarget* target)
 {
+    flog();
+
     SoftwareDevice::set_render_target(target);
     if (!target)
         return;
@@ -76,7 +82,10 @@ void Win32SoftwareDevice::draw_text(const std::string& text, int x, int y)
 ///////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<RenderTarget> Win32SoftwareDevice::create_render_target(int width, int height)
 {
+    flog();
+
     // TODO: or texture, etc..
+    log_info("Creating win32 window render target...");
     return std::unique_ptr<RenderTarget>{ new Win32Window{ m_renderer, width, height } };
 }
 

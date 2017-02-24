@@ -2,6 +2,8 @@
 
 #include "misc.h"
 
+constexpr char* DEFAULT_LOG = "qkamber.log";
+
 enum class LogLevel
 {
     Debug,
@@ -29,6 +31,9 @@ private:
 class Logger
 {
 public:
+    Logger();
+    ~Logger() = default;
+
     static Logger& get();
 
     void set_output_file(const std::string& filename);
@@ -131,6 +136,11 @@ inline void LogFormatter::incr_prefix(int delta)
 ///////////////////////////////////////////////////////////////////////////////
 // Logger impl
 ///////////////////////////////////////////////////////////////////////////////
+inline Logger::Logger()
+{
+    set_output_file(DEFAULT_LOG);
+}
+
 inline Logger& Logger::get()
 {
     static Logger log;
