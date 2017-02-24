@@ -77,12 +77,6 @@ void Renderer::end_frame()
     // delay for fps
 }
 
-void Renderer::resize(int width, int height)
-{
-    // TODO: not sure if this should exist
-    m_context.on_resize(width, height);
-}
-
 void Renderer::pause(bool enabled)
 {
     if (m_paused == enabled)

@@ -71,7 +71,6 @@ public:
     void set_camera(Camera* camera);
     void set_viewport(Viewport* viewport);
 
-    void resize(int width, int height);
     void pause(bool enabled);
     bool is_paused() const;
 

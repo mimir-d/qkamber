@@ -104,8 +104,7 @@ void Win32DepthBuffer::resize(int width, int height)
 // Win32Window impl
 ///////////////////////////////////////////////////////////////////////////////
 Win32Window::Win32Window(QkEngine::Context& context, int width, int height) :
-    m_renderer(context.get_renderer()),
-    m_input(context.get_input())
+    m_context(context)
 {
     flog("id = %#x", this);
 
@@ -145,7 +144,24 @@ void Win32Window::register_class()
 
     wcex.lpfnWndProc    = [](HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) -> LRESULT
     {
+        if (message == WM_CREATE)
+        {
+            dlog("Got win32 message: WM_CREATE");
+
+            // first message to go, save Win32Window instance to USERDATA
+            LPVOID create_arg = reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams;
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create_arg));
+            return 0;
+        }
+
         Win32Window* window = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        if (!window)
+        {
+            // NOTE: there are a couple of messages that are sent before WM_CREATE gets a chance to set
+            // the GWLP_USERDATA pointer for the window, so return the default wndproc before that happens
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+
         return window->wnd_proc(hWnd, message, wParam, lParam);
     };
 
@@ -193,7 +209,7 @@ HWND Win32Window::create_window(int width, int height)
     m_dc = GetDC(window_handle);
 
     // create render buffer objects
-    m_color_buf = std::make_unique<Win32ColorBuffer>(GetDC(window_handle), width, height);
+    m_color_buf = std::make_unique<Win32ColorBuffer>(m_dc, width, height);
     m_depth_buf = std::make_unique<Win32DepthBuffer>(width, height);
 
     ShowWindow(window_handle, SW_SHOW);
@@ -206,8 +222,9 @@ void Win32Window::register_inputs(HWND window_handle)
 {
     flog();
 
-    auto& mouse = static_cast<Win32MouseDevice&>(m_input.get_mouse());
-    auto& keyboard = static_cast<Win32KeyboardDevice&>(m_input.get_keyboard());
+    auto& input = m_context.get_input();
+    auto& mouse = static_cast<Win32MouseDevice&>(input.get_mouse());
+    auto& keyboard = static_cast<Win32KeyboardDevice&>(input.get_keyboard());
 
     mouse.win32_init(window_handle);
     keyboard.win32_init(window_handle);
@@ -215,24 +232,26 @@ void Win32Window::register_inputs(HWND window_handle)
 
 bool Win32Window::on_input(HRAWINPUT raw_handle)
 {
-    RAWINPUT input;
-    UINT raw_data_size = sizeof(input);
+    RAWINPUT raw_input;
+    UINT raw_data_size = sizeof(raw_input);
 
-    GetRawInputData(raw_handle, RID_INPUT, &input, &raw_data_size, sizeof(RAWINPUTHEADER));
+    GetRawInputData(raw_handle, RID_INPUT, &raw_input, &raw_data_size, sizeof(RAWINPUTHEADER));
 
+    auto& renderer = m_context.get_renderer();
+    auto& input = m_context.get_input();
     // TODO: parse inputs but discard in input system itself ?
     // discard any input while paused
-    if (m_renderer.is_paused())
+    if (renderer.is_paused())
         return 0;
 
-    switch (input.header.dwType)
+    switch (raw_input.header.dwType)
     {
         case RIM_TYPEMOUSE:
-            static_cast<Win32MouseDevice&>(m_input.get_mouse()).feed_input(input.data.mouse);
+            static_cast<Win32MouseDevice&>(input.get_mouse()).feed_input(raw_input.data.mouse);
             break;
 
         case RIM_TYPEKEYBOARD:
-            static_cast<Win32KeyboardDevice&>(m_input.get_keyboard()).feed_input(input.data.keyboard);
+            static_cast<Win32KeyboardDevice&>(input.get_keyboard()).feed_input(raw_input.data.keyboard);
             break;
     }
 
@@ -243,19 +262,20 @@ void Win32Window::on_resize(RECT& rc)
 {
     if (!EqualRect(&m_rect, &rc))
     {
+        auto& renderer = m_context.get_renderer();
         const int width = rc.right - rc.left;
         const int height = rc.bottom - rc.top;
 
         // NOTE: only pause if the window state is not sizing because WM_ENTERSIZEMOVE does the pausing already
         if (m_window_state != WindowState::Sizing)
-            m_renderer.pause(true);
+            renderer.pause(true);
 
         m_color_buf->resize(width, height);
         m_depth_buf->resize(width, height);
-        m_renderer.resize(width, height);
+        m_context.on_resize(width, height);
 
         if (m_window_state != WindowState::Sizing)
-            m_renderer.pause(false);
+            renderer.pause(false);
 
         CopyRect(&m_rect, &rc);
     }
@@ -263,20 +283,13 @@ void Win32Window::on_resize(RECT& rc)
 
 LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+    auto& renderer = m_context.get_renderer();
+
     switch (msg)
     {
-        case WM_CREATE:
-        {
-            dlog("Got win32 message: WM_CREATE");
-            // save Win32Window instance to USERDATA
-            LPVOID create_arg = reinterpret_cast<LPCREATESTRUCT>(lp)->lpCreateParams;
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create_arg));
-            break;
-        }
-
         case WM_ACTIVATEAPP:
             dlog("Got win32 message: WM_ACTIVATEAPP %d", wp);
-            m_renderer.pause(!wp);
+            renderer.pause(!wp);
             break;
 
         case WM_PAINT:
@@ -328,13 +341,13 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
         case WM_ENTERSIZEMOVE:
             dlog("Got win32 message: WM_ENTERSIZEMOVE");
-            m_renderer.pause(true);
+            renderer.pause(true);
             m_window_state = WindowState::Sizing;
             break;
 
         case WM_EXITSIZEMOVE:
             dlog("Got win32 message: WM_EXITSIZEMOVE");
-            m_renderer.pause(false);
+            renderer.pause(false);
             m_window_state = WindowState::Restored;
             break;
 
@@ -342,7 +355,7 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             switch (wp)
             {
                 case SIZE_MINIMIZED:
-                    m_renderer.pause(true);
+                    renderer.pause(true);
                     m_window_state = WindowState::Minimized;
                     break;
 
@@ -354,7 +367,7 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     if (m_window_state == WindowState::Minimized)
                     {
                         // unpause since window was minimized and now restored
-                        m_renderer.pause(false);
+                        renderer.pause(false);
                     }
 
                     RECT rc;

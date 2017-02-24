@@ -192,6 +192,7 @@ namespace
     };
 }
 
+// TODO: when point and line are impl with raw ops, move all of these to software device
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     // NOTE: flush any gdi calls before drawing to backbuffer directly

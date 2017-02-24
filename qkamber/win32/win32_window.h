@@ -94,8 +94,7 @@ private:
     std::unique_ptr<Win32ColorBuffer> m_color_buf;
     std::unique_ptr<Win32DepthBuffer> m_depth_buf;
 
-    Renderer& m_renderer;
-    InputSystem& m_input;
+    QkEngine::Context& m_context;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
