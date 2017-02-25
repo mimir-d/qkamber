@@ -36,6 +36,4 @@ private:
     HPEN m_line_pen;
     HBRUSH m_fill_brush;
     HFONT m_font;
-
-    HWND m_window_handle;
 };

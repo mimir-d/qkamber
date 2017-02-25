@@ -230,6 +230,18 @@ void Win32Window::register_inputs(HWND window_handle)
     keyboard.win32_init(window_handle);
 }
 
+void Win32Window::pause_timer(bool enable)
+{
+    auto& timer = m_context.get_timer();
+    if (enable)
+        timer.stop();
+    else
+        timer.resume();
+
+    // also discard any input while paused
+    m_discard_input = enable;
+}
+
 bool Win32Window::on_input(HRAWINPUT raw_handle)
 {
     RAWINPUT raw_input;
@@ -239,9 +251,9 @@ bool Win32Window::on_input(HRAWINPUT raw_handle)
 
     auto& renderer = m_context.get_renderer();
     auto& input = m_context.get_input();
-    // TODO: parse inputs but discard in input system itself ?
+
     // discard any input while paused
-    if (renderer.is_paused())
+    if (m_discard_input)
         return 0;
 
     switch (raw_input.header.dwType)
@@ -268,14 +280,14 @@ void Win32Window::on_resize(RECT& rc)
 
         // NOTE: only pause if the window state is not sizing because WM_ENTERSIZEMOVE does the pausing already
         if (m_window_state != WindowState::Sizing)
-            renderer.pause(true);
+            pause_timer(true);
 
         m_color_buf->resize(width, height);
         m_depth_buf->resize(width, height);
         m_context.on_resize(width, height);
 
         if (m_window_state != WindowState::Sizing)
-            renderer.pause(false);
+            pause_timer(false);
 
         CopyRect(&m_rect, &rc);
     }
@@ -289,29 +301,38 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     {
         case WM_ACTIVATEAPP:
             dlog("Got win32 message: WM_ACTIVATEAPP %d", wp);
-            renderer.pause(!wp);
+            pause_timer(!wp);
+            // pause the engine asap
+            PostMessage(hwnd, CCM_ENGINE_PAUSE, static_cast<WPARAM>(!wp), 0);
             break;
+
+        case WM_ERASEBKGND:
+            return TRUE;
+
+        case WM_SETCURSOR:
+            // hide the cursor when inside the client area
+            if (LOWORD(lp) == HTCLIENT)
+            {
+                SetCursor(nullptr);
+                return TRUE;
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+            if (m_window_state != WindowState::Sizing)
+                return DefWindowProc(hwnd, msg, wp, lp);
 
-            // TODO: this should be scene render because queue is emptied on last render
-            // m_renderer.begin_frame();
-            // m_renderer.render();
-            // m_renderer.end_frame();
-
-            EndPaint(hwnd, &ps);
+            // while sizing or moving, draw one frame with no elapsed time
+            auto& timer = m_context.get_timer();
+            m_context.on_update(timer.get_abs_time(), 0);
+            m_context.on_render(timer.get_abs_time(), 0);
             break;
         }
 
         case WM_INPUT:
             on_input(reinterpret_cast<HRAWINPUT>(lp));
             break;
-
-        case WM_ERASEBKGND:
-            return TRUE;
 
         case WM_KEYDOWN:
             // TODO: maybe should input this as configurable
@@ -320,62 +341,39 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 case VK_ESCAPE:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     break;
-
-                case 'F':
-                    if (m_window_state != WindowState::Maximized)
-                        ShowWindow(hwnd, SW_MAXIMIZE);
-                    else
-                        ShowWindow(hwnd, SW_RESTORE);
-                    break;
             }
             break;
 
-        case WM_SETCURSOR:
-            // hide the cursor when inside the window
-            if (LOWORD(lp) == HTCLIENT)
-            {
-                SetCursor(nullptr);
-                return TRUE;
-            }
-            return DefWindowProc(hwnd, msg, wp, lp);
-
         case WM_ENTERSIZEMOVE:
             dlog("Got win32 message: WM_ENTERSIZEMOVE");
-            renderer.pause(true);
             m_window_state = WindowState::Sizing;
+
+            pause_timer(true);
             break;
 
         case WM_EXITSIZEMOVE:
             dlog("Got win32 message: WM_EXITSIZEMOVE");
-            renderer.pause(false);
-            m_window_state = WindowState::Restored;
+            m_window_state = WindowState::Normal;
+
+            pause_timer(false);
+            // ensure the engine isnt paused when exiting the size/move loop
+            PostMessage(hwnd, CCM_ENGINE_PAUSE, static_cast<WPARAM>(false), 0);
             break;
 
         case WM_SIZE:
             switch (wp)
             {
-                case SIZE_MINIMIZED:
-                    renderer.pause(true);
-                    m_window_state = WindowState::Minimized;
-                    break;
-
                 case SIZE_MAXIMIZED:
                 case SIZE_RESTORED:
                     if (m_window_state == WindowState::Unknown)
-                        dlog("Got win32 message: WM_SIZE at window creation");
-
-                    if (m_window_state == WindowState::Minimized)
                     {
-                        // unpause since window was minimized and now restored
-                        renderer.pause(false);
+                        dlog("Got win32 message: WM_SIZE at window creation");
+                        m_window_state = WindowState::Normal;
                     }
 
                     RECT rc;
                     GetClientRect(hwnd, &rc);
                     on_resize(rc);
-
-                    if (m_window_state != WindowState::Sizing)
-                        m_window_state = WindowState::Restored;
                     break;
             }
             break;

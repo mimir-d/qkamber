@@ -71,9 +71,6 @@ public:
     void set_camera(Camera* camera);
     void set_viewport(Viewport* viewport);
 
-    void pause(bool enabled);
-    bool is_paused() const;
-
     float get_fps() const;
 
 protected:
@@ -85,9 +82,9 @@ protected:
     Viewport* m_viewport = nullptr;
 
     QkEngine::Context& m_context;
-    bool m_paused = true;
     uint64_t m_frame_number = 0;
 
+    // TODO: move these to StatsSystem
     float m_target_fps = 60;
     float m_fps = 0;
     uint32_t m_fps_last_count = 0;
@@ -115,11 +112,6 @@ inline void Renderer::set_camera(Camera* camera)
 inline void Renderer::set_viewport(Viewport* viewport)
 {
     m_viewport = viewport;
-}
-
-inline bool Renderer::is_paused() const
-{
-    return m_paused;
 }
 
 inline float Renderer::get_fps() const

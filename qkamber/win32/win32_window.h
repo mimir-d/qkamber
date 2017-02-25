@@ -73,6 +73,8 @@ private:
     HWND create_window(int width, int height);
     void register_inputs(HWND window_handle);
 
+    void pause_timer(bool enable);
+
     bool on_input(HRAWINPUT raw_handle);
     void on_resize(RECT& rc);
     LRESULT wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -84,7 +86,7 @@ private:
     enum class WindowState : int
     {
         Unknown = -1,
-        Restored = SIZE_RESTORED,
+        Normal = SIZE_RESTORED,
         Minimized = SIZE_MINIMIZED,
         Maximized = SIZE_MAXIMIZED,
         Sizing = SIZE_MAXHIDE + 1000
@@ -95,6 +97,7 @@ private:
     std::unique_ptr<Win32DepthBuffer> m_depth_buf;
 
     QkEngine::Context& m_context;
+    bool m_discard_input = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
