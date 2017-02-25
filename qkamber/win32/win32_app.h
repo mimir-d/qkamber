@@ -2,6 +2,8 @@
 
 #include "engine.h"
 
+constexpr UINT CCM_ENGINE_PAUSE = WM_APP + 0x100;
+
 class Win32App : public App
 {
 public:

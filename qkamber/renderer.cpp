@@ -77,22 +77,4 @@ void Renderer::end_frame()
     // delay for fps
 }
 
-void Renderer::pause(bool enabled)
-{
-    if (m_paused == enabled)
-        return;
-
-    auto& timer = m_context.get_timer();
-    if (enabled)
-    {
-        timer.stop();
-        dlog("Rendering stopped");
-    }
-    else
-    {
-        timer.resume();
-        dlog("Rendering resumed");
-    }
-    m_paused = enabled;
-}
 
