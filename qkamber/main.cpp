@@ -17,6 +17,7 @@ class Context : public QkEngine::Context
 {
 public:
     void on_create() final;
+    void on_destroy() final;
     void on_resize(int width, int height) final;
 
     void on_update(float abs_time, float elapsed_time) final;
@@ -51,6 +52,12 @@ void Context::on_create()
     m_mesh = make_unique<Mesh>(dev);
 }
 
+void Context::on_destroy()
+{
+    get_renderer().get_device().set_render_target(nullptr);
+    m_target = nullptr;
+}
+
 void Context::on_resize(int width, int height)
 {
     m_camera.set_proj_params(width, height);
@@ -81,6 +88,11 @@ void Context::on_update(float abs_time, float elapsed_time)
     {
         m_poly_mode_changed = false;
     }
+
+    auto& keyboard = get_input().get_keyboard();
+    // TODO: translate keys to platform independent
+    if (keyboard.get_key_pressed(VK_ESCAPE))
+        notify_exit();
 
     m_camera.update(abs_time, elapsed_time);
 
@@ -133,7 +145,7 @@ int main()
     try
     {
         Context ctx;
-        return QkEngine(ctx).run();
+        QkEngine(ctx).run();
     }
     catch (exception& ex)
     {
