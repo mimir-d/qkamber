@@ -32,9 +32,7 @@ Win32SoftwareDevice::~Win32SoftwareDevice()
     DeleteObject(m_line_pen);
     DeleteObject(m_fill_brush);
     DeleteObject(m_clear_brush);
-
-    if (m_font != INVALID_HANDLE_VALUE)
-        DeleteObject(m_font);
+    DeleteObject(m_font);
 
     log_info("Destroyed win32 software device");
 }

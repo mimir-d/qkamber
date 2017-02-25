@@ -10,7 +10,7 @@ class Win32ColorBuffer : public ColorBuffer
 {
 public:
     Win32ColorBuffer(HDC surface, int width, int height);
-    ~Win32ColorBuffer() = default;
+    ~Win32ColorBuffer();
 
     HDC get_dc();
 
@@ -70,8 +70,8 @@ public:
 private:
     void register_class();
     void unregister_class();
-    HWND create_window(int width, int height);
-    void register_inputs(HWND window_handle);
+    void create_window(int width, int height);
+    void register_inputs();
 
     void pause_timer(bool enable);
 
@@ -80,15 +80,14 @@ private:
     LRESULT wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 private:
-    HDC m_dc;
+    HDC m_dc = static_cast<HDC>(INVALID_HANDLE_VALUE);
+    HWND m_window_handle = static_cast<HWND>(INVALID_HANDLE_VALUE);
     RECT m_rect = { 0 };
 
     enum class WindowState : int
     {
         Unknown = -1,
         Normal = SIZE_RESTORED,
-        Minimized = SIZE_MINIMIZED,
-        Maximized = SIZE_MAXIMIZED,
         Sizing = SIZE_MAXHIDE + 1000
     };
     WindowState m_window_state = WindowState::Unknown;

@@ -14,12 +14,16 @@ public:
         virtual ~Context();
 
         virtual void on_create() = 0;
+        virtual void on_destroy() = 0;
         virtual void on_resize(int width, int height) = 0;
 
         virtual void on_update(float abs_time, float elapsed_time) = 0;
         virtual void on_render(float abs_time, float elapsed_time) = 0;
 
     public:
+        void notify_exit();
+        bool get_exit_requested() const;
+
         Timer& get_timer();
         Renderer& get_renderer();
         InputSystem& get_input();
@@ -29,6 +33,8 @@ public:
         std::unique_ptr<Timer> m_timer;
         std::unique_ptr<Renderer> m_renderer;
         std::unique_ptr<InputSystem> m_input;
+
+        bool m_exit_requested = false;
     };
 
 public:
@@ -56,6 +62,16 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // Engine::Context impl
 ///////////////////////////////////////////////////////////////////////////////
+inline void QkEngine::Context::notify_exit()
+{
+    m_exit_requested = true;
+}
+
+inline bool QkEngine::Context::get_exit_requested() const
+{
+    return m_exit_requested;
+}
+
 inline Timer& QkEngine::Context::get_timer()
 {
     return *m_timer.get();

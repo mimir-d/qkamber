@@ -12,8 +12,6 @@ using namespace std;
 constexpr char* WINDOW_CLASS = "WIN32_QK_RENDERER";
 constexpr char* WINDOW_TITLE = "Qukamber renderer";
 
-constexpr int WS_SIZING = SIZE_MAXHIDE;
-
 ///////////////////////////////////////////////////////////////////////////////
 // Win32ColorBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,6 +31,12 @@ Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc, int width, int height) :
     log_info("Created win32 color buffer");
 }
 
+Win32ColorBuffer::~Win32ColorBuffer()
+{
+    DeleteObject(m_bitmap);
+    DeleteDC(m_dc);
+}
+
 void Win32ColorBuffer::resize(int width, int height)
 {
     if (m_width == width && m_height == height)
@@ -41,9 +45,6 @@ void Win32ColorBuffer::resize(int width, int height)
     // update dimensions
     m_width = width;
     m_height = height;
-
-    if (m_bitmap != INVALID_HANDLE_VALUE)
-        DeleteObject(m_bitmap);
 
     BITMAPINFO bi = { 0 };
     BITMAPINFOHEADER& bmi = bi.bmiHeader;
@@ -55,6 +56,7 @@ void Win32ColorBuffer::resize(int width, int height)
     bmi.biHeight = -min(height, 1080);
     bmi.biCompression = BI_RGB;
 
+    DeleteObject(m_bitmap);
     m_bitmap = CreateDIBSection(
         m_surface_dc,
         &bi,
@@ -112,8 +114,8 @@ Win32Window::Win32Window(QkEngine::Context& context, int width, int height) :
     // TODO: right now, this might fail uncontrollably if create_render_target is called multiple times
     // register class just once?
     register_class();
-    HWND window_handle = create_window(width, height);
-    register_inputs(window_handle);
+    create_window(width, height);
+    register_inputs();
 
     log_info("Finished creating win32 window target %#x", this);
 }
@@ -121,6 +123,9 @@ Win32Window::Win32Window(QkEngine::Context& context, int width, int height) :
 Win32Window::~Win32Window()
 {
     flog();
+
+    DeleteDC(m_dc);
+    DestroyWindow(m_window_handle);
 
     unregister_class();
     log_info("Destroyed win32 window");
@@ -180,7 +185,7 @@ void Win32Window::unregister_class()
     dlog("Unregistered win32 class: %s", WINDOW_CLASS);
 }
 
-HWND Win32Window::create_window(int width, int height)
+void Win32Window::create_window(int width, int height)
 {
     flog();
     HINSTANCE instance = GetModuleHandle(nullptr);
@@ -190,7 +195,7 @@ HWND Win32Window::create_window(int width, int height)
     const int window_width = rc.right - rc.left;
     const int window_height = rc.bottom - rc.top;
 
-    HWND window_handle = CreateWindow(
+    m_window_handle = CreateWindow(
         WINDOW_CLASS,
         WINDOW_TITLE,
         WS_OVERLAPPEDWINDOW,
@@ -202,23 +207,21 @@ HWND Win32Window::create_window(int width, int height)
         reinterpret_cast<LPVOID>(this)
     );
 
-    if (!window_handle)
+    if (!m_window_handle)
         throw exception("CreateWindow failed");
-    log_info("Created window hwnd = %#x, title = %s", window_handle, WINDOW_TITLE);
+    log_info("Created window hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
 
-    m_dc = GetDC(window_handle);
+    m_dc = GetDC(m_window_handle);
 
     // create render buffer objects
     m_color_buf = std::make_unique<Win32ColorBuffer>(m_dc, width, height);
     m_depth_buf = std::make_unique<Win32DepthBuffer>(width, height);
 
-    ShowWindow(window_handle, SW_SHOW);
-    UpdateWindow(window_handle);
-
-    return window_handle;
+    ShowWindow(m_window_handle, SW_SHOW);
+    UpdateWindow(m_window_handle);
 }
 
-void Win32Window::register_inputs(HWND window_handle)
+void Win32Window::register_inputs()
 {
     flog();
 
@@ -226,8 +229,8 @@ void Win32Window::register_inputs(HWND window_handle)
     auto& mouse = static_cast<Win32MouseDevice&>(input.get_mouse());
     auto& keyboard = static_cast<Win32KeyboardDevice&>(input.get_keyboard());
 
-    mouse.win32_init(window_handle);
-    keyboard.win32_init(window_handle);
+    mouse.win32_init(m_window_handle);
+    keyboard.win32_init(m_window_handle);
 }
 
 void Win32Window::pause_timer(bool enable)
@@ -334,16 +337,6 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             on_input(reinterpret_cast<HRAWINPUT>(lp));
             break;
 
-        case WM_KEYDOWN:
-            // TODO: maybe should input this as configurable
-            switch (wp)
-            {
-                case VK_ESCAPE:
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
-                    break;
-            }
-            break;
-
         case WM_ENTERSIZEMOVE:
             dlog("Got win32 message: WM_ENTERSIZEMOVE");
             m_window_state = WindowState::Sizing;
@@ -376,11 +369,6 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     on_resize(rc);
                     break;
             }
-            break;
-
-        case WM_DESTROY:
-            dlog("Got win32 message: WM_DESTROY");
-            PostQuitMessage(0);
             break;
 
         default:

@@ -27,19 +27,15 @@ int Win32App::mainloop()
     MSG msg;
     bool paused = true;
 
-    while (true)
+    while (!m_context.get_exit_requested())
     {
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
-            switch (msg.message)
+            if (msg.message == CCM_ENGINE_PAUSE)
             {
-                case WM_QUIT:
-                    return static_cast<int>(msg.wParam);
-
-                case CCM_ENGINE_PAUSE:
-                    dlog("Got win32 message: CCM_ENGINE_PAUSE %d", msg.wParam);
-                    paused = !!msg.wParam;
-                    continue;
+                dlog("Got win32 message: CCM_ENGINE_PAUSE %d", msg.wParam);
+                paused = !!msg.wParam;
+                continue;
             }
 
             TranslateMessage(&msg);
@@ -53,6 +49,7 @@ int Win32App::mainloop()
         }
         render_one();
     }
+    m_context.on_destroy();
 
     return 0;
 }

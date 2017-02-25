@@ -116,6 +116,7 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
     if (!target)
     {
         m_render_target = m_null_target.get();
+        log_info("Set render target to null");
         return;
     }
 
