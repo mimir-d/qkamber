@@ -56,12 +56,11 @@ int Win32App::mainloop()
 
 void Win32App::render_one()
 {
-    auto& time = m_context.get_time();
-    float abs_time = time.get_abs_time();
-    float diff_time = time.get_diff_time();
+    m_context.on_update();
+    m_context.on_render();
 
-    m_context.on_update(abs_time, diff_time);
-    m_context.on_render(abs_time, diff_time);
+    auto& time = m_context.get_time();
+    time.process();
 
     //     const float frame_time = 1.0f / 15.0f;
     //     const float ctime = m_timer->get_abs_time() - abs_time;

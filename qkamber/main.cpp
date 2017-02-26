@@ -20,8 +20,8 @@ public:
     void on_destroy() final;
     void on_resize(int width, int height) final;
 
-    void on_update(float abs_time, float elapsed_time) final;
-    void on_render(float abs_time, float elapsed_time) final;
+    void on_update() final;
+    void on_render() final;
 
 private:
     std::unique_ptr<RenderTarget> m_target;
@@ -64,8 +64,11 @@ void Context::on_resize(int width, int height)
     m_viewport.set_params(width, height);
 }
 
-void Context::on_update(float abs_time, float elapsed_time)
+void Context::on_update()
 {
+    auto& time = get_time();
+    float abs_time = time.get_abs_time();
+
     auto& render = get_render();
     auto& mouse = get_input().get_mouse();
     // TODO: should encode button transitions somehow
@@ -94,7 +97,7 @@ void Context::on_update(float abs_time, float elapsed_time)
     if (keyboard.get_key_pressed(VK_ESCAPE))
         notify_exit();
 
-    m_camera.update(abs_time, elapsed_time);
+    m_camera.update();
 
     // TODO: check paren identation formatting
     // scene stuff
@@ -123,7 +126,7 @@ void Context::on_update(float abs_time, float elapsed_time)
     // m_scene.update();
 }
 
-void Context::on_render(float abs_time, float elapsed_time)
+void Context::on_render()
 {
     auto& render = get_render();
     // m_scene.render();

@@ -17,8 +17,8 @@ public:
         virtual void on_destroy() = 0;
         virtual void on_resize(int width, int height) = 0;
 
-        virtual void on_update(float abs_time, float elapsed_time) = 0;
-        virtual void on_render(float abs_time, float elapsed_time) = 0;
+        virtual void on_update() = 0;
+        virtual void on_render() = 0;
 
     public:
         void notify_exit();
