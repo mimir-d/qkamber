@@ -23,16 +23,17 @@ public:
     ~FpsCamera() = default;
 
     void set_proj_params(int width, int height);
-    void update(float abs_time, float elapsed_time);
+    void update();
 
     const vec3& get_position() const;
     const vec2& get_rotation() const;
 
 private:
     vec2 get_rotation_delta();
-    vec3 get_position_delta(float elapsed_time);
+    vec3 get_position_delta();
 
     InputSystem& m_input;
+    TimeSystem& m_time;
 
     vec3 m_position;
     vec2 m_rotation;
@@ -69,6 +70,7 @@ inline const mat4& Camera::get_proj() const
 ///////////////////////////////////////////////////////////////////////////////
 inline FpsCamera::FpsCamera(QkEngine::Context& context, const vec3& position) :
     m_input(context.get_input()),
+    m_time(context.get_time()),
     m_position(position)
 {
     flog("id = %#x", this);

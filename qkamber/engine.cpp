@@ -11,8 +11,8 @@ QkEngine::Context::Context()
     flog();
 
     // init subsystems? all of these will have context as parent
-    m_time.reset(new TimeSystem);
-    m_render.reset(new RenderSystem(*this));
+    m_time.reset(new TimeSystem{ *this });
+    m_render.reset(new RenderSystem{ *this });
     m_input.reset(new InputSystem);
 
     log_info("Finished creating engine context");

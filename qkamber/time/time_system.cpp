@@ -4,6 +4,15 @@
 
 using namespace std::chrono;
 
+void TimeSystem::process()
+{
+    // get duration since last frame and update time_point
+    auto now = app_clock::now();
+    auto microsec = duration_cast<microseconds>(now - m_last_diff);
+    m_last_diff = now;
+    m_frame_time = static_cast<float>(microsec.count() * 1e-6);
+}
+
 void TimeSystem::resume()
 {
 	if (m_running)
@@ -40,16 +49,11 @@ float TimeSystem::get_abs_time() const
     return m_total_abs + static_cast<float>(microsec.count() * 1e-6);
 }
 
-float TimeSystem::get_diff_time()
+float TimeSystem::get_diff_time() const
 {
     if (!m_running)
         return 0;
 
-    // get duration since last diff call and update time_point
-    auto now = app_clock::now();
-    auto microsec = duration_cast<microseconds>(now - m_last_diff);
-    m_last_diff = now;
-
-    return static_cast<float>(microsec.count() * 1e-6);
+    return m_frame_time;
 }
 

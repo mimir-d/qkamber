@@ -326,10 +326,8 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             if (m_window_state != WindowState::Sizing)
                 return DefWindowProc(hwnd, msg, wp, lp);
 
-            // while sizing or moving, draw one frame with no elapsed time
-            auto& time = m_context.get_time();
-            m_context.on_update(time.get_abs_time(), 0);
-            m_context.on_render(time.get_abs_time(), 0);
+            m_context.on_update();
+            m_context.on_render();
             break;
         }
 

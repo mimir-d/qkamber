@@ -3,6 +3,7 @@
 #include "camera.h"
 
 #include "input/input_system.h"
+#include "time/time_system.h"
 
 void FpsCamera::set_proj_params(int width, int height)
 {
@@ -10,7 +11,7 @@ void FpsCamera::set_proj_params(int width, int height)
     m_proj = mat4::proj_perspective(PI_4, aspect, 0.1f, 100.0f);
 }
 
-void FpsCamera::update(float abs_time, float elapsed_time)
+void FpsCamera::update()
 {
     // compute camera rotation
     m_rotation += get_rotation_delta();
@@ -29,7 +30,7 @@ void FpsCamera::update(float abs_time, float elapsed_time)
     const vec3 up = rotation * vec3 { 0, 1, 0 };
 
     // compute camera movement
-    const vec3 position_delta = get_position_delta(elapsed_time);
+    const vec3 position_delta = get_position_delta();
     m_position += rotation * position_delta;
 
     m_view = mat4::lookat(m_position, m_position - ahead, up);
@@ -50,8 +51,9 @@ vec2 FpsCamera::get_rotation_delta()
     return vec2 { -m_mouse_delta.y(), -m_mouse_delta.x() } * m_rotation_scaler;
 }
 
-vec3 FpsCamera::get_position_delta(float elapsed_time)
+vec3 FpsCamera::get_position_delta()
 {
+    float elapsed_time = m_time.get_diff_time();
     auto& keyboard = m_input.get_keyboard();
 
     const vec3 accel = vec3

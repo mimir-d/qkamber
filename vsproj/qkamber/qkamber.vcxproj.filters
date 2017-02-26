@@ -80,6 +80,9 @@
     <ClInclude Include="$(src)\precompiled.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\subsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="$(src)\platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -131,9 +134,6 @@
     <ClInclude Include="$(src)\win32\render\win32_software_device.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>
-    <ClInclude Include="$(src)\model\mesh.cpp">
-      <Filter>Source Files\model</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -180,6 +180,9 @@
     </ClCompile>
     <ClCompile Include="$(src)\win32\render\win32_window.cpp">
       <Filter>Source Files\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="$(src)\model\mesh.cpp">
+      <Filter>Source Files\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

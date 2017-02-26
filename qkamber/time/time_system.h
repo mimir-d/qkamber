@@ -1,26 +1,32 @@
 #pragma once
 
-class TimeSystem
+#include "subsystem.h"
+
+class TimeSystem : public Subsystem
 {
 public:
-	TimeSystem();
+	TimeSystem(QkEngine::Context& context);
     ~TimeSystem();
 
+    void process() final;
+
+public:
 	void resume();
 	void stop();
 
 	float get_abs_time() const;
-    // TODO: this should be done once a frame when this is turned into a system
-	float get_diff_time();
+	float get_diff_time() const;
 
 private:
 	bool m_running = false;
     float m_total_abs = 0;
+    float m_frame_time = 0;
     app_clock::time_point m_last_abs;
     app_clock::time_point m_last_diff;
 };
 
-inline TimeSystem::TimeSystem()
+inline TimeSystem::TimeSystem(QkEngine::Context& context) :
+    Subsystem(context)
 {
     flog("id = %#x", this);
     log_info("Created timer");
