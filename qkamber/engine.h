@@ -3,6 +3,7 @@
 class TimeSystem;
 class RenderSystem;
 class InputSystem;
+class StatsSystem;
 
 class QkEngine
 {
@@ -27,12 +28,14 @@ public:
         TimeSystem& get_time();
         RenderSystem& get_render();
         InputSystem& get_input();
+        StatsSystem& get_stats();
 
     private:
         // TODO: context will be the keeper of systems
         std::unique_ptr<TimeSystem> m_time;
         std::unique_ptr<RenderSystem> m_render;
         std::unique_ptr<InputSystem> m_input;
+        std::unique_ptr<StatsSystem> m_stats;
 
         bool m_exit_requested = false;
     };
@@ -85,6 +88,11 @@ inline RenderSystem& QkEngine::Context::get_render()
 inline InputSystem& QkEngine::Context::get_input()
 {
     return *m_input.get();
+}
+
+inline StatsSystem& QkEngine::Context::get_stats()
+{
+    return *m_stats.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

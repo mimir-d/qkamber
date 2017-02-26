@@ -57,24 +57,7 @@ void RenderSystem::end_frame()
     // finished drawing the queued objects
     m_queue.clear();
 
-    // TODO: i get the feeling fps is engine state
-    m_dev->draw_text(print_fmt("fps: %.2f", m_fps), 3, 3);
-
-    // count fps
-    m_frame_number ++;
-    m_fps_last_count ++;
-
-    float now = m_context.get_time().get_abs_time();
-    float delta = now - m_fps_last_timestamp;
-    if (delta >= 1.0f)
-    {
-        m_fps = m_fps_last_count / delta;
-        m_fps_last_count = 0;
-        m_fps_last_timestamp = now;
-    }
-
     m_dev->swap_buffers();
-    // delay for fps
 }
 
 

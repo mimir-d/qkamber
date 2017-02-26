@@ -71,8 +71,6 @@ public:
     void set_camera(Camera* camera);
     void set_viewport(Viewport* viewport);
 
-    float get_fps() const;
-
 protected:
     std::unique_ptr<RenderDevice> m_dev;
     RenderQueue m_queue;
@@ -82,13 +80,6 @@ protected:
     Viewport* m_viewport = nullptr;
 
     QkEngine::Context& m_context;
-    uint64_t m_frame_number = 0;
-
-    // TODO: move these to StatsSystem
-    float m_target_fps = 60;
-    float m_fps = 0;
-    uint32_t m_fps_last_count = 0;
-    float m_fps_last_timestamp = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,9 +103,4 @@ inline void RenderSystem::set_camera(Camera* camera)
 inline void RenderSystem::set_viewport(Viewport* viewport)
 {
     m_viewport = viewport;
-}
-
-inline float RenderSystem::get_fps() const
-{
-    return m_fps;
 }

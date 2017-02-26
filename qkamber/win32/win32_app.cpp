@@ -3,6 +3,7 @@
 #include "win32_app.h"
 
 #include "engine.h"
+#include "stats/stats_system.h"
 #include "time/time_system.h"
 
 using namespace std;
@@ -55,6 +56,9 @@ void Win32App::render_one()
 {
     m_context.on_update();
     m_context.on_render();
+
+    auto& stats = m_context.get_stats();
+    stats.process();
 
     auto& time = m_context.get_time();
     time.process();
