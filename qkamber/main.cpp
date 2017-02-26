@@ -4,12 +4,12 @@
 #include "precompiled.h"
 
 #include "engine.h"
-#include "renderer.h"
-#include "input_system.h"
+#include "render/render_system.h"
+#include "input/input_system.h"
 #include "math3.h"
-#include "camera.h"
-#include "viewport.h"
-#include "mesh.h"
+#include "scene/camera.h"
+#include "scene/viewport.h"
+#include "model/mesh.h"
 
 using namespace std;
 
@@ -38,12 +38,12 @@ private:
 
 void Context::on_create()
 {
-    auto& renderer = get_renderer();
-    renderer.set_camera(&m_camera);
-    renderer.set_viewport(&m_viewport);
+    auto& render = get_render();
+    render.set_camera(&m_camera);
+    render.set_viewport(&m_viewport);
 
     // initialize a render target for the app
-    auto& dev = renderer.get_device();
+    auto& dev = render.get_device();
     m_target = dev.create_render_target(640, 480);
 
     dev.set_render_target(m_target.get());
@@ -54,7 +54,7 @@ void Context::on_create()
 
 void Context::on_destroy()
 {
-    get_renderer().get_device().set_render_target(nullptr);
+    get_render().get_device().set_render_target(nullptr);
     m_target = nullptr;
 }
 
@@ -66,7 +66,7 @@ void Context::on_resize(int width, int height)
 
 void Context::on_update(float abs_time, float elapsed_time)
 {
-    auto& renderer = get_renderer();
+    auto& render = get_render();
     auto& mouse = get_input().get_mouse();
     // TODO: should encode button transitions somehow
     if (mouse.get_button_pressed(MouseDevice::RMB))
@@ -79,7 +79,7 @@ void Context::on_update(float abs_time, float elapsed_time)
                 case PolygonMode::Line:  m_poly_mode = PolygonMode::Fill; break;
                 case PolygonMode::Fill:  m_poly_mode = PolygonMode::Point; break;
             }
-            renderer.get_device().set_polygon_mode(m_poly_mode);
+            render.get_device().set_polygon_mode(m_poly_mode);
 
             m_poly_mode_changed = true;
         }
@@ -99,7 +99,7 @@ void Context::on_update(float abs_time, float elapsed_time)
     // TODO: check paren identation formatting
     // scene stuff
 
-    auto& q = renderer.get_queue();
+    auto& q = render.get_queue();
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
@@ -125,19 +125,19 @@ void Context::on_update(float abs_time, float elapsed_time)
 
 void Context::on_render(float abs_time, float elapsed_time)
 {
-    auto& renderer = get_renderer();
+    auto& render = get_render();
     // m_scene.render();
 
     // TODO: this should not be public here
-    renderer.begin_frame();
-    renderer.render();
+    render.begin_frame();
+    render.render();
 
     vec3 p = m_camera.get_position();
     vec2 r = m_camera.get_rotation() * (180.0f / PI);
-    renderer.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
-    renderer.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
+    render.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
+    render.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
 
-    renderer.end_frame();
+    render.end_frame();
 }
 
 int main()

@@ -11,8 +11,8 @@ QkEngine::Context::Context()
     flog();
 
     // init subsystems? all of these will have context as parent
-    m_timer.reset(new Timer);
-    m_renderer.reset(new Renderer(*this));
+    m_time.reset(new TimeSystem);
+    m_render.reset(new RenderSystem(*this));
     m_input.reset(new InputSystem);
 
     log_info("Finished creating engine context");
@@ -24,8 +24,8 @@ QkEngine::Context::~Context()
 
     // i want to manually destroy systems
     m_input = nullptr;
-    m_renderer = nullptr;
-    m_timer = nullptr;
+    m_render = nullptr;
+    m_time = nullptr;
 
     log_info("Destroyed engine context");
 }

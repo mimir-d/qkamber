@@ -1,7 +1,7 @@
 #pragma once
 
-class Timer;
-class Renderer;
+class TimeSystem;
+class RenderSystem;
 class InputSystem;
 
 class QkEngine
@@ -24,14 +24,14 @@ public:
         void notify_exit();
         bool get_exit_requested() const;
 
-        Timer& get_timer();
-        Renderer& get_renderer();
+        TimeSystem& get_time();
+        RenderSystem& get_render();
         InputSystem& get_input();
 
     private:
         // TODO: context will be the keeper of systems
-        std::unique_ptr<Timer> m_timer;
-        std::unique_ptr<Renderer> m_renderer;
+        std::unique_ptr<TimeSystem> m_time;
+        std::unique_ptr<RenderSystem> m_render;
         std::unique_ptr<InputSystem> m_input;
 
         bool m_exit_requested = false;
@@ -72,14 +72,14 @@ inline bool QkEngine::Context::get_exit_requested() const
     return m_exit_requested;
 }
 
-inline Timer& QkEngine::Context::get_timer()
+inline TimeSystem& QkEngine::Context::get_time()
 {
-    return *m_timer.get();
+    return *m_time.get();
 }
 
-inline Renderer& QkEngine::Context::get_renderer()
+inline RenderSystem& QkEngine::Context::get_render()
 {
-    return *m_renderer.get();
+    return *m_render.get();
 }
 
 inline InputSystem& QkEngine::Context::get_input()

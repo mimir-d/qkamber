@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine.h"
-#include "render_buffers.h"
-#include "render_window.h"
+#include "render/render_buffers.h"
+#include "render/render_window.h"
 
 class Win32SoftwareDevice;
 

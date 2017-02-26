@@ -1,8 +1,6 @@
 #pragma once
 
-// TODO: forward decl not working?
-#include "render_buffers.h"
-#include "render_primitive.h"
+#include "render/render_primitive.h"
 
 class RenderDevice;
 class VertexBuffer;
@@ -12,6 +10,7 @@ class Mesh
 {
 public:
     Mesh(RenderDevice& dev);
+    ~Mesh();
 
     RenderPrimitive get_primitive() const;
 

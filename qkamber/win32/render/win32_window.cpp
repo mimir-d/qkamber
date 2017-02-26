@@ -2,9 +2,9 @@
 #include "precompiled.h"
 #include "win32_window.h"
 
-#include "win32_app.h"
-#include "win32_software_device.h"
-#include "win32_input_system.h"
+#include "win32/win32_app.h"
+#include "win32/render/win32_software_device.h"
+#include "win32/input/win32_input_system.h"
 #include "resource.h"
 
 using namespace std;
@@ -235,11 +235,11 @@ void Win32Window::register_inputs()
 
 void Win32Window::pause_timer(bool enable)
 {
-    auto& timer = m_context.get_timer();
+    auto& time = m_context.get_time();
     if (enable)
-        timer.stop();
+        time.stop();
     else
-        timer.resume();
+        time.resume();
 
     // also discard any input while paused
     m_discard_input = enable;
@@ -252,7 +252,7 @@ bool Win32Window::on_input(HRAWINPUT raw_handle)
 
     GetRawInputData(raw_handle, RID_INPUT, &raw_input, &raw_data_size, sizeof(RAWINPUTHEADER));
 
-    auto& renderer = m_context.get_renderer();
+    auto& render = m_context.get_render();
     auto& input = m_context.get_input();
 
     // discard any input while paused
@@ -277,7 +277,7 @@ void Win32Window::on_resize(RECT& rc)
 {
     if (!EqualRect(&m_rect, &rc))
     {
-        auto& renderer = m_context.get_renderer();
+        auto& render = m_context.get_render();
         const int width = rc.right - rc.left;
         const int height = rc.bottom - rc.top;
 
@@ -298,7 +298,7 @@ void Win32Window::on_resize(RECT& rc)
 
 LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    auto& renderer = m_context.get_renderer();
+    auto& render = m_context.get_render();
 
     switch (msg)
     {
@@ -327,9 +327,9 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 return DefWindowProc(hwnd, msg, wp, lp);
 
             // while sizing or moving, draw one frame with no elapsed time
-            auto& timer = m_context.get_timer();
-            m_context.on_update(timer.get_abs_time(), 0);
-            m_context.on_render(timer.get_abs_time(), 0);
+            auto& time = m_context.get_time();
+            m_context.on_update(time.get_abs_time(), 0);
+            m_context.on_render(time.get_abs_time(), 0);
             break;
         }
 

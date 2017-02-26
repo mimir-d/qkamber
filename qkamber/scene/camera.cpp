@@ -2,7 +2,7 @@
 #include "precompiled.h"
 #include "camera.h"
 
-#include "input_system.h"
+#include "input/input_system.h"
 
 void FpsCamera::set_proj_params(int width, int height)
 {

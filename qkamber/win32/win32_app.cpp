@@ -3,9 +3,9 @@
 #include "win32_app.h"
 
 #include "engine.h"
-#include "renderer.h"
-#include "win32_window.h"
-#include "win32_input_system.h"
+#include "render/render_system.h"
+#include "win32/render/win32_window.h"
+#include "win32/input/win32_input_system.h"
 #include "resource.h"
 
 using namespace std;
@@ -56,9 +56,9 @@ int Win32App::mainloop()
 
 void Win32App::render_one()
 {
-    auto& timer = m_context.get_timer();
-    float abs_time = timer.get_abs_time();
-    float diff_time = timer.get_diff_time();
+    auto& time = m_context.get_time();
+    float abs_time = time.get_abs_time();
+    float diff_time = time.get_diff_time();
 
     m_context.on_update(abs_time, diff_time);
     m_context.on_render(abs_time, diff_time);

@@ -1,10 +1,10 @@
 #pragma once
 
-class Timer
+class TimeSystem
 {
 public:
-	Timer();
-    ~Timer();
+	TimeSystem();
+    ~TimeSystem();
 
 	void resume();
 	void stop();
@@ -20,13 +20,13 @@ private:
     app_clock::time_point m_last_diff;
 };
 
-inline Timer::Timer()
+inline TimeSystem::TimeSystem()
 {
     flog("id = %#x", this);
     log_info("Created timer");
 }
 
-inline Timer::~Timer()
+inline TimeSystem::~TimeSystem()
 {
     flog();
     log_info("Destroyed timer");
