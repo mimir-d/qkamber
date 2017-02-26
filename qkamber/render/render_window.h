@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer.h"
+#include "render_system.h"
 
 class RenderWindow : public RenderTarget
 {

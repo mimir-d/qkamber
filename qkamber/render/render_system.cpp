@@ -1,11 +1,11 @@
 
 #include "precompiled.h"
-#include "renderer.h"
+#include "render_system.h"
 
 #include "engine.h"
 #include "render_queue.h"
 #include "render_primitive.h"
-#include "mesh.h"
+#include "model/mesh.h"
 #include "math3.h"
 #include "platform.h"
 
@@ -14,7 +14,7 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer
 ///////////////////////////////////////////////////////////////////////////////
-Renderer::Renderer(QkEngine::Context& context) :
+RenderSystem::RenderSystem(QkEngine::Context& context) :
     m_context(context)
 {
     flog("id = %#x", this);
@@ -22,18 +22,18 @@ Renderer::Renderer(QkEngine::Context& context) :
     log_info("Created renderer");
 }
 
-Renderer::~Renderer()
+RenderSystem::~RenderSystem()
 {
     flog();
     log_info("Destroyed renderer");
 }
 
-void Renderer::begin_frame()
+void RenderSystem::begin_frame()
 {
     m_dev->clear();
 }
 
-void Renderer::render()
+void RenderSystem::render()
 {
     // set camera and viewport just once
     m_dev->set_view_matrix(m_camera->get_view());
@@ -47,12 +47,12 @@ void Renderer::render()
     }
 }
 
-void Renderer::render_text(const std::string& text, int x, int y)
+void RenderSystem::render_text(const std::string& text, int x, int y)
 {
     m_dev->draw_text(text, x, y);
 }
 
-void Renderer::end_frame()
+void RenderSystem::end_frame()
 {
     // finished drawing the queued objects
     m_queue.clear();
@@ -64,7 +64,7 @@ void Renderer::end_frame()
     m_frame_number ++;
     m_fps_last_count ++;
 
-    float now = m_context.get_timer().get_abs_time();
+    float now = m_context.get_time().get_abs_time();
     float delta = now - m_fps_last_timestamp;
     if (delta >= 1.0f)
     {

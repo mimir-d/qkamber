@@ -2,8 +2,8 @@
 #include "precompiled.h"
 #include "mesh.h"
 
-#include "renderer.h"
-#include "render_buffers.h"
+#include "render/render_system.h"
+#include "render/render_buffers.h"
 #include "math3.h"
 
 #define MESH_CUBE
@@ -198,6 +198,10 @@ Mesh::Mesh(RenderDevice& dev)
     });
 }
 #endif
+
+Mesh::~Mesh()
+{}
+
 RenderPrimitive Mesh::get_primitive() const
 {
     return RenderPrimitive(*m_vertices, *m_indices);

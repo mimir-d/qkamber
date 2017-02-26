@@ -2,8 +2,8 @@
 #include "precompiled.h"
 #include "win32_software_device.h"
 
-#include "render_primitive.h"
-#include "render_buffers.h"
+#include "render/render_primitive.h"
+#include "render/render_buffers.h"
 #include "win32_window.h"
 
 using namespace std;

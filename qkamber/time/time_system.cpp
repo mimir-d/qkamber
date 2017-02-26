@@ -1,10 +1,10 @@
 
 #include "precompiled.h"
-#include "timer.h"
+#include "time_system.h"
 
 using namespace std::chrono;
 
-void Timer::resume()
+void TimeSystem::resume()
 {
 	if (m_running)
 		return;
@@ -17,7 +17,7 @@ void Timer::resume()
 	dlog("Timer resumed");
 }
 
-void Timer::stop()
+void TimeSystem::stop()
 {
     if (!m_running)
         return;
@@ -30,7 +30,7 @@ void Timer::stop()
 	dlog("Timer stopped");
 }
 
-float Timer::get_abs_time() const
+float TimeSystem::get_abs_time() const
 {
     if (!m_running)
         return m_total_abs;
@@ -40,7 +40,7 @@ float Timer::get_abs_time() const
     return m_total_abs + static_cast<float>(microsec.count() * 1e-6);
 }
 
-float Timer::get_diff_time()
+float TimeSystem::get_diff_time()
 {
     if (!m_running)
         return 0;

@@ -3,9 +3,9 @@
 #include "engine.h"
 #include "render_buffers.h"
 #include "render_queue.h"
-#include "timer.h"
-#include "camera.h"
-#include "viewport.h"
+#include "time/time_system.h"
+#include "scene/camera.h"
+#include "scene/viewport.h"
 
 struct RenderPrimitive;
 
@@ -53,11 +53,11 @@ public:
     virtual void swap_buffers() = 0;
 };
 
-class Renderer
+class RenderSystem
 {
 public:
-	Renderer(QkEngine::Context& context);
-	~Renderer();
+	RenderSystem(QkEngine::Context& context);
+	~RenderSystem();
 
     void begin_frame();
     void render();
@@ -94,27 +94,27 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer impl
 ///////////////////////////////////////////////////////////////////////////////
-inline RenderDevice& Renderer::get_device()
+inline RenderDevice& RenderSystem::get_device()
 {
     return *m_dev;
 }
 
-inline RenderQueue& Renderer::get_queue()
+inline RenderQueue& RenderSystem::get_queue()
 {
     return m_queue;
 }
 
-inline void Renderer::set_camera(Camera* camera)
+inline void RenderSystem::set_camera(Camera* camera)
 {
     m_camera = camera;
 }
 
-inline void Renderer::set_viewport(Viewport* viewport)
+inline void RenderSystem::set_viewport(Viewport* viewport)
 {
     m_viewport = viewport;
 }
 
-inline float Renderer::get_fps() const
+inline float RenderSystem::get_fps() const
 {
     return m_fps;
 }
