@@ -4,13 +4,15 @@
 #include "precompiled.h"
 
 #include "engine.h"
+#include "math3.h"
 #include "render/render_system.h"
 #include "input/input_system.h"
 #include "input/input_device.h"
-#include "math3.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
 #include "model/mesh.h"
+#include "stats/stats_system.h"
+#include "time/time_system.h"
 
 using namespace std;
 
@@ -136,10 +138,14 @@ void Context::on_render()
     render.begin_frame();
     render.render();
 
+    int y = 0;
+    auto& stats = get_stats();
+    render.render_text(print_fmt("fps: %0.2f, frame count = %05u", stats.get_fps(), stats.get_frame_number()), 3, y += 3);
+
     vec3 p = m_camera.get_position();
     vec2 r = m_camera.get_rotation() * (180.0f / PI);
-    render.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, 13);
-    render.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, 23);
+    render.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, y += 10);
+    render.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, y += 10);
 
     render.end_frame();
 }

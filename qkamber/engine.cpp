@@ -5,6 +5,7 @@
 #include "time/time_system.h"
 #include "render/render_system.h"
 #include "input/input_system.h"
+#include "stats/stats_system.h"
 #include "platform.h"
 
 using namespace std;
@@ -17,6 +18,7 @@ QkEngine::Context::Context()
     m_time.reset(new TimeSystem{ *this });
     m_render.reset(new RenderSystem{ *this });
     m_input.reset(new InputSystem{ *this });
+    m_stats.reset(new StatsSystem{ *this });
 
     log_info("Finished creating engine context");
 }

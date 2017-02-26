@@ -180,6 +180,7 @@
     <ClInclude Include="$(src)\render\software_device.h" />
     <ClInclude Include="$(src)\scene\camera.h" />
     <ClInclude Include="$(src)\scene\viewport.h" />
+    <ClInclude Include="$(src)\stats\stats_system.h" />
     <ClInclude Include="$(src)\time\time_system.h" />
     <ClInclude Include="$(src)\win32\win32_app.h" />
     <ClInclude Include="$(src)\win32\input\win32_input_device.h" />
@@ -198,6 +199,7 @@
     <ClCompile Include="$(src)\render\software_device.cpp" />
     <ClCompile Include="$(src)\scene\camera.cpp" />
     <ClCompile Include="$(src)\scene\viewport.cpp" />
+    <ClCompile Include="$(src)\stats\stats_system.cpp" />
     <ClCompile Include="$(src)\time\time_system.cpp" />
     <ClCompile Include="$(src)\win32\win32_app.cpp" />
     <ClCompile Include="$(src)\win32\input\win32_input_device.cpp" />
