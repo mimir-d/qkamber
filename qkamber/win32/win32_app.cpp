@@ -3,10 +3,7 @@
 #include "win32_app.h"
 
 #include "engine.h"
-#include "render/render_system.h"
-#include "win32/render/win32_window.h"
-#include "win32/input/win32_input_system.h"
-#include "resource.h"
+#include "time/time_system.h"
 
 using namespace std;
 

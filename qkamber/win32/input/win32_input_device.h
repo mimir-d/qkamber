@@ -1,6 +1,6 @@
 #pragma once
 
-#include "input/input_system.h"
+#include "input/input_device.h"
 
 // class Win32InputDevice
 // {

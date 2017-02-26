@@ -2,6 +2,9 @@
 #include "precompiled.h"
 #include "engine.h"
 
+#include "time/time_system.h"
+#include "render/render_system.h"
+#include "input/input_system.h"
 #include "platform.h"
 
 using namespace std;
@@ -13,7 +16,7 @@ QkEngine::Context::Context()
     // init subsystems? all of these will have context as parent
     m_time.reset(new TimeSystem{ *this });
     m_render.reset(new RenderSystem{ *this });
-    m_input.reset(new InputSystem);
+    m_input.reset(new InputSystem{ *this });
 
     log_info("Finished creating engine context");
 }

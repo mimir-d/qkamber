@@ -1,27 +1,18 @@
 #pragma once
 
-#include "math3.h"
+#include "engine.h"
+#include "subsystem.h"
 
-class MouseDevice
+class MouseDevice;
+class KeyboardDevice;
+
+class InputSystem : public Subsystem
 {
 public:
-    enum Button { LMB, RMB };
-
-    virtual bool get_button_pressed(Button button) = 0;
-    virtual vec2 get_position() = 0;
-};
-
-class KeyboardDevice
-{
-public:
-    virtual bool get_key_pressed(int key_code) = 0;
-};
-
-class InputSystem
-{
-public:
-    InputSystem();
+    InputSystem(QkEngine::Context& context);
     ~InputSystem();
+
+    void process() final {}
 
     MouseDevice& get_mouse();
     KeyboardDevice& get_keyboard();

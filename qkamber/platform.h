@@ -2,7 +2,7 @@
 
 #include "win32/win32_app.h"
 #include "win32/render/win32_software_device.h"
-#include "win32/input/win32_input_system.h"
+#include "win32/input/win32_input_device.h"
 
 template <typename Intf, typename Impl>
 class PlatformFactory
