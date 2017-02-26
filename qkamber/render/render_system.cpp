@@ -15,7 +15,7 @@ using namespace std;
 // Renderer
 ///////////////////////////////////////////////////////////////////////////////
 RenderSystem::RenderSystem(QkEngine::Context& context) :
-    m_context(context)
+    Subsystem(context)
 {
     flog("id = %#x", this);
     m_dev = RenderDeviceFactory::create(context);
@@ -28,13 +28,10 @@ RenderSystem::~RenderSystem()
     log_info("Destroyed renderer");
 }
 
-void RenderSystem::begin_frame()
+void RenderSystem::process()
 {
-    m_dev->clear();
-}
+    begin_frame();
 
-void RenderSystem::render()
-{
     // set camera and viewport just once
     m_dev->set_view_matrix(m_camera->get_view());
     m_dev->set_proj_matrix(m_camera->get_proj());
@@ -45,11 +42,14 @@ void RenderSystem::render()
         m_dev->set_world_matrix(qi.world_matrix);
         m_dev->draw_primitive(qi.mesh.get_primitive());
     }
+
+    m_context.on_render();
+    end_frame();
 }
 
-void RenderSystem::render_text(const std::string& text, int x, int y)
+void RenderSystem::begin_frame()
 {
-    m_dev->draw_text(text, x, y);
+    m_dev->clear();
 }
 
 void RenderSystem::end_frame()
