@@ -4,7 +4,8 @@
 
 #include "platform.h"
 
-InputSystem::InputSystem()
+InputSystem::InputSystem(QkEngine::Context& context) :
+    Subsystem(context)
 {
     flog("id = %#x", this);
     m_mouse = MouseDeviceFactory::create();

@@ -6,6 +6,7 @@
 #include "engine.h"
 #include "render/render_system.h"
 #include "input/input_system.h"
+#include "input/input_device.h"
 #include "math3.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"

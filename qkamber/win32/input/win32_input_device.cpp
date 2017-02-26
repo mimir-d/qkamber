@@ -1,6 +1,6 @@
 
 #include "precompiled.h"
-#include "win32_input_system.h"
+#include "win32_input_device.h"
 
 constexpr USHORT HID_USAGE_PAGE_GENERIC = 0x01;
 constexpr USHORT HID_USAGE_GENERIC_MOUSE = 0x02;
