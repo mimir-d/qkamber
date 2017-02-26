@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine.h"
+#include "subsystem.h"
 #include "render_buffers.h"
 #include "render_queue.h"
 #include "time/time_system.h"
@@ -53,23 +54,25 @@ public:
     virtual void swap_buffers() = 0;
 };
 
-class RenderSystem
+class RenderSystem : public Subsystem
 {
 public:
 	RenderSystem(QkEngine::Context& context);
 	~RenderSystem();
 
-    void begin_frame();
-    void render();
-    // TODO: temp until some gui happens
-    void render_text(const std::string& text, int x, int y);
-    void end_frame();
+    void process() final;
 
+public:
     RenderDevice& get_device();
     RenderQueue& get_queue();
 
+    // TODO: should these be here?
     void set_camera(Camera* camera);
     void set_viewport(Viewport* viewport);
+
+private:
+    void begin_frame();
+    void end_frame();
 
 protected:
     std::unique_ptr<RenderDevice> m_dev;
@@ -78,8 +81,6 @@ protected:
     //TEMP:
     Camera* m_camera = nullptr;
     Viewport* m_viewport = nullptr;
-
-    QkEngine::Context& m_context;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

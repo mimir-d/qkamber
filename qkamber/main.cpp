@@ -131,23 +131,16 @@ void Context::on_update()
 
 void Context::on_render()
 {
-    auto& render = get_render();
-    // m_scene.render();
-
-    // TODO: this should not be public here
-    render.begin_frame();
-    render.render();
+    auto& dev = get_render().get_device();
 
     int y = 0;
     auto& stats = get_stats();
-    render.render_text(print_fmt("fps: %0.2f, frame count = %05u", stats.get_fps(), stats.get_frame_number()), 3, y += 3);
+    dev.draw_text(print_fmt("fps: %0.2f, frame count = %05u", stats.get_fps(), stats.get_frame_number()), 3, y += 3);
 
     vec3 p = m_camera.get_position();
     vec2 r = m_camera.get_rotation() * (180.0f / PI);
-    render.render_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, y += 10);
-    render.render_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, y += 10);
-
-    render.end_frame();
+    dev.draw_text(print_fmt("cam pos = %.4f %.4f %.4f", p.x(), p.y(), p.z()), 3, y += 10);
+    dev.draw_text(print_fmt("cam rot = %.4f %.4f", r.x(), -r.y()), 3, y += 10);
 }
 
 int main()
