@@ -39,6 +39,11 @@ public:
         >
     >
     dirty_t(const Args&... args);
+    ~dirty_t() = default;
+
+    // non-copyable and non-assignable
+    dirty_t(const dirty_t&) = delete;
+    dirty_t& operator=(const dirty_t&) = delete;
 
     void set_dirty();
     const T& get();
@@ -106,6 +111,22 @@ template <typename T, std::size_t N>
 using repeat_t = typename detail::repeat_type<T, N>::type;
 
 ///////////////////////////////////////////////////////////////////////////////
+// typelist_index
+///////////////////////////////////////////////////////////////////////////////
+template <typename T, typename... Ts>
+struct typelist_index;
+
+template <typename T, typename... Rest>
+struct typelist_index<T, T, Rest...> :
+    std::integral_constant<std::size_t, 0>
+{};
+
+template <typename T, typename T0, typename... Rest>
+struct typelist_index<T, T0, Rest...> :
+    std::integral_constant<std::size_t, 1 + typelist_index<T, Rest...>::value>
+{};
+
+///////////////////////////////////////////////////////////////////////////////
 // app_clock
 ///////////////////////////////////////////////////////////////////////////////
 namespace detail
@@ -147,11 +168,11 @@ inline std::tuple<Durations...> duration_parts(DurationIn d)
     using swallow = int[];
     (void)swallow
     {
-        0,
-        (void((
-            (std::get<Durations>(ret) = std::chrono::duration_cast<Durations>(d)),
-            (d -= std::chrono::duration_cast<DurationIn>(std::get<Durations>(ret)))
-        )), 0)...
+        (
+            std::get<Durations>(ret) = std::chrono::duration_cast<Durations>(d),
+            d -= std::chrono::duration_cast<DurationIn>(std::get<Durations>(ret)),
+            0
+        )...
     };
     return ret;
 }

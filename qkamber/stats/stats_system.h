@@ -7,7 +7,7 @@ class StatsSystem : public Subsystem
 {
 public:
     StatsSystem(QkEngine::Context& context);
-    ~StatsSystem() = default;
+    ~StatsSystem();
 
     void process() final;
 

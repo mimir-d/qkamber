@@ -168,6 +168,10 @@
     <ClInclude Include="$(src)\platform.h" />
     <ClInclude Include="$(src)\precompiled.h" />
     <ClInclude Include="$(src)\subsystem.h" />
+    <ClInclude Include="$(src)\entity\component_store.h" />
+    <ClInclude Include="$(src)\entity\entity_system.h" />
+    <ClInclude Include="$(src)\entity\model_component.h" />
+    <ClInclude Include="$(src)\entity\srt_component.h" />
     <ClInclude Include="$(src)\input\input_device.h" />
     <ClInclude Include="$(src)\input\input_system.h" />
     <ClInclude Include="$(src)\model\mesh.h" />
@@ -191,6 +195,7 @@
   <ItemGroup>
     <ClCompile Include="$(src)\engine.cpp" />
     <ClCompile Include="$(src)\main.cpp" />
+    <ClCompile Include="$(src)\entity\entity_system.cpp" />
     <ClCompile Include="$(src)\input\input_system.cpp" />
     <ClCompile Include="$(src)\model\mesh.cpp" />
     <ClCompile Include="$(src)\render\render_buffers.cpp" />

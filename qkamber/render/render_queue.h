@@ -13,11 +13,11 @@ class RenderQueue
 public:
     struct Item
     {
-        mat4& world_matrix;
-        Mesh& mesh;
+        const mat4& world_matrix;
+        const Mesh& mesh;
         // material
 
-        Item(mat4& world_matrix, Mesh& mesh);
+        Item(const mat4& world_matrix, const Mesh& mesh);
     };
 
     using iterator = std::vector<Item>::const_iterator;
@@ -37,7 +37,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // RenderQueue::Item impl
 ///////////////////////////////////////////////////////////////////////////////
-inline RenderQueue::Item::Item(mat4& world_matrix, Mesh& mesh) :
+inline RenderQueue::Item::Item(const mat4& world_matrix, const Mesh& mesh) :
     world_matrix(world_matrix), mesh(mesh)
 {}
 

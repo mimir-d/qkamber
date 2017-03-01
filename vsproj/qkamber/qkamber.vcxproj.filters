@@ -13,21 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\input">
-      <UniqueIdentifier>{607600a6-a5cf-4446-9354-0564ea8995fe}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Header Files\model">
-      <UniqueIdentifier>{940c72ea-143c-479b-ac67-ebabe6a64476}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\input">
-      <UniqueIdentifier>{718e3847-4fdf-48ae-aad5-e906b9828cdd}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Source Files\model">
-      <UniqueIdentifier>{349e4675-7ba9-434b-84b9-d364c7ffd29d}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files\stats">
       <UniqueIdentifier>{596ddb8d-bcac-43eb-b45d-4599946fdff7}</UniqueIdentifier>
     </Filter>
@@ -64,6 +49,27 @@
     </Filter>
     <Filter Include="Source Files\render">
       <UniqueIdentifier>{853d775c-fa7c-420a-8e1d-a706c2bd7d6f}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files\entity">
+      <UniqueIdentifier>{14ec6fb9-0504-47d1-80be-1374e69aff6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\input">
+      <UniqueIdentifier>{607600a6-a5cf-4446-9354-0564ea8995fe}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\model">
+      <UniqueIdentifier>{940c72ea-143c-479b-ac67-ebabe6a64476}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\entity">
+      <UniqueIdentifier>{4b0efd7b-c309-4122-ae92-d96097f9ffc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\input">
+      <UniqueIdentifier>{718e3847-4fdf-48ae-aad5-e906b9828cdd}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\model">
+      <UniqueIdentifier>{349e4675-7ba9-434b-84b9-d364c7ffd29d}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
@@ -146,6 +152,18 @@
     <ClInclude Include="$(src)\stats\stats_system.h">
       <Filter>Header Files\stats</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\entity\entity_system.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="$(src)\entity\model_component.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="$(src)\entity\srt_component.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="$(src)\entity\component_store.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -198,6 +216,9 @@
     </ClCompile>
     <ClCompile Include="$(src)\stats\stats_system.cpp">
       <Filter>Source Files\stats</Filter>
+    </ClCompile>
+    <ClCompile Include="$(src)\entity\entity_system.cpp">
+      <Filter>Source Files\entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
