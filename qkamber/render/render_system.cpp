@@ -5,8 +5,10 @@
 #include "engine.h"
 #include "render_queue.h"
 #include "render_primitive.h"
+#include "scene/scene_system.h"
+#include "scene/camera.h"
+#include "scene/viewport.h"
 #include "model/mesh.h"
-#include "math3.h"
 #include "platform.h"
 
 using namespace std;
@@ -19,23 +21,27 @@ RenderSystem::RenderSystem(QkEngine::Context& context) :
 {
     flog("id = %#x", this);
     m_dev = RenderDeviceFactory::create(context);
-    log_info("Created renderer");
+    log_info("Created render system");
 }
 
 RenderSystem::~RenderSystem()
 {
     flog();
-    log_info("Destroyed renderer");
+    log_info("Destroyed render system");
 }
 
 void RenderSystem::process()
 {
     begin_frame();
 
-    // set camera and viewport just once
-    m_dev->set_view_matrix(m_camera->get_view());
-    m_dev->set_proj_matrix(m_camera->get_proj());
-    m_dev->set_clip_matrix(m_viewport->get_clip());
+    // set camera and viewport
+    auto& scene = m_context.get_scene();
+    auto& camera = scene.get_camera();
+    auto& viewport = scene.get_viewport();
+
+    m_dev->set_view_matrix(camera.get_view());
+    m_dev->set_proj_matrix(camera.get_proj());
+    m_dev->set_clip_matrix(viewport.get_clip());
 
     for (auto& qi : m_queue)
     {

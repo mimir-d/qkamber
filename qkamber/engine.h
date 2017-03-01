@@ -3,6 +3,7 @@
 class TimeSystem;
 class EntitySystem;
 class RenderSystem;
+class SceneSystem;
 class InputSystem;
 class StatsSystem;
 
@@ -29,6 +30,7 @@ public:
         TimeSystem& get_time();
         EntitySystem& get_entity();
         RenderSystem& get_render();
+        SceneSystem& get_scene();
         InputSystem& get_input();
         StatsSystem& get_stats();
 
@@ -37,6 +39,7 @@ public:
         std::unique_ptr<TimeSystem> m_time;
         std::unique_ptr<EntitySystem> m_entity;
         std::unique_ptr<RenderSystem> m_render;
+        std::unique_ptr<SceneSystem> m_scene;
         std::unique_ptr<InputSystem> m_input;
         std::unique_ptr<StatsSystem> m_stats;
 
@@ -91,6 +94,11 @@ inline EntitySystem& QkEngine::Context::get_entity()
 inline RenderSystem& QkEngine::Context::get_render()
 {
     return *m_render.get();
+}
+
+inline SceneSystem& QkEngine::Context::get_scene()
+{
+    return *m_scene.get();
 }
 
 inline InputSystem& QkEngine::Context::get_input()

@@ -6,6 +6,7 @@
 #include "engine.h"
 #include "math3.h"
 #include "render/render_system.h"
+#include "scene/scene_system.h"
 #include "input/input_system.h"
 #include "input/input_device.h"
 #include "scene/camera.h"
@@ -14,7 +15,6 @@
 #include "stats/stats_system.h"
 #include "time/time_system.h"
 #include "entity/entity_system.h"
-
 
 using namespace std;
 
@@ -34,7 +34,7 @@ private:
     bool m_poly_mode_changed = false;
 
     FpsCamera m_camera { *this, { 0, 0, 15 } };
-    Viewport m_viewport;
+    RectViewport m_viewport;
 
     unique_ptr<Mesh> m_mesh;
     std::unique_ptr<EntitySystem::Entity> m_ent[9];
@@ -42,12 +42,12 @@ private:
 
 void Context::on_create()
 {
-    auto& render = get_render();
-    render.set_camera(&m_camera);
-    render.set_viewport(&m_viewport);
+    auto& scene = get_scene();
+    scene.set_camera(&m_camera);
+    scene.set_viewport(&m_viewport);
 
     // initialize a render target for the app
-    auto& dev = render.get_device();
+    auto& dev = get_render().get_device();
     m_target = dev.create_render_target(640, 480);
 
     dev.set_render_target(m_target.get());
@@ -116,24 +116,11 @@ void Context::on_update()
     m_camera.update();
 
     // TODO: check paren identation formatting
-    // scene stuff
 
     for (int i = 0; i < 0; i++)
     {
         auto& srt = m_ent[i]->get_component<SrtComponent>();
         srt.set_rotation(vec3{ 1, 1, 1 } * ((i / 3 + i % 3 + 1) * abs_time));
-    }
-    // m_scene.update();
-
-    auto& q = render.get_queue();
-    for (auto& agg : get_entity().filter_comp<SrtComponent, ModelComponent>())
-    {
-        auto& srt = std::get<0>(agg);
-        auto& model = std::get<1>(agg);
-
-        //dlog("%f %f %f", srt.get_world_matrix()[0][2], srt.get_world_matrix()[1][2], srt.get_world_matrix()[2][2]);
-        q.add(srt.get_world(), *model.get_mesh());
-        //q.add(world, *model.get_mesh());
     }
 }
 
