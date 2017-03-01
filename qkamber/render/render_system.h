@@ -66,10 +66,6 @@ public:
     RenderDevice& get_device();
     RenderQueue& get_queue();
 
-    // TODO: should these be here?
-    void set_camera(Camera* camera);
-    void set_viewport(Viewport* viewport);
-
 private:
     void begin_frame();
     void end_frame();
@@ -77,10 +73,6 @@ private:
 protected:
     std::unique_ptr<RenderDevice> m_dev;
     RenderQueue m_queue;
-
-    //TEMP:
-    Camera* m_camera = nullptr;
-    Viewport* m_viewport = nullptr;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,14 +86,4 @@ inline RenderDevice& RenderSystem::get_device()
 inline RenderQueue& RenderSystem::get_queue()
 {
     return m_queue;
-}
-
-inline void RenderSystem::set_camera(Camera* camera)
-{
-    m_camera = camera;
-}
-
-inline void RenderSystem::set_viewport(Viewport* viewport)
-{
-    m_viewport = viewport;
 }

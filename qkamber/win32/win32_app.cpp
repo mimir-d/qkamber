@@ -4,6 +4,7 @@
 
 #include "engine.h"
 #include "render/render_system.h"
+#include "scene/scene_system.h"
 #include "stats/stats_system.h"
 #include "time/time_system.h"
 
@@ -56,6 +57,9 @@ int Win32App::mainloop()
 void Win32App::render_one()
 {
     m_context.on_update();
+
+    auto& scene = m_context.get_scene();
+    scene.process();
 
     auto& render = m_context.get_render();
     render.process();

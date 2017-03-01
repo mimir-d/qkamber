@@ -164,6 +164,9 @@
     <ClInclude Include="$(src)\entity\component_store.h">
       <Filter>Header Files\entity</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\scene\scene_system.h">
+      <Filter>Header Files\scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -219,6 +222,9 @@
     </ClCompile>
     <ClCompile Include="$(src)\entity\entity_system.cpp">
       <Filter>Source Files\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="$(src)\scene\scene_system.cpp">
+      <Filter>Source Files\scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
