@@ -1,6 +1,7 @@
 #pragma once
 
 class TimeSystem;
+class EntitySystem;
 class RenderSystem;
 class InputSystem;
 class StatsSystem;
@@ -26,6 +27,7 @@ public:
         bool get_exit_requested() const;
 
         TimeSystem& get_time();
+        EntitySystem& get_entity();
         RenderSystem& get_render();
         InputSystem& get_input();
         StatsSystem& get_stats();
@@ -33,6 +35,7 @@ public:
     private:
         // TODO: context will be the keeper of systems
         std::unique_ptr<TimeSystem> m_time;
+        std::unique_ptr<EntitySystem> m_entity;
         std::unique_ptr<RenderSystem> m_render;
         std::unique_ptr<InputSystem> m_input;
         std::unique_ptr<StatsSystem> m_stats;
@@ -78,6 +81,11 @@ inline bool QkEngine::Context::get_exit_requested() const
 inline TimeSystem& QkEngine::Context::get_time()
 {
     return *m_time.get();
+}
+
+inline EntitySystem& QkEngine::Context::get_entity()
+{
+    return *m_entity.get();
 }
 
 inline RenderSystem& QkEngine::Context::get_render()

@@ -3,6 +3,7 @@
 #include "engine.h"
 
 #include "time/time_system.h"
+#include "entity/entity_system.h"
 #include "render/render_system.h"
 #include "input/input_system.h"
 #include "stats/stats_system.h"
@@ -16,6 +17,7 @@ QkEngine::Context::Context()
 
     // init subsystems? all of these will have context as parent
     m_time.reset(new TimeSystem{ *this });
+    m_entity.reset(new EntitySystem{ *this });
     m_render.reset(new RenderSystem{ *this });
     m_input.reset(new InputSystem{ *this });
     m_stats.reset(new StatsSystem{ *this });
@@ -55,6 +57,3 @@ int QkEngine::run()
         throw;
     }
 }
-
-// todo: keep entity system here + subsystems
-// timing is a subsystem?

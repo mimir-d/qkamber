@@ -6,7 +6,16 @@
 
 StatsSystem::StatsSystem(QkEngine::Context& context) :
     Subsystem(context)
-{}
+{
+    flog("id = %#x", this);
+    log_info("Created stats system");
+}
+
+StatsSystem::~StatsSystem()
+{
+    flog();
+    log_info("Destroyed stats system");
+}
 
 void StatsSystem::process()
 {

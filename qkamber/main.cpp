@@ -13,6 +13,8 @@
 #include "model/mesh.h"
 #include "stats/stats_system.h"
 #include "time/time_system.h"
+#include "entity/entity_system.h"
+
 
 using namespace std;
 
@@ -32,11 +34,10 @@ private:
     bool m_poly_mode_changed = false;
 
     FpsCamera m_camera { *this, { 0, 0, 15 } };
-
     Viewport m_viewport;
 
     unique_ptr<Mesh> m_mesh;
-    mat4 m_world_matrix[3][3];
+    std::unique_ptr<EntitySystem::Entity> m_ent[9];
 };
 
 void Context::on_create()
@@ -53,6 +54,18 @@ void Context::on_create()
     dev.set_polygon_mode(m_poly_mode);
 
     m_mesh = make_unique<Mesh>(dev);
+
+    auto& entity = get_entity();
+    for (int i = 0; i < 9; i++)
+    {
+        m_ent[i] = entity.create_entity();
+
+        auto& srt = m_ent[i]->add_component<SrtComponent>();
+        srt.set_position({ (i/3 - 1) * 3.5f, (i%3 - 1) * 3.5f, 0 });
+
+        auto& model = m_ent[i]->add_component<ModelComponent>();
+        model.set_mesh(m_mesh.get());
+    }
 }
 
 void Context::on_destroy()
@@ -105,28 +118,23 @@ void Context::on_update()
     // TODO: check paren identation formatting
     // scene stuff
 
-    auto& q = render.get_queue();
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 0; i++)
     {
-        for (int j = 0; j < 3; j++)
-        {
-            m_world_matrix[i][j] = mat4::translate(
-                (i - 1) * 3.5f,
-                (j - 1) * 3.5f,
-                0
-            );
-            //m_world_matrix[i][j] *= mat4::rotate(
-            //    (i + j + 1) * abs_time,
-            //    (i + j + 1) * abs_time,
-            //    (i + j + 1) * abs_time
-            //);
-            //m_world_matrix[i] *= mat4::rotate(0.5, 0, 0);
-            //m_world_matrix[i][j] *= mat4::scale(1.0f, 1.0f, 1.0f);
-
-            q.add(m_world_matrix[i][j], *m_mesh);
-        }
+        auto& srt = m_ent[i]->get_component<SrtComponent>();
+        srt.set_rotation(vec3{ 1, 1, 1 } * ((i / 3 + i % 3 + 1) * abs_time));
     }
     // m_scene.update();
+
+    auto& q = render.get_queue();
+    for (auto& agg : get_entity().filter_comp<SrtComponent, ModelComponent>())
+    {
+        auto& srt = std::get<0>(agg);
+        auto& model = std::get<1>(agg);
+
+        //dlog("%f %f %f", srt.get_world_matrix()[0][2], srt.get_world_matrix()[1][2], srt.get_world_matrix()[2][2]);
+        q.add(srt.get_world(), *model.get_mesh());
+        //q.add(world, *model.get_mesh());
+    }
 }
 
 void Context::on_render()
