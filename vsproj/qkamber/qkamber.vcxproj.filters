@@ -167,6 +167,9 @@
     <ClInclude Include="$(src)\scene\scene_system.h">
       <Filter>Header Files\scene</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\model\image_loader.h">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -225,6 +228,9 @@
     </ClCompile>
     <ClCompile Include="$(src)\scene\scene_system.cpp">
       <Filter>Source Files\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="$(src)\model\image_loader.cpp">
+      <Filter>Source Files\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
