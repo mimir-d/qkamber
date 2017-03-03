@@ -67,11 +67,6 @@ void Context::on_create()
         auto& model = m_ent[i]->add_component<ModelComponent>();
         model.set_mesh(m_mesh.get());
     }
-
-    ImageLoader tl;
-    unique_ptr<Image> im = tl.load("tex1.bmp");
-    uint8_t* dd = im->data();
-    dlog("pixel color is rgba = %d %d %d %d", dd[0], dd[1], dd[2], dd[3]);
 }
 
 void Context::on_destroy()

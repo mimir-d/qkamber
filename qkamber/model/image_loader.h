@@ -26,9 +26,27 @@ public:
     };
 
 public:
+    ImageLoader();
+    ~ImageLoader();
+
     std::unique_ptr<Image> load(const std::string& filename, FileFormat format = FileFormat::Unknown);
 
 private:
     FileFormat get_format(const std::string& filename);
     std::unique_ptr<Image> load_bmp(const std::string& filename);
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// impl
+///////////////////////////////////////////////////////////////////////////////
+inline ImageLoader::ImageLoader()
+{
+    flog("id = %#x", this);
+    log_info("Created image loader");
+}
+
+inline ImageLoader::~ImageLoader()
+{
+    flog();
+    log_info("Destroyed image loader");
+}

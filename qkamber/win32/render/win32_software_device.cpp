@@ -22,6 +22,9 @@ Win32SoftwareDevice::Win32SoftwareDevice(QkEngine::Context& context) :
     m_fill_brush = CreateSolidBrush(0x009600c8);
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
+    // TODO: temporary
+    m_tex0 = m_context.get_image_loader().load("tex4.bmp");
+
     log_info("Created win32 software device");
 }
 
@@ -206,13 +209,21 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const fp4 y1 = p1.position.y();
     const fp4 y2 = p2.position.y();
 
+    float zi0 = p0.position.z();
+    float zi1 = p1.position.z();
+    float zi2 = p2.position.z();
+
     vec3 c0 = p0.color * 255.f;
     vec3 c1 = p1.color * 255.f;
     vec3 c2 = p2.color * 255.f;
 
-    float z0 = p0.position.z();
-    float z1 = p1.position.z();
-    float z2 = p2.position.z();
+    vec2 uv0 = p0.texcoord;
+    vec2 uv1 = p1.texcoord;
+    vec2 uv2 = p2.texcoord;
+
+    float wi0 = p0.w_inv;
+    float wi1 = p1.w_inv;
+    float wi2 = p2.w_inv;
 
     // min bounding box
     const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
@@ -258,23 +269,40 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const heval he_dx = { dx01, dx12, dx20 };
     const heval he_dy = { dy01, dy12, dy20 };
 
+    // running z-value interpolation values
+    float zi_y = (
+        zi2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        zi0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        zi1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    );
+    const float dzi_dx = (zi2 * fdx01 + zi0 * fdx12 + zi1 * fdx20) * lerp_c;
+    const float dzi_dy = (zi2 * fdy01 + zi0 * fdy12 + zi1 * fdy20) * lerp_c;
+
+    float wi_y = (
+        wi2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        wi0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        wi1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    );
+    const float dwi_dx = (wi2 * fdx01 + wi0 * fdx12 + wi1 * fdx20) * lerp_c;
+    const float dwi_dy = (wi2 * fdy01 + wi0 * fdy12 + wi1 * fdy20) * lerp_c;
+
     // running color interpolation values
     vec3 c_y = (
-        c2 * static_cast<float>(get<0>(he_y)) +
-        c0 * static_cast<float>(get<1>(he_y)) +
-        c1 * static_cast<float>(get<2>(he_y))
-    ) * lerp_c;
+        c2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        c0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        c1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    );
     const vec3 dc_dx = (c2 * fdx01 + c0 * fdx12 + c1 * fdx20) * lerp_c;
     const vec3 dc_dy = (c2 * fdy01 + c0 * fdy12 + c1 * fdy20) * lerp_c;
 
-    // running z-value interpolation values
-    float z_y = (
-        z2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        z0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        z1 * static_cast<float>(get<2>(he_y)) * lerp_c
+    // running texcoord interpolation values
+    vec2 uv_y = (
+        uv2 * static_cast<float>(get<0>(he_y)) * lerp_c +
+        uv0 * static_cast<float>(get<1>(he_y)) * lerp_c +
+        uv1 * static_cast<float>(get<2>(he_y)) * lerp_c
     );
-    const float dz_dx = (z2 * fdx01 + z0 * fdx12 + z1 * fdx20) * lerp_c;
-    const float dz_dy = (z2 * fdy01 + z0 * fdy12 + z1 * fdy20) * lerp_c;
+    const vec2 duv_dx = (uv2 * fdx01 + uv0 * fdx12 + uv1 * fdx20) * lerp_c;
+    const vec2 duv_dy = (uv2 * fdy01 + uv0 * fdy12 + uv1 * fdy20) * lerp_c;
 
     // buffers
     auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
@@ -289,26 +317,49 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     {
         // Start value for horizontal scan
         heval he_x = he_y;
+        float zi_x = zi_y;
+        float wi_x = wi_y;
         vec3 c_x = c_y;
-        float z_x = z_y;
+        vec2 uv_x = uv_y;
 
         for (int x = min_x; x < max_x; x++)
         {
-            // TODO: there's some zbuff fighting at 50+ distance
-            if (z_x < depth_ptr[x] && he_x > 0)
+            const float w = 1.0f / wi_x;
+            // TODO: pretty sure this isnt right, should be 1/zi_x
+            const float z = zi_x * w;
+            const vec3 c = c_x * w;
+            const vec<size_t, 2> texcoord =
             {
-                color_ptr[x] = RGB(c_x.z(), c_x.y(), c_x.x());;
-                depth_ptr[x] = z_x;
+                clamp(static_cast<size_t>(uv_x.x() * w * m_tex0->get_width()), size_t(0), m_tex0->get_width() - 1),
+                clamp(static_cast<size_t>(uv_x.y() * w * m_tex0->get_height()), size_t(0), m_tex0->get_height() - 1),
+            };
+
+            if (z < depth_ptr[x] && he_x > 0)
+            {
+                // TODO: get texture unit and sample uv
+                const uint8_t* tex_ptr = m_tex0->data() + (texcoord[1] * m_tex0->get_width() + texcoord[0]) * 4;
+                // ignore alpha atm
+
+                color_ptr[x] = RGB(
+                    (2.0f * tex_ptr[0] + c.z()) / 3.0f,
+                    (2.0f * tex_ptr[1] + c.y()) / 3.0f,
+                    (2.0f * tex_ptr[2] + c.x()) / 3.0f
+                );
+                depth_ptr[x] = z;
             }
 
             he_x -= he_dy;
+            zi_x -= dzi_dy;
+            wi_x -= dwi_dy;
             c_x -= dc_dy;
-            z_x -= dz_dy;
+            uv_x -= duv_dy;
         }
 
         he_y += he_dx;
+        zi_y += dzi_dx;
+        wi_y += dwi_dx;
         c_y += dc_dx;
-        z_y += dz_dx;
+        uv_y += duv_dx;
 
         color_ptr += color_stride;
         depth_ptr += depth_stride;

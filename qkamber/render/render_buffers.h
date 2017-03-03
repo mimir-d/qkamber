@@ -38,11 +38,13 @@ inline void lock_buffer(DeviceBuffer* buffer, Func fun);
 enum VertexSemantic
 {
     VDES_POSITION,
-    VDES_COLOR
+    VDES_COLOR,
+    VDES_TEXCOORD
 };
 
 enum VertexType
 {
+    VDET_FLOAT2,
     VDET_FLOAT3
 };
 

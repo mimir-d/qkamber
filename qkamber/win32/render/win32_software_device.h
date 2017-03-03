@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render/software_device.h"
+#include "model/image_loader.h"
 #include "engine.h"
 
 class Win32SoftwareDevice : public SoftwareDevice
@@ -36,4 +37,6 @@ private:
     HPEN m_line_pen;
     HBRUSH m_fill_brush;
     HFONT m_font;
+
+    std::unique_ptr<Image> m_tex0;
 };

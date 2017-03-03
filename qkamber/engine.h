@@ -7,6 +7,8 @@ class SceneSystem;
 class InputSystem;
 class StatsSystem;
 
+class ImageLoader;
+
 class QkEngine
 {
 public:
@@ -34,6 +36,8 @@ public:
         InputSystem& get_input();
         StatsSystem& get_stats();
 
+        ImageLoader& get_image_loader();
+
     private:
         // TODO: context will be the keeper of systems
         std::unique_ptr<TimeSystem> m_time;
@@ -42,6 +46,8 @@ public:
         std::unique_ptr<SceneSystem> m_scene;
         std::unique_ptr<InputSystem> m_input;
         std::unique_ptr<StatsSystem> m_stats;
+
+        std::unique_ptr<ImageLoader> m_image_loader;
 
         bool m_exit_requested = false;
     };
@@ -109,6 +115,11 @@ inline InputSystem& QkEngine::Context::get_input()
 inline StatsSystem& QkEngine::Context::get_stats()
 {
     return *m_stats.get();
+}
+
+inline ImageLoader& QkEngine::Context::get_image_loader()
+{
+    return *m_image_loader.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

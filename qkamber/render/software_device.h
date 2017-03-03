@@ -35,7 +35,8 @@ protected:
     {
         vec3 position;
         vec3 color;
-        //vec2 tex_coords;
+        vec2 texcoord;
+        float w_inv;
     };
 
 public:
