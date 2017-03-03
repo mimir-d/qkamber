@@ -94,8 +94,8 @@ private:
     T m_value;
 };
 
-using fp4 = FixedPoint<int, 4>;
-using fp8 = FixedPoint<int, 8>;
+using fp4 = FixedPoint<int32_t, 4>;
+using fp8 = FixedPoint<int32_t, 8>;
 
 ///////////////////////////////////////////////////////////////////////////////
 // vector types

@@ -8,6 +8,7 @@
 #include "scene/scene_system.h"
 #include "input/input_system.h"
 #include "stats/stats_system.h"
+#include "model/image_loader.h"
 #include "platform.h"
 
 using namespace std;
@@ -24,12 +25,17 @@ QkEngine::Context::Context()
     m_input.reset(new InputSystem{ *this });
     m_stats.reset(new StatsSystem{ *this });
 
+    // TODO: maybe these should stay in some resource folder + interface name = loader
+    m_image_loader.reset(new ImageLoader);
+
     log_info("Finished creating engine context");
 }
 
 QkEngine::Context::~Context()
 {
     flog();
+
+    m_image_loader = nullptr;
 
     // i want to manually destroy systems
     m_stats = nullptr;
