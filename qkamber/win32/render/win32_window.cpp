@@ -95,12 +95,6 @@ void Win32DepthBuffer::resize(int width, int height)
     m_height = height;
 
     m_data.reset(new float[height * width]);
-
-    m_data_clear.reset(new float[height * width]);
-    std::fill(
-        m_data_clear.get(), m_data_clear.get() + height * width,
-        std::numeric_limits<float>::max()
-    );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

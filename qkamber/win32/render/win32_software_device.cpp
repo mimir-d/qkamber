@@ -101,9 +101,10 @@ void Win32SoftwareDevice::clear()
 
     // clear the zbuffer
     auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
-    memcpy(
-        depth_buf.get_data(), depth_buf.get_data_clear(),
-        m_render_target->get_height() * depth_buf.get_stride() * sizeof(float)
+    std::fill(
+        depth_buf.get_data(),
+        depth_buf.get_data() + m_render_target->get_height() * depth_buf.get_stride(),
+        std::numeric_limits<float>::max()
     );
 }
 
