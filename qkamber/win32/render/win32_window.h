@@ -43,12 +43,8 @@ public:
 
     void resize(int width, int height);
 
-    // TODO: should this optimization be here or somewhere else?
-    float* get_data_clear();
-
 private:
     std::unique_ptr<float[]> m_data;
-    std::unique_ptr<float[]> m_data_clear;
     size_t m_width = 0;
     size_t m_height = 0;
 };
@@ -128,11 +124,6 @@ inline float* Win32DepthBuffer::get_data()
 inline size_t Win32DepthBuffer::get_stride()
 {
     return m_width;
-}
-
-inline float* Win32DepthBuffer::get_data_clear()
-{
-    return m_data_clear.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
