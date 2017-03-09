@@ -9,6 +9,8 @@
 #include "scene/viewport.h"
 
 struct RenderPrimitive;
+class Image;
+class Texture;
 
 enum class PolygonMode
 {
@@ -44,10 +46,13 @@ public:
     virtual void set_render_target(RenderTarget* target) = 0;
     virtual void set_polygon_mode(PolygonMode mode) = 0;
 
+    virtual void set_texture(Texture* texture) = 0;
+
     // resource management methods
     virtual std::unique_ptr<RenderTarget> create_render_target(int width, int height) = 0;
     virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;
     virtual std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) = 0;
+    virtual std::unique_ptr<Texture> create_texture(Image* image) = 0;
 
     // framebuffer methods
     virtual void clear() = 0;

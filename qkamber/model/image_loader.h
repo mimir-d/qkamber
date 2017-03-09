@@ -2,7 +2,8 @@
 
 enum class ImageFormat
 {
-    Rgba8
+    Rgba8,
+    Rgb8
 };
 
 class Image
@@ -13,7 +14,6 @@ public:
 
     virtual size_t get_width() const = 0;
     virtual size_t get_height() const = 0;
-    virtual size_t get_stride() const = 0;
 };
 
 class ImageLoader

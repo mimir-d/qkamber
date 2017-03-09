@@ -4,6 +4,7 @@
 
 #include "render/render_primitive.h"
 #include "render/render_buffers.h"
+#include "render/software_buffers.h"
 #include "win32_window.h"
 
 using namespace std;
@@ -23,7 +24,9 @@ Win32SoftwareDevice::Win32SoftwareDevice(QkEngine::Context& context) :
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
     // TODO: temporary
-    m_tex0 = m_context.get_image_loader().load("tex4.bmp");
+    auto im0 = m_context.get_image_loader().load("tex4.bmp");
+    m_tex0 = create_texture(im0.get());
+    set_texture(m_tex0.get());
 
     log_info("Created win32 software device");
 }
@@ -328,23 +331,20 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
             const float w = 1.0f / wi_x;
             // TODO: pretty sure this isnt right, should be 1/zi_x
             const float z = zi_x * w;
-            const vec3 c = c_x * w;
-            const vec<size_t, 2> texcoord =
-            {
-                clamp(static_cast<size_t>(uv_x.x() * w * m_tex0->get_width()), size_t(0), m_tex0->get_width() - 1),
-                clamp(static_cast<size_t>(uv_x.y() * w * m_tex0->get_height()), size_t(0), m_tex0->get_height() - 1),
-            };
 
             if (z < depth_ptr[x] && he_x > 0)
             {
-                // TODO: get texture unit and sample uv
-                const uint8_t* tex_ptr = m_tex0->data() + (texcoord[1] * m_tex0->get_width() + texcoord[0]) * 4;
+                const vec3 c = c_x * w;
+
+                // TODO: get texture unit and sample uv; split raster func in variant
+                SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
+                const uint8_t* texel = tex->sample(uv_x.x() * w, uv_x.y() * w);
                 // ignore alpha atm
 
                 color_ptr[x] = RGB(
-                    (2.0f * tex_ptr[0] + c.z()) / 3.0f,
-                    (2.0f * tex_ptr[1] + c.y()) / 3.0f,
-                    (2.0f * tex_ptr[2] + c.x()) / 3.0f
+                    (2.0f * texel[0] + c.z()) / 3.0f,
+                    (2.0f * texel[1] + c.y()) / 3.0f,
+                    (2.0f * texel[2] + c.x()) / 3.0f
                 );
                 depth_ptr[x] = z;
             }

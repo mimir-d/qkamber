@@ -56,9 +56,12 @@ public:
     void set_polygon_mode(PolygonMode mode) final;
     void set_render_target(RenderTarget* target);
 
+    void set_texture(Texture* texture) final;
+
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) final;
+    std::unique_ptr<Texture> create_texture(Image* image) final;
 
 protected:
     virtual void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) = 0;
@@ -67,6 +70,8 @@ protected:
     PolygonMode m_poly_mode = PolygonMode::Fill;
     RenderTarget* m_render_target;
     std::unique_ptr<RenderTarget> m_null_target;
+
+    Texture* m_texture = nullptr;
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -123,4 +128,9 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
 
     m_render_target = target;
     log_info("Set render target %#x", target);
+}
+
+inline void SoftwareDevice::set_texture(Texture* texture)
+{
+    m_texture = texture;
 }
