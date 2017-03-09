@@ -28,10 +28,6 @@
       <UniqueIdentifier>{81a18402-c6c6-4fd5-9998-c7a959bcc961}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Header Files\render">
-      <UniqueIdentifier>{f91cef23-1f53-4fdc-b530-f401285e5df1}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="Source Files\stats">
       <UniqueIdentifier>{a897f72b-6861-4a4f-97be-87442208acee}</UniqueIdentifier>
     </Filter>
@@ -47,19 +43,12 @@
       <UniqueIdentifier>{d0d8a732-649f-40cc-b10b-e37cd23bcfe0}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\render">
-      <UniqueIdentifier>{853d775c-fa7c-420a-8e1d-a706c2bd7d6f}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files\entity">
       <UniqueIdentifier>{14ec6fb9-0504-47d1-80be-1374e69aff6f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\input">
       <UniqueIdentifier>{607600a6-a5cf-4446-9354-0564ea8995fe}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Header Files\model">
-      <UniqueIdentifier>{940c72ea-143c-479b-ac67-ebabe6a64476}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\entity">
       <UniqueIdentifier>{4b0efd7b-c309-4122-ae92-d96097f9ffc8}</UniqueIdentifier>
@@ -68,8 +57,18 @@
       <UniqueIdentifier>{718e3847-4fdf-48ae-aad5-e906b9828cdd}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\model">
-      <UniqueIdentifier>{349e4675-7ba9-434b-84b9-d364c7ffd29d}</UniqueIdentifier>
+    <Filter Include="Header Files\resource">
+      <UniqueIdentifier>{3f0c31af-1513-4cc8-9cbb-270304d21309}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\render">
+      <UniqueIdentifier>{f91cef23-1f53-4fdc-b530-f401285e5df1}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files\resource">
+      <UniqueIdentifier>{85cd4404-c5ab-4eef-ae95-6a0d9e893143}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\render">
+      <UniqueIdentifier>{853d775c-fa7c-420a-8e1d-a706c2bd7d6f}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
@@ -107,8 +106,8 @@
     <ClInclude Include="$(src)\input\input_system.h">
       <Filter>Header Files\input</Filter>
     </ClInclude>
-    <ClInclude Include="$(src)\model\mesh.h">
-      <Filter>Header Files\model</Filter>
+    <ClInclude Include="$(src)\render\mesh.h">
+      <Filter>Header Files\render</Filter>
     </ClInclude>
     <ClInclude Include="$(src)\render\render_buffers.h">
       <Filter>Header Files\render</Filter>
@@ -167,8 +166,11 @@
     <ClInclude Include="$(src)\scene\scene_system.h">
       <Filter>Header Files\scene</Filter>
     </ClInclude>
-    <ClInclude Include="$(src)\model\image_loader.h">
-      <Filter>Header Files\model</Filter>
+    <ClInclude Include="$(src)\resource\image_loader.h">
+      <Filter>Header Files\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="$(src)\resource\loader.h">
+      <Filter>Header Files\resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -217,8 +219,8 @@
     <ClCompile Include="$(src)\win32\render\win32_window.cpp">
       <Filter>Source Files\win32</Filter>
     </ClCompile>
-    <ClCompile Include="$(src)\model\mesh.cpp">
-      <Filter>Source Files\model</Filter>
+    <ClCompile Include="$(src)\render\mesh.cpp">
+      <Filter>Source Files\render</Filter>
     </ClCompile>
     <ClCompile Include="$(src)\stats\stats_system.cpp">
       <Filter>Source Files\stats</Filter>
@@ -229,8 +231,8 @@
     <ClCompile Include="$(src)\scene\scene_system.cpp">
       <Filter>Source Files\scene</Filter>
     </ClCompile>
-    <ClCompile Include="$(src)\model\image_loader.cpp">
-      <Filter>Source Files\model</Filter>
+    <ClCompile Include="$(src)\resource\image_loader.cpp">
+      <Filter>Source Files\resource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

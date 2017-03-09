@@ -2,10 +2,11 @@
 #include "precompiled.h"
 #include "win32_software_device.h"
 
+#include "win32_window.h"
 #include "render/render_primitive.h"
 #include "render/render_buffers.h"
 #include "render/software_buffers.h"
-#include "win32_window.h"
+#include "resource/loader.h"
 
 using namespace std;
 
@@ -24,7 +25,7 @@ Win32SoftwareDevice::Win32SoftwareDevice(QkEngine::Context& context) :
     m_line_pen = CreatePen(PS_SOLID, 1, 0x009600c8);
 
     // TODO: temporary
-    auto im0 = m_context.get_image_loader().load("tex4.bmp");
+    auto im0 = m_context.get_loader().load_image("tex4.bmp");
     m_tex0 = create_texture(im0.get());
     set_texture(m_tex0.get());
 

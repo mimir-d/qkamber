@@ -11,11 +11,11 @@
 #include "input/input_device.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
-#include "model/mesh.h"
+#include "render/mesh.h"
 #include "stats/stats_system.h"
 #include "time/time_system.h"
 #include "entity/entity_system.h"
-#include "model/image_loader.h"
+#include "resource/image_loader.h"
 
 using namespace std;
 

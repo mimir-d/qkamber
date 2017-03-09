@@ -2,13 +2,13 @@
 #include "precompiled.h"
 #include "render_system.h"
 
-#include "engine.h"
 #include "render_queue.h"
 #include "render_primitive.h"
+#include "mesh.h"
 #include "scene/scene_system.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
-#include "model/mesh.h"
+#include "engine.h"
 #include "platform.h"
 
 using namespace std;
