@@ -62,7 +62,6 @@ namespace
 
         size_t get_width() const;
         size_t get_height() const;
-        size_t get_stride() const;
 
         static bool is_valid(const string& filename);
 
@@ -74,7 +73,7 @@ namespace
         FileHeader m_fh;
         BitmapHeader m_bh;
         std::unique_ptr<uint8_t[]> m_data;
-        size_t m_stride;
+        ImageFormat m_format;
     };
 
     inline BmpImage::BmpImage(const string& filename)
@@ -92,8 +91,7 @@ namespace
 
     inline ImageFormat BmpImage::get_format() const
     {
-        // TODO: only supports rgba8 images atm
-        return ImageFormat::Rgba8;
+        return m_format;
     }
 
     inline uint8_t* BmpImage::data() const
@@ -109,11 +107,6 @@ namespace
     inline size_t BmpImage::get_height() const
     {
         return static_cast<size_t>(m_bh.height);
-    }
-
-    inline size_t BmpImage::get_stride() const
-    {
-        return m_stride;
     }
 
     inline bool BmpImage::is_valid(const string& filename)
@@ -154,24 +147,29 @@ namespace
         fin.seekg(sizeof(FileHeader), ios::beg);
         fin.read(reinterpret_cast<char*>(&m_bh), sizeof(BitmapHeader));
 
-        if (m_bh.bit_count != 24 && m_bh.bit_count != 32)
-            throw exception(print_fmt("unsupported bitcount %d, must be 24/32", m_bh.bit_count).c_str());
+        switch (m_bh.bit_count)
+        {
+            case 24: m_format = ImageFormat::Rgb8;  break;
+            case 32: m_format = ImageFormat::Rgba8; break;
+            default:
+                throw exception(print_fmt("unsupported bitcount %d, must be 24/32", m_bh.bit_count).c_str());
+        }
 
         if (m_bh.compression != 0)
             throw exception("unsupported compression type, must be uncompressed/0");
-
-        m_stride = ((m_bh.width * 4) + 3) & ~3;
     }
 
     inline void BmpImage::read_data(ifstream& fin)
     {
-        fin.seekg(m_fh.bits_offset, ios::beg);
-        m_data.reset(new uint8_t[m_bh.height * m_stride]);
+        const size_t im_stride = m_bh.width * m_bh.bit_count / 8;
+        const size_t file_stride = (im_stride + 3) & ~3;
 
-        size_t file_stride = ((m_bh.width * m_bh.bit_count / 8) + 3) & ~3;
+        fin.seekg(m_fh.bits_offset, ios::beg);
+        m_data.reset(new uint8_t[m_bh.height * im_stride]);
+
         std::unique_ptr<uint8_t[]> read_buf{ new uint8_t[file_stride] };
 
-        uint8_t* pdata = m_data.get() + (m_bh.height - 1) * m_stride;
+        uint8_t* pdata = m_data.get() + (m_bh.height - 1) * im_stride;
         for (int y = 0; y < m_bh.height; y++)
         {
             uint8_t* pbuf = read_buf.get();
@@ -181,35 +179,28 @@ namespace
             uint8_t* prow = pdata;
             if (m_bh.bit_count == 24)
             {
-                for (int x = 0; x < m_bh.width; x++)
+                for (; pbuf != read_buf.get() + file_stride; pbuf += 3, prow += 3)
                 {
                     // convert BGR to RGB, fully opaque
                     prow[0] = pbuf[2];
                     prow[1] = pbuf[1];
                     prow[2] = pbuf[0];
-                    prow[3] = 0xff;
-
-                    prow += 4;
-                    pbuf += 3;
                 }
             }
             else
             {
-                for (int x = 0; x < m_bh.width; x++)
+                for (; pbuf != read_buf.get() + file_stride; pbuf += 4, prow += 4)
                 {
                     // convert BGRA to RGBA
                     prow[0] = pbuf[2];
                     prow[1] = pbuf[1];
                     prow[2] = pbuf[0];
                     prow[3] = pbuf[3];
-
-                    prow += 4;
-                    pbuf += 4;
                 }
             }
 
             // bitmap is stored with mirrored y
-            pdata -= m_stride;
+            pdata -= im_stride;
         }
     }
 }

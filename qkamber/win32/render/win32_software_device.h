@@ -38,5 +38,5 @@ private:
     HBRUSH m_fill_brush;
     HFONT m_font;
 
-    std::unique_ptr<Image> m_tex0;
+    std::unique_ptr<Texture> m_tex0;
 };

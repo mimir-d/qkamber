@@ -193,14 +193,21 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 ///////////////////////////////////////////////////////////////////////////////
 unique_ptr<VertexBuffer> SoftwareDevice::create_vertex_buffer(unique_ptr<VertexDecl> decl, size_t count)
 {
-    auto ret = unique_ptr<VertexBuffer>(new SoftwareVertexBuffer(move(decl), count));
+    auto ret = unique_ptr<VertexBuffer>{ new SoftwareVertexBuffer{ move(decl), count } };
     dlog("Created vertex buffer %#x", ret.get());
     return ret;
 }
 
 unique_ptr<IndexBuffer> SoftwareDevice::create_index_buffer(size_t count)
 {
-    auto ret = unique_ptr<IndexBuffer>(new SoftwareIndexBuffer(count));
+    auto ret = unique_ptr<IndexBuffer>{ new SoftwareIndexBuffer{ count } };
     dlog("Created index buffer %#x", ret.get());
+    return ret;
+}
+
+unique_ptr<Texture> SoftwareDevice::create_texture(Image* image)
+{
+    auto ret = unique_ptr<Texture>{ new SoftwareTexture{ image } };
+    dlog("Created texture %#x", ret.get());
     return ret;
 }
