@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render_buffers.h"
-#include "model/image_loader.h"
+#include "resource/image_loader.h"
 
 namespace detail
 {

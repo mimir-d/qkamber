@@ -7,7 +7,7 @@ class SceneSystem;
 class InputSystem;
 class StatsSystem;
 
-class ImageLoader;
+class Loader;
 
 class QkEngine
 {
@@ -36,7 +36,7 @@ public:
         InputSystem& get_input();
         StatsSystem& get_stats();
 
-        ImageLoader& get_image_loader();
+        Loader& get_loader();
 
     private:
         // TODO: context will be the keeper of systems
@@ -47,7 +47,7 @@ public:
         std::unique_ptr<InputSystem> m_input;
         std::unique_ptr<StatsSystem> m_stats;
 
-        std::unique_ptr<ImageLoader> m_image_loader;
+        std::unique_ptr<Loader> m_loader;
 
         bool m_exit_requested = false;
     };
@@ -117,9 +117,9 @@ inline StatsSystem& QkEngine::Context::get_stats()
     return *m_stats.get();
 }
 
-inline ImageLoader& QkEngine::Context::get_image_loader()
+inline Loader& QkEngine::Context::get_loader()
 {
-    return *m_image_loader.get();
+    return *m_loader.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
