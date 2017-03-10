@@ -6,6 +6,7 @@
 #include "viewport.h"
 
 #include "render/render_system.h"
+#include "render/model.h"
 #include "entity/entity_system.h"
 #include "entity/srt_component.h"
 #include "entity/model_component.h"
@@ -62,12 +63,16 @@ SceneSystem::~SceneSystem()
 void SceneSystem::process()
 {
     auto& q = m_context.get_render().get_queue();
+    // TODO: move queue clear here (wm_paint doesnt need to call update anymore)
+
     for (auto& agg : m_context.get_entity().filter_comp<SrtComponent, ModelComponent>())
     {
+        // NOTE: maybe have const srt and compute the world matrix in entity_system.process
         auto& srt = std::get<0>(agg);
         auto& model = std::get<1>(agg);
 
         // TODO: add any visibility algorithms here
-        q.add(srt.get_world(), *model.get_mesh());
+        for (auto& unit : model.get_model()->get_units())
+            q.add(srt.get_world(), unit);
     }
 }

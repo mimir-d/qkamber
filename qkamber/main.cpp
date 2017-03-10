@@ -11,7 +11,7 @@
 #include "input/input_device.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
-#include "render/mesh.h"
+#include "render/model.h"
 #include "stats/stats_system.h"
 #include "time/time_system.h"
 #include "entity/entity_system.h"
@@ -37,7 +37,7 @@ private:
     FpsCamera m_camera { *this, { 0, 0, 15 } };
     RectViewport m_viewport;
 
-    unique_ptr<Mesh> m_mesh;
+    unique_ptr<Model> m_model[9];
     std::unique_ptr<EntitySystem::Entity> m_ent[9];
 };
 
@@ -54,18 +54,18 @@ void Context::on_create()
     dev.set_render_target(m_target.get());
     dev.set_polygon_mode(m_poly_mode);
 
-    m_mesh = make_unique<Mesh>(dev);
-
     auto& entity = get_entity();
     for (int i = 0; i < 9; i++)
     {
+        m_model[i] = make_unique<Model>(dev, get_loader(), i % 3 == 0 ? "tex0.bmp" : i % 3 == 1 ? "tex3.bmp" : "tex4.bmp");
+
         m_ent[i] = entity.create_entity();
 
         auto& srt = m_ent[i]->add_component<SrtComponent>();
         srt.set_position({ (i/3 - 1) * 3.5f, (i%3 - 1) * 3.5f, 0 });
 
         auto& model = m_ent[i]->add_component<ModelComponent>();
-        model.set_mesh(m_mesh.get());
+        model.set_model(m_model[i].get());
     }
 }
 

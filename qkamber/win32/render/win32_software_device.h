@@ -37,6 +37,4 @@ private:
     HPEN m_line_pen;
     HBRUSH m_fill_brush;
     HFONT m_font;
-
-    std::unique_ptr<Texture> m_tex0;
 };
