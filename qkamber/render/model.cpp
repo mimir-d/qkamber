@@ -3,7 +3,7 @@
 #include "model.h"
 
 #include "render/render_system.h"
-#include "resource/loader.h"
+#include "asset/asset_system.h"
 #include "mesh.h"
 #include "material.h"
 
@@ -12,12 +12,12 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Model impl
 ///////////////////////////////////////////////////////////////////////////////
-Model::Model(RenderDevice& dev, Loader& loader, const string& tex_name)
+Model::Model(RenderDevice& dev, AssetSystem& asset, const string& tex_name)
 {
     flog("id = %#x", this);
 
     // TODO: get loader and iterate thru resource chunks
-    std::unique_ptr<Image> im0 = loader.load_image(tex_name);
+    auto im0 = asset.load_image(tex_name);
     m_texture = dev.create_texture(im0.get());
 
     // TODO: temporary
