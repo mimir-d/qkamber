@@ -1,26 +1,26 @@
 #pragma once
 
-class Mesh;
+class Model;
 
 class ModelComponent
 {
 public:
-    void set_mesh(Mesh* mesh);
-    Mesh* get_mesh() const;
+    void set_model(Model* model);
+    Model* get_model();
 
 private:
-    Mesh* m_mesh;
+    Model* m_model;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
-inline void ModelComponent::set_mesh(Mesh* mesh)
+inline void ModelComponent::set_model(Model* model)
 {
-    m_mesh = mesh;
+    m_model = model;
 }
 
-inline Mesh* ModelComponent::get_mesh() const
+inline Model* ModelComponent::get_model()
 {
-    return m_mesh;
+    return m_model;
 }

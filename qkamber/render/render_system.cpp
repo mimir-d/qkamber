@@ -5,6 +5,8 @@
 #include "render_queue.h"
 #include "render_primitive.h"
 #include "mesh.h"
+#include "material.h"
+
 #include "scene/scene_system.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
@@ -46,7 +48,10 @@ void RenderSystem::process()
     for (auto& qi : m_queue)
     {
         m_dev->set_world_matrix(qi.world_matrix);
-        m_dev->draw_primitive(qi.mesh.get_primitive());
+        // NOTE: should only be 1 tex here atm
+        for (auto& tex : qi.model_unit.get_material()->get_textures())
+            m_dev->set_texture(tex);
+        m_dev->draw_primitive(qi.model_unit.get_primitive());
     }
 
     m_context.on_render();

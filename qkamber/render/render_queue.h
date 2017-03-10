@@ -5,8 +5,9 @@
 // render group has solids/transparent/etc as render compounds
 //
 
+#include "model.h"
+
 class mat4;
-class Mesh;
 
 class RenderQueue
 {
@@ -14,10 +15,9 @@ public:
     struct Item
     {
         const mat4& world_matrix;
-        const Mesh& mesh;
-        // material
+        const Model::Unit& model_unit;
 
-        Item(const mat4& world_matrix, const Mesh& mesh);
+        Item(const mat4& world_matrix, const Model::Unit& model_unit);
     };
 
     using iterator = std::vector<Item>::const_iterator;
@@ -37,8 +37,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // RenderQueue::Item impl
 ///////////////////////////////////////////////////////////////////////////////
-inline RenderQueue::Item::Item(const mat4& world_matrix, const Mesh& mesh) :
-    world_matrix(world_matrix), mesh(mesh)
+inline RenderQueue::Item::Item(const mat4& world_matrix, const Model::Unit& model_unit) :
+    world_matrix(world_matrix), model_unit(model_unit)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -178,7 +178,9 @@
     <ClInclude Include="$(src)\entity\srt_component.h" />
     <ClInclude Include="$(src)\input\input_device.h" />
     <ClInclude Include="$(src)\input\input_system.h" />
+    <ClInclude Include="$(src)\render\material.h" />
     <ClInclude Include="$(src)\render\mesh.h" />
+    <ClInclude Include="$(src)\render\model.h" />
     <ClInclude Include="$(src)\render\render_buffers.h" />
     <ClInclude Include="$(src)\render\render_primitive.h" />
     <ClInclude Include="$(src)\render\render_queue.h" />
@@ -205,6 +207,7 @@
     <ClCompile Include="$(src)\entity\entity_system.cpp" />
     <ClCompile Include="$(src)\input\input_system.cpp" />
     <ClCompile Include="$(src)\render\mesh.cpp" />
+    <ClCompile Include="$(src)\render\model.cpp" />
     <ClCompile Include="$(src)\render\render_buffers.cpp" />
     <ClCompile Include="$(src)\render\render_queue.cpp" />
     <ClCompile Include="$(src)\render\render_system.cpp" />
