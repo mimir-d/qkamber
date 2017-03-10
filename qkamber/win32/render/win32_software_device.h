@@ -1,7 +1,6 @@
 #pragma once
 
 #include "render/software_device.h"
-#include "resource/image_loader.h"
 #include "engine.h"
 
 class Win32SoftwareDevice : public SoftwareDevice

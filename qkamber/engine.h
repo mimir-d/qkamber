@@ -6,8 +6,7 @@ class RenderSystem;
 class SceneSystem;
 class InputSystem;
 class StatsSystem;
-
-class Loader;
+class AssetSystem;
 
 class QkEngine
 {
@@ -35,8 +34,7 @@ public:
         SceneSystem& get_scene();
         InputSystem& get_input();
         StatsSystem& get_stats();
-
-        Loader& get_loader();
+        AssetSystem& get_asset();
 
     private:
         // TODO: context will be the keeper of systems
@@ -46,8 +44,7 @@ public:
         std::unique_ptr<SceneSystem> m_scene;
         std::unique_ptr<InputSystem> m_input;
         std::unique_ptr<StatsSystem> m_stats;
-
-        std::unique_ptr<Loader> m_loader;
+        std::unique_ptr<AssetSystem> m_asset;
 
         bool m_exit_requested = false;
     };
@@ -117,9 +114,9 @@ inline StatsSystem& QkEngine::Context::get_stats()
     return *m_stats.get();
 }
 
-inline Loader& QkEngine::Context::get_loader()
+inline AssetSystem& QkEngine::Context::get_asset()
 {
-    return *m_loader.get();
+    return *m_asset.get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

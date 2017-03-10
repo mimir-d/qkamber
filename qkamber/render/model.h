@@ -6,7 +6,7 @@
 #include "render_buffers.h"
 
 class RenderDevice;
-class Loader;
+class AssetSystem;
 
 class Model
 {
@@ -28,7 +28,7 @@ public:
     using Units = std::vector<Unit>;
 
 public:
-    Model(RenderDevice& dev, Loader& loader, const std::string& tex_name);
+    Model(RenderDevice& dev, AssetSystem& asset, const std::string& tex_name);
     ~Model();
 
     const Units& get_units() const;

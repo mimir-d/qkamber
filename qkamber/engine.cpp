@@ -8,7 +8,7 @@
 #include "scene/scene_system.h"
 #include "input/input_system.h"
 #include "stats/stats_system.h"
-#include "resource/loader.h"
+#include "asset/asset_system.h"
 #include "platform.h"
 
 using namespace std;
@@ -24,9 +24,7 @@ QkEngine::Context::Context()
     m_scene.reset(new SceneSystem{ *this });
     m_input.reset(new InputSystem{ *this });
     m_stats.reset(new StatsSystem{ *this });
-
-    // TODO: maybe these should stay in some resource folder + interface name = loader
-    m_loader.reset(new Loader);
+    m_asset.reset(new AssetSystem{ *this });
 
     log_info("Finished creating engine context");
 }
@@ -35,9 +33,8 @@ QkEngine::Context::~Context()
 {
     flog();
 
-    m_loader = nullptr;
-
     // i want to manually destroy systems
+    m_asset = nullptr;
     m_stats = nullptr;
     m_input = nullptr;
     m_scene = nullptr;

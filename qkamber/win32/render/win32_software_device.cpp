@@ -6,7 +6,6 @@
 #include "render/render_primitive.h"
 #include "render/render_buffers.h"
 #include "render/software_buffers.h"
-#include "resource/loader.h"
 
 using namespace std;
 

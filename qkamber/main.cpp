@@ -15,7 +15,7 @@
 #include "stats/stats_system.h"
 #include "time/time_system.h"
 #include "entity/entity_system.h"
-#include "resource/image_loader.h"
+#include "asset/asset_system.h"
 
 using namespace std;
 
@@ -57,7 +57,7 @@ void Context::on_create()
     auto& entity = get_entity();
     for (int i = 0; i < 9; i++)
     {
-        m_model[i] = make_unique<Model>(dev, get_loader(), i % 3 == 0 ? "tex0.bmp" : i % 3 == 1 ? "tex3.bmp" : "tex4.bmp");
+        m_model[i] = make_unique<Model>(dev, get_asset(), i % 3 == 0 ? "tex0.bmp" : i % 3 == 1 ? "tex3.bmp" : "tex4.bmp");
 
         m_ent[i] = entity.create_entity();
 
