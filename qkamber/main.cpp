@@ -37,8 +37,7 @@ private:
     FpsCamera m_camera { *this, { 0, 0, 15 } };
     RectViewport m_viewport;
 
-    unique_ptr<Model> m_model[9];
-    std::unique_ptr<EntitySystem::Entity> m_ent[9];
+    std::unique_ptr<EntitySystem::Entity> m_ent;
 };
 
 void Context::on_create()
@@ -55,18 +54,10 @@ void Context::on_create()
     dev.set_polygon_mode(m_poly_mode);
 
     auto& entity = get_entity();
-    for (int i = 0; i < 9; i++)
-    {
-        m_model[i] = make_unique<Model>(dev, get_asset(), i % 3 == 0 ? "tex0.bmp" : i % 3 == 1 ? "tex3.bmp" : "tex4.bmp");
+    m_ent = entity.create_entity("ship.3ds");
 
-        m_ent[i] = entity.create_entity();
-
-        auto& srt = m_ent[i]->add_component<SrtComponent>();
-        srt.set_position({ (i/3 - 1) * 3.5f, (i%3 - 1) * 3.5f, 0 });
-
-        auto& model = m_ent[i]->add_component<ModelComponent>();
-        model.set_model(m_model[i].get());
-    }
+    auto& srt = m_ent->get_component<SrtComponent>();
+    //srt.set_position({ (i/3 - 1) * 3.5f, (i%3 - 1) * 3.5f, 0 });
 }
 
 void Context::on_destroy()
@@ -118,11 +109,11 @@ void Context::on_update()
 
     // TODO: check paren identation formatting
 
-    for (int i = 0; i < 0; i++)
-    {
-        auto& srt = m_ent[i]->get_component<SrtComponent>();
-        srt.set_rotation(vec3{ 1, 1, 1 } * ((i / 3 + i % 3 + 1) * abs_time));
-    }
+    // for (int i = 0; i < 0; i++)
+    // {
+    //     auto& srt = m_ent[i]->get_component<SrtComponent>();
+    //     srt.set_rotation(vec3{ 1, 1, 1 } * ((i / 3 + i % 3 + 1) * abs_time));
+    // }
 }
 
 void Context::on_render()

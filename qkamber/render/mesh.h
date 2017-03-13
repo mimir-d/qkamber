@@ -1,5 +1,6 @@
 #pragma once
 
+#include "asset/asset_system.h"
 #include "render/render_primitive.h"
 
 class RenderDevice;
@@ -9,7 +10,7 @@ class IndexBuffer;
 class Mesh
 {
 public:
-    Mesh(RenderDevice& dev);
+    Mesh(const GeometryAsset::Object& object, RenderDevice& dev);
     ~Mesh();
 
     RenderPrimitive get_primitive() const;

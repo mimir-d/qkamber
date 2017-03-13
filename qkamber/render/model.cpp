@@ -12,20 +12,34 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Model impl
 ///////////////////////////////////////////////////////////////////////////////
-Model::Model(RenderDevice& dev, AssetSystem& asset, const string& tex_name)
+namespace
+{
+    template <typename T>
+    T& last(vector<T>& v)
+    {
+        return v[v.size() - 1];
+    }
+}
+
+Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
 {
     flog("id = %#x", this);
 
-    // TODO: get loader and iterate thru resource chunks
-    auto im0 = asset.load_image(tex_name);
-    m_texture = dev.create_texture(im0.get());
+    for (auto& obj : geometry.get_objects())
+    {
+        m_meshes.emplace_back(new Mesh{ obj, dev });
+        m_materials.emplace_back(new Material);
 
-    // TODO: temporary
-    m_mesh.reset(new Mesh{ dev });
-    m_material.reset(new Material);
-    m_material->set_texture(m_texture.get());
+        auto& mat = geometry.get_materials()[obj.material_index];
+        if (mat.tex_filename.size() > 0)
+        {
+            auto im = asset.load_image(mat.tex_filename);
+            m_textures.push_back(dev.create_texture(im.get()));
+            last(m_materials)->set_texture(last(m_textures).get());
+        }
 
-    m_units.emplace_back(m_mesh.get(), m_material.get());
+        m_units.emplace_back(last(m_meshes).get(), last(m_materials).get());
+    }
 
     log_info("Created model %#x", this);
 }
