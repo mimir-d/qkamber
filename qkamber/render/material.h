@@ -4,28 +4,6 @@
 
 class Texture;
 
-// TODO: this might need to stay in some other place
-class Color : public vec<float, 4>
-{
-    using Base = vec<float, 4>;
-public:
-    using Base::Base;
-
-    Color() : Base() {}
-    Color(const Color& rhs) : Base(rhs) {}
-    Color(const Base& rhs) : Base(rhs) {}
-
-    float& r() { return m_data[0]; }
-    float& g() { return m_data[1]; }
-    float& b() { return m_data[2]; }
-    float& a() { return m_data[3]; }
-
-    float r() const { return m_data[0]; }
-    float g() const { return m_data[1]; }
-    float b() const { return m_data[2]; }
-    float a() const { return m_data[3]; }
-};
-
 class Material
 {
 public:

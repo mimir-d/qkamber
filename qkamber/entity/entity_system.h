@@ -64,7 +64,6 @@ public:
         // NOTE: only allow EntitySystem to create these objects
         friend class EntitySystem;
         Entity(EntitySystem& parent, eid_t id);
-
     public:
         ~Entity() = default;
 
@@ -89,8 +88,8 @@ public:
     void process() final {}
 
     // TODO: create delete + freelist
-    // TODO: create a factory to add all needed comp + config
-    std::unique_ptr<Entity> create_entity();
+    // TODO: extract factory to add all needed comp + config
+    std::unique_ptr<Entity> create_entity(const std::string& name);
 
     template <typename... Components>
     filter<Components...> filter_comp();

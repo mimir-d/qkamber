@@ -3,6 +3,7 @@
 #include "subsystem.h"
 #include "engine.h"
 #include "image_loader.h"
+#include "geometry_loader.h"
 
 class AssetSystem : public Subsystem
 {
@@ -19,12 +20,23 @@ public:
         ImageLoader::FileFormat format = ImageLoader::FileFormat::Unknown
     );
 
+    std::shared_ptr<GeometryAsset> load_geometry(
+        const std::string& filename,
+        GeometryLoader::FileFormat format = GeometryLoader::FileFormat::Unknown
+    );
+
 private:
-    using ImageCache = std::unordered_map<std::string, std::shared_ptr<Image>>;
-    // using MeshCache = std::unordered_map<std::string, ...>;
+    template <typename T>
+    using AssetCache = std::unordered_map<std::string, std::shared_ptr<T>>;
+
+    template <typename T, typename Loader, typename... Args>
+    std::shared_ptr<T> cache_load(AssetCache<T>& cache, Loader& loader, const std::string& filename, Args&&... args);
 
     ImageLoader m_image_loader;
-    ImageCache m_image_cache;
+    GeometryLoader m_geometry_loader;
+
+    AssetCache<Image> m_image_cache;
+    AssetCache<GeometryAsset> m_geometry_cache;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,17 +55,32 @@ inline AssetSystem::~AssetSystem()
     log_info("Destroyed asset system");
 }
 
-inline std::shared_ptr<Image> AssetSystem::load_image(const std::string& filename, ImageLoader::FileFormat format)
+inline std::shared_ptr<Image>
+AssetSystem::load_image(const std::string& filename, ImageLoader::FileFormat format)
 {
     flog();
+    return cache_load(m_image_cache, m_image_loader, filename, format);
+}
 
-    auto search = m_image_cache.find(filename);
-    if (search == m_image_cache.end())
+inline std::shared_ptr<GeometryAsset>
+AssetSystem::load_geometry(const std::string& filename, GeometryLoader::FileFormat format)
+{
+    flog();
+    return cache_load(m_geometry_cache, m_geometry_loader, filename, format);
+}
+
+template <typename T, typename Loader, typename... Args>
+std::shared_ptr<T> AssetSystem::cache_load(
+    AssetCache<T>& cache, Loader& loader,
+    const std::string& filename, Args&&... args
+) {
+    auto search = cache.find(filename);
+    if (search == cache.end())
     {
-        auto ret = std::shared_ptr<Image>{ m_image_loader.load(filename, format) };
-        return m_image_cache[filename] = ret;
+        auto ret = std::shared_ptr<T>{ loader.load(filename, std::forward<Args>(args)...) };
+        return cache[filename] = ret;
     }
 
-    dlog("load_image cache hit, filename = %s", filename.c_str());
+    dlog("cache hit, filename = %s", filename.c_str());
     return search->second;
 }

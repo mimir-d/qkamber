@@ -333,14 +333,18 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
                 // TODO: get texture unit and sample uv; split raster func in variant
                 SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
-                const uint8_t* texel = tex->sample(uv_x.x() * w, uv_x.y() * w);
-                // ignore alpha atm
+                if (tex)
+                {
+                    const uint8_t* texel = tex->sample(uv_x.x() * w, uv_x.y() * w);
+                    // ignore alpha atm
 
-                color_ptr[x] = RGB(
-                    (2.0f * texel[0] + c.z()) / 3.0f,
-                    (2.0f * texel[1] + c.y()) / 3.0f,
-                    (2.0f * texel[2] + c.x()) / 3.0f
-                );
+                    color_ptr[x] = RGB(texel[2], texel[1], texel[0]);
+                }
+                else
+                {
+                    color_ptr[x] = RGB(c.z(), c.y(), c.x());
+                }
+
                 depth_ptr[x] = z;
             }
 

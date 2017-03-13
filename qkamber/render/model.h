@@ -7,6 +7,7 @@
 
 class RenderDevice;
 class AssetSystem;
+class GeometryAsset;
 
 class Model
 {
@@ -28,7 +29,7 @@ public:
     using Units = std::vector<Unit>;
 
 public:
-    Model(RenderDevice& dev, AssetSystem& asset, const std::string& tex_name);
+    Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset);
     ~Model();
 
     const Units& get_units() const;
@@ -36,9 +37,9 @@ public:
 private:
     Units m_units;
     // TODO: temporary until someone owns up to these
-    std::unique_ptr<Mesh> m_mesh;
-    std::unique_ptr<Material> m_material;
-    std::unique_ptr<Texture> m_texture;
+    std::vector<std::unique_ptr<Mesh>> m_meshes;
+    std::vector<std::unique_ptr<Material>> m_materials;
+    std::vector<std::unique_ptr<Texture>> m_textures;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
