@@ -32,7 +32,7 @@ unique_ptr<EntitySystem::Entity> EntitySystem::create_entity(const string& name)
     m_mask.resize(eid + 1);
 
     // TODO: small block allocator or value-type
-    auto ret = unique_ptr<Entity>(new Entity{ *this, eid });
+    auto ret = unique_ptr<Entity>(new Entity{ *this, eid, private_tag{} });
 
     // add components
     // TODO: base on config file
