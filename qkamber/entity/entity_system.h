@@ -58,13 +58,14 @@ class EntitySystem : public Subsystem
     template <typename... Components>
     using const_filter = filter_t<true, Components...>;
 
+    struct private_tag {};
+
 public:
     class Entity
     {
-        // NOTE: only allow EntitySystem to create these objects
-        friend class EntitySystem;
-        Entity(EntitySystem& parent, eid_t id);
     public:
+        // NOTE: only allow EntitySystem to create these objects
+        Entity(EntitySystem& parent, eid_t id, private_tag);
         ~Entity() = default;
 
         template <typename Component>
@@ -195,7 +196,7 @@ EntitySystem::filter_t<is_const, Components...>::end()
 ///////////////////////////////////////////////////////////////////////////////
 // Entity impl
 ///////////////////////////////////////////////////////////////////////////////
-inline EntitySystem::Entity::Entity(EntitySystem& parent, eid_t id) :
+inline EntitySystem::Entity::Entity(EntitySystem& parent, eid_t id, private_tag) :
     m_parent(parent),
     m_id(id)
 {}
