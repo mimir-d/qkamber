@@ -21,6 +21,9 @@ size_t VertexDecl::get_elem_size(VertexType type)
 
         case VDET_FLOAT3:
             return 3 * sizeof(float);
+
+        case VDET_FLOAT4:
+            return 4 * sizeof(float);
     }
     // TODO: this should fail somehow at compile time because reasons
     throw exception("unknown vertex decl element");

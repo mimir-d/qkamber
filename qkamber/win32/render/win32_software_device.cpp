@@ -359,10 +359,10 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const vec<fp4, 3> y = { p0.position.y(), p1.position.y(), p2.position.y() };
 
     // TODO: if-constexpr could really benefit this function
-    const vec<vec3, 3> cs = {
-        p0.color.has_value() ? p0.color.value() : vec3{},
-        p1.color.has_value() ? p1.color.value() : vec3{},
-        p2.color.has_value() ? p2.color.value() : vec3{}
+    const vec<Color, 3> cs = {
+        p0.color.has_value() ? p0.color.value() : vec4{},
+        p1.color.has_value() ? p1.color.value() : vec4{},
+        p2.color.has_value() ? p2.color.value() : vec4{}
     };
 
     const vec<vec2, 3> uvs = {
@@ -381,7 +381,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     lerp_halfedge he{ x, y, min_x, min_y };
 
     // attribute interpolation
-    lerp_pack<float, float, vec3, vec2> attrs
+    lerp_pack<float, float, Color, vec2> attrs
     {
         { he, { p0.position.z(), p1.position.z(), p2.position.z() } },
         { he, { p0.w_inv, p1.w_inv, p2.w_inv } },
@@ -411,14 +411,17 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                 // TODO: extract c when shading
                 if (p0.color.has_value())
                 {
-                     const vec3 c = attrs.get<2>().value() * w;
-                     color_ptr[x] = RGB(c.z(), c.y(), c.x());
+                     const Color c = attrs.get<2>().value() * w;
+                     // TODO: alpha transparency
+                     // ignore alpha atm
+                     color_ptr[x] = RGB(c.b(), c.g(), c.r());
                 }
                 else if (p0.texcoord.has_value())
                 {
                     SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
                     const vec2 uv = attrs.get<3>().value() * w;
                     const uint8_t* c = tex->sample(uv.x(), uv.y());
+                    // ignore alpha atm
                     color_ptr[x] = RGB(c[2], c[1], c[0]);
                 }
                 else

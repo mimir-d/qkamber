@@ -21,8 +21,8 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
 
     if (has_colors)
     {
-        decl->add(offset, VDET_FLOAT3, VDES_COLOR);
-        offset += VertexDecl::get_elem_size(VDET_FLOAT3);
+        decl->add(offset, VDET_FLOAT4, VDES_COLOR);
+        offset += VertexDecl::get_elem_size(VDET_FLOAT4);
     }
 
     if (has_texcoords)
@@ -46,7 +46,8 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
                 ptr[0] = object.colors[i].r();
                 ptr[1] = object.colors[i].g();
                 ptr[2] = object.colors[i].b();
-                ptr += 3;
+                ptr[3] = object.colors[i].a();
+                ptr += 4;
             }
 
             if (has_texcoords)
