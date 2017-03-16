@@ -164,35 +164,190 @@ void Win32SoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint
 
 namespace
 {
-    struct heval : repeat_t<fp8, 3>
+    class lerp_halfedge
     {
-        heval(fp8 a, fp8 b, fp8 c) : repeat_t<fp8, 3>(a, b, c)
+        using fp4v = vec<fp4, 3>;
+        using fp8v = vec<fp8, 3>;
+
+    public:
+        lerp_halfedge(const fp4v& x, const fp4v& y, fp4 x0, fp4 y0) :
+            // deltas in fp4
+            dx4{ x[0] - x[1], x[1] - x[2], x[2] - x[0] },
+            dy4{ y[0] - y[1], y[1] - y[2], y[2] - y[0] },
+
+            // constant part of half-edge functions + fill correction (left sides are filled on +1, right sides are not)
+            const8 {
+                dy4[0].denorm_mul(x[0]) - dx4[0].denorm_mul(y[0]) + (dy4[0] < 0 || (dy4[0] == 0 && dx4[0] > 0)),
+                dy4[1].denorm_mul(x[1]) - dx4[1].denorm_mul(y[1]) + (dy4[1] < 0 || (dy4[1] == 0 && dx4[1] > 0)),
+                dy4[2].denorm_mul(x[2]) - dx4[2].denorm_mul(y[2]) + (dy4[2] < 0 || (dy4[2] == 0 && dx4[2] > 0))
+            },
+
+            // running half-edge values, all in fixed-point 8 frac digits
+            value_y {
+                const8[0] + dx4[0].denorm_mul(y0) - dy4[0].denorm_mul(x0),
+                const8[1] + dx4[1].denorm_mul(y0) - dy4[1].denorm_mul(x0),
+                const8[2] + dx4[2].denorm_mul(y0) - dy4[2].denorm_mul(x0)
+            },
+            value_x{ 0, 0, 0 },
+            dx{ dx4[0], dx4[1], dx4[2] },
+            dy{ dy4[0], dy4[1], dy4[2] },
+
+            // deltas in float
+            fdx{ static_cast<float>(dx4[0]), static_cast<float>(dx4[1]), static_cast<float>(dx4[2]) },
+            fdy{ static_cast<float>(dy4[0]), static_cast<float>(dy4[1]), static_cast<float>(dy4[2]) },
+
+            // interpolation normalization
+            lerp_norm{ 1.0f / (fdx[0] * fdy[2] - fdx[2] * fdy[0]) },
+
+            // weights for 0,1,2 lerp dot products
+            weight {
+                static_cast<float>(value_y[1]) * lerp_norm,
+                static_cast<float>(value_y[2]) * lerp_norm,
+                static_cast<float>(value_y[0]) * lerp_norm
+            },
+            weight_dx { fdx[1] * lerp_norm, fdx[2] * lerp_norm, fdx[0] * lerp_norm },
+            weight_dy { fdy[1] * lerp_norm, fdy[2] * lerp_norm, fdy[0] * lerp_norm }
+        {
+            // first iteration values
+            value_x = value_y;
+        }
+        ~lerp_halfedge() = default;
+
+    public:
+        const fp8v& value() const
+        {
+            return value_x;
+        }
+
+        const vec3& w() const
+        {
+            return weight;
+        }
+
+        const vec3& w_dx() const
+        {
+            return weight_dx;
+        }
+
+        const vec3& w_dy() const
+        {
+            return weight_dy;
+        }
+
+        void incr_y()
+        {
+            value_y += dx;
+            value_x = value_y;
+        }
+
+        void incr_x()
+        {
+            value_x -= dy;
+        }
+
+    private:
+        // NOTE: these need to be places here in order for init to work correctly
+        const fp4v dx4, dy4;
+        const fp8v const8;
+        const vec3 fdx, fdy;
+        const float lerp_norm;
+
+        fp8v value_x, value_y;
+        const fp8v dx, dy;
+
+        // weights
+        const vec3 weight;
+        const vec3 weight_dx;
+        const vec3 weight_dy;
+    };
+
+    template <typename T>
+    class lerp_attr
+    {
+    public:
+        lerp_attr(const lerp_halfedge& he, const vec<T, 3>& attr) :
+            value_y{ attr[0] * he.w()[0] + attr[1] * he.w()[1] + attr[2] * he.w()[2] },
+            dx{ attr[0] * he.w_dx()[0] + attr[1] * he.w_dx()[1] + attr[2] * he.w_dx()[2] },
+            dy{ attr[0] * he.w_dy()[0] + attr[1] * he.w_dy()[1] + attr[2] * he.w_dy()[2] }
+        {
+            // first iteration values
+            m_value_x = value_y;
+        }
+        ~lerp_attr() = default;
+
+        const T& value() const
+        {
+            return m_value_x;
+        }
+
+        void incr_y()
+        {
+            value_y += dx;
+            m_value_x = value_y;
+        }
+
+        void incr_x()
+        {
+            m_value_x -= dy;
+        }
+
+    private:
+        T m_value_x, value_y;
+        const T dx;
+        const T dy;
+    };
+
+    template <typename... Attrs>
+    class lerp_pack
+    {
+    public:
+        lerp_pack(lerp_attr<Attrs>&&... args) :
+            m_data{ std::forward<lerp_attr<Attrs>>(args)... }
         {}
+        ~lerp_pack() = default;
 
-        heval& operator+=(const heval& rhs)
+        void incr_y()
         {
-            get<0>(*this) += get<0>(rhs);
-            get<1>(*this) += get<1>(rhs);
-            get<2>(*this) += get<2>(rhs);
-            return *this;
+            incr_y(std::make_index_sequence<sizeof...(Attrs)>());
         }
 
-        heval& operator-=(const heval& rhs)
+        void incr_x()
         {
-            get<0>(*this) -= get<0>(rhs);
-            get<1>(*this) -= get<1>(rhs);
-            get<2>(*this) -= get<2>(rhs);
-            return *this;
+            incr_x(std::make_index_sequence<sizeof...(Attrs)>());
         }
 
-        bool operator>(fp8 value)
+        template <size_t I, typename Attr = typename typelist_at<I, Attrs...>::type>
+        const lerp_attr<Attr>& get() const
         {
-            return get<0>(*this) > value && get<1>(*this) > value && get<2>(*this) > value;
+            return std::get<I>(m_data);
         }
+
+    private:
+        template <size_t... I>
+        void incr_y(std::index_sequence<I...>)
+        {
+            using swallow = int[];
+            (void)swallow{ (std::get<I>(m_data).incr_y(), 0)... };
+        }
+
+        template <size_t... I>
+        void incr_x(std::index_sequence<I...>)
+        {
+            using swallow = int[];
+            (void)swallow{ (std::get<I>(m_data).incr_x(), 0)... };
+        }
+
+        tuple<lerp_attr<Attrs>...> m_data;
     };
 }
 
-// TODO: when point and line are impl with raw ops, move all of these to software device
+// NOTE: this crashes the vs2015 compiler spectacularly, ill just leave it here
+// auto c_init = []
+// {
+//     return vec<vec3, 3>{};
+// }();
+
+//template <bool with_color, bool with_tex>
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     // NOTE: flush any gdi calls before drawing to backbuffer directly
@@ -200,108 +355,39 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
     // NOTE: shamelessly stolen from http://forum.devmaster.net/t/advanced-rasterization/6145
     // TODO: read this http://www.cs.unc.edu/~olano/papers/2dh-tri/
-    const fp4 x0 = p0.position.x();
-    const fp4 x1 = p1.position.x();
-    const fp4 x2 = p2.position.x();
+    const vec<fp4, 3> x = { p0.position.x(), p1.position.x(), p2.position.x() };
+    const vec<fp4, 3> y = { p0.position.y(), p1.position.y(), p2.position.y() };
 
-    const fp4 y0 = p0.position.y();
-    const fp4 y1 = p1.position.y();
-    const fp4 y2 = p2.position.y();
+    // TODO: if-constexpr could really benefit this function
+    const vec<vec3, 3> cs = {
+        p0.color.has_value() ? p0.color.value() : vec3{},
+        p1.color.has_value() ? p1.color.value() : vec3{},
+        p2.color.has_value() ? p2.color.value() : vec3{}
+    };
 
-    float zi0 = p0.position.z();
-    float zi1 = p1.position.z();
-    float zi2 = p2.position.z();
-
-    vec3 c0 = p0.color * 255.f;
-    vec3 c1 = p1.color * 255.f;
-    vec3 c2 = p2.color * 255.f;
-
-    vec2 uv0 = p0.texcoord;
-    vec2 uv1 = p1.texcoord;
-    vec2 uv2 = p2.texcoord;
-
-    float wi0 = p0.w_inv;
-    float wi1 = p1.w_inv;
-    float wi2 = p2.w_inv;
+    const vec<vec2, 3> uvs = {
+        p0.texcoord.has_value() ? p0.texcoord.value() : vec2{},
+        p1.texcoord.has_value() ? p1.texcoord.value() : vec2{},
+        p2.texcoord.has_value() ? p2.texcoord.value() : vec2{}
+    };
 
     // min bounding box
-    const int min_x = ::max(static_cast<int>(::min(x0, x1, x2)), 0);
-    const int max_x = ::min(static_cast<int>(::max(x0, x1, x2)), m_render_target->get_width());
-    const int min_y = ::max(static_cast<int>(::min(y0, y1, y2)), 0);
-    const int max_y = ::min(static_cast<int>(::max(y0, y1, y2)), m_render_target->get_height());
+    const int min_x = ::max(static_cast<int>(::min(x[0], x[1], x[2])), 0);
+    const int max_x = ::min(static_cast<int>(::max(x[0], x[1], x[2])), m_render_target->get_width());
+    const int min_y = ::max(static_cast<int>(::min(y[0], y[1], y[2])), 0);
+    const int max_y = ::min(static_cast<int>(::max(y[0], y[1], y[2])), m_render_target->get_height());
 
-    const fp4 fp4_min_x = min_x;
-    const fp4 fp4_min_y = min_y;
+    // half-edge interpolation
+    lerp_halfedge he{ x, y, min_x, min_y };
 
-    // fp4 deltas
-    const fp4 dx01 = x0 - x1;
-    const fp4 dx12 = x1 - x2;
-    const fp4 dx20 = x2 - x0;
-
-    const fp4 dy01 = y0 - y1;
-    const fp4 dy12 = y1 - y2;
-    const fp4 dy20 = y2 - y0;
-
-    // float lerp
-    const float fdx01 = static_cast<float>(dx01);
-    const float fdx12 = static_cast<float>(dx12);
-    const float fdx20 = static_cast<float>(dx20);
-
-    const float fdy01 = static_cast<float>(dy01);
-    const float fdy12 = static_cast<float>(dy12);
-    const float fdy20 = static_cast<float>(dy20);
-
-    const float lerp_c = 1.0f / (fdx01 * fdy20 - fdx20 * fdy01);
-
-    // constant part of half-edge functions + fill correction (left sides are filled on +1, right sides are not)
-    const fp8 he_c0 = dy01.denorm_mul(x0) - dx01.denorm_mul(y0) + (dy01 < 0 || (dy01 == 0 && dx01 > 0));
-    const fp8 he_c1 = dy12.denorm_mul(x1) - dx12.denorm_mul(y1) + (dy12 < 0 || (dy12 == 0 && dx12 > 0));
-    const fp8 he_c2 = dy20.denorm_mul(x2) - dx20.denorm_mul(y2) + (dy20 < 0 || (dy20 == 0 && dx20 > 0));
-
-    // running half-edge values, all in fixed-point 8 frac digits
-    heval he_y =
+    // attribute interpolation
+    lerp_pack<float, float, vec3, vec2> attrs
     {
-        he_c0 + dx01.denorm_mul(fp4_min_y) - dy01.denorm_mul(fp4_min_x),
-        he_c1 + dx12.denorm_mul(fp4_min_y) - dy12.denorm_mul(fp4_min_x),
-        he_c2 + dx20.denorm_mul(fp4_min_y) - dy20.denorm_mul(fp4_min_x)
+        { he, { p0.position.z(), p1.position.z(), p2.position.z() } },
+        { he, { p0.w_inv, p1.w_inv, p2.w_inv } },
+        { he, cs },
+        { he, uvs }
     };
-    const heval he_dx = { dx01, dx12, dx20 };
-    const heval he_dy = { dy01, dy12, dy20 };
-
-    // running z-value interpolation values
-    float zi_y = (
-        zi2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        zi0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        zi1 * static_cast<float>(get<2>(he_y)) * lerp_c
-    );
-    const float dzi_dx = (zi2 * fdx01 + zi0 * fdx12 + zi1 * fdx20) * lerp_c;
-    const float dzi_dy = (zi2 * fdy01 + zi0 * fdy12 + zi1 * fdy20) * lerp_c;
-
-    float wi_y = (
-        wi2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        wi0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        wi1 * static_cast<float>(get<2>(he_y)) * lerp_c
-    );
-    const float dwi_dx = (wi2 * fdx01 + wi0 * fdx12 + wi1 * fdx20) * lerp_c;
-    const float dwi_dy = (wi2 * fdy01 + wi0 * fdy12 + wi1 * fdy20) * lerp_c;
-
-    // running color interpolation values
-    vec3 c_y = (
-        c2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        c0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        c1 * static_cast<float>(get<2>(he_y)) * lerp_c
-    );
-    const vec3 dc_dx = (c2 * fdx01 + c0 * fdx12 + c1 * fdx20) * lerp_c;
-    const vec3 dc_dy = (c2 * fdy01 + c0 * fdy12 + c1 * fdy20) * lerp_c;
-
-    // running texcoord interpolation values
-    vec2 uv_y = (
-        uv2 * static_cast<float>(get<0>(he_y)) * lerp_c +
-        uv0 * static_cast<float>(get<1>(he_y)) * lerp_c +
-        uv1 * static_cast<float>(get<2>(he_y)) * lerp_c
-    );
-    const vec2 duv_dx = (uv2 * fdx01 + uv0 * fdx12 + uv1 * fdx20) * lerp_c;
-    const vec2 duv_dy = (uv2 * fdy01 + uv0 * fdy12 + uv1 * fdy20) * lerp_c;
 
     // buffers
     auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
@@ -314,52 +400,42 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
     for (int y = min_y; y < max_y; y++)
     {
-        // Start value for horizontal scan
-        heval he_x = he_y;
-        float zi_x = zi_y;
-        float wi_x = wi_y;
-        vec3 c_x = c_y;
-        vec2 uv_x = uv_y;
-
         for (int x = min_x; x < max_x; x++)
         {
-            const float w = 1.0f / wi_x;
+            const float w = 1.0f / attrs.get<1>().value();
             // TODO: pretty sure this isnt right, should be 1/zi_x
-            const float z = zi_x * w;
+            const float z = attrs.get<0>().value() * w;
 
-            if (z < depth_ptr[x] && he_x > 0)
+            if (he.value()[0] > 0 && he.value()[1] > 0 && he.value()[2] > 0 && z < depth_ptr[x])
             {
-                const vec3 c = c_x * w;
-
-                // TODO: get texture unit and sample uv; split raster func in variant
-                SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
-                if (tex)
+                // TODO: extract c when shading
+                if (p0.color.has_value())
                 {
-                    const uint8_t* texel = tex->sample(uv_x.x() * w, uv_x.y() * w);
-                    // ignore alpha atm
-
-                    color_ptr[x] = RGB(texel[2], texel[1], texel[0]);
+                     const vec3 c = attrs.get<2>().value() * w;
+                     color_ptr[x] = RGB(c.z(), c.y(), c.x());
+                }
+                else if (p0.texcoord.has_value())
+                {
+                    SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
+                    const vec2 uv = attrs.get<3>().value() * w;
+                    const uint8_t* c = tex->sample(uv.x(), uv.y());
+                    color_ptr[x] = RGB(c[2], c[1], c[0]);
                 }
                 else
                 {
-                    color_ptr[x] = RGB(c.z(), c.y(), c.x());
+                    // TODO: get material colors when shading
+                    color_ptr[x] = RGB(255, 255, 255);
                 }
 
                 depth_ptr[x] = z;
             }
 
-            he_x -= he_dy;
-            zi_x -= dzi_dy;
-            wi_x -= dwi_dy;
-            c_x -= dc_dy;
-            uv_x -= duv_dy;
+            he.incr_x();
+            attrs.incr_x();
         }
 
-        he_y += he_dx;
-        zi_y += dzi_dx;
-        wi_y += dwi_dx;
-        c_y += dc_dx;
-        uv_y += duv_dx;
+        he.incr_y();
+        attrs.incr_y();
 
         color_ptr += color_stride;
         depth_ptr += depth_stride;

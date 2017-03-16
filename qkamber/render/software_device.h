@@ -34,9 +34,10 @@ protected:
     struct DevicePoint
     {
         vec3 position;
-        vec3 color;
-        vec2 texcoord;
         float w_inv;
+
+        optional_t<vec3> color;
+        optional_t<vec2> texcoord;
     };
 
 public:

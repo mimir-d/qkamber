@@ -19,13 +19,13 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
     decl->add(offset, VDET_FLOAT3, VDES_POSITION);
     offset += VertexDecl::get_elem_size(VDET_FLOAT3);
 
-    if (true || has_colors)
+    if (has_colors)
     {
         decl->add(offset, VDET_FLOAT3, VDES_COLOR);
         offset += VertexDecl::get_elem_size(VDET_FLOAT3);
     }
 
-    if (true || has_texcoords)
+    if (has_texcoords)
     {
         decl->add(offset, VDET_FLOAT2, VDES_TEXCOORD);
         offset += VertexDecl::get_elem_size(VDET_FLOAT2);
@@ -48,22 +48,12 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
                 ptr[2] = object.colors[i].b();
                 ptr += 3;
             }
-            else
-            {
-                ptr[0] = ptr[1] = ptr[2] = 0;
-                ptr += 3;
-            }
 
             if (has_texcoords)
             {
                 ptr[0] = object.texcoords[i].x();
                 ptr[1] = object.texcoords[i].y();
                 ptr += 2;
-            }
-            else
-            {
-                ptr[0] = ptr[1] = ptr[2] = 0;
-                ptr += 3;
             }
         }
     });

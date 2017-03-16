@@ -103,7 +103,6 @@ using fp8 = FixedPoint<int32_t, 8>;
 template <typename T, size_t N>
 class vec
 {
-    static_assert(std::is_arithmetic<T>::value, "T must be arithmetic");
 public:
     vec();
     vec(const vec& rhs);
@@ -710,7 +709,7 @@ namespace detail
 template <typename T, size_t N>
 inline vec<T, N>::vec()
 {
-    m_data.fill(0);
+    m_data.fill(T());
 }
 
 template <typename T, size_t N>
