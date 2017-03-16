@@ -45,7 +45,8 @@ enum VertexSemantic
 enum VertexType
 {
     VDET_FLOAT2,
-    VDET_FLOAT3
+    VDET_FLOAT3,
+    VDET_FLOAT4
 };
 
 class VertexDecl

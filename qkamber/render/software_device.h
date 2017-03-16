@@ -36,7 +36,7 @@ protected:
         vec3 position;
         float w_inv;
 
-        optional_t<vec3> color;
+        optional_t<Color> color;
         optional_t<vec2> texcoord;
     };
 

@@ -178,9 +178,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
             const float* p_c2 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[2] * vertex_size);
 
             // TODO: make a ptr-based vec3
-            dp[0].color = vec3{ p_c0[0], p_c0[1], p_c0[2] } * wi0;
-            dp[1].color = vec3{ p_c1[0], p_c1[1], p_c1[2] } * wi1;
-            dp[2].color = vec3{ p_c2[0], p_c2[1], p_c2[2] } * wi2;
+            dp[0].color = Color{ p_c0[0], p_c0[1], p_c0[2], p_c0[3] } * wi0;
+            dp[1].color = Color{ p_c1[0], p_c1[1], p_c1[2], p_c1[3] } * wi1;
+            dp[2].color = Color{ p_c2[0], p_c2[1], p_c2[2], p_c2[3] } * wi2;
         }
 
         if (texcoord_offset >= 0)
