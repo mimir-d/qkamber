@@ -63,14 +63,16 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     auto& ib = static_cast<const SoftwareIndexBuffer&>(primitive.indices);
 
     // go thru declaration and figure out the offsets and data size
-    size_t position_offset, color_offset, texcoord_offset;
+    int position_offset = -1;
+    int color_offset = -1;
+    int texcoord_offset = -1;
     for (auto& di : vb.get_declaration())
     {
         switch (di.semantic)
         {
-            case VDES_POSITION: position_offset = di.offset; break;
-            case VDES_COLOR:    color_offset = di.offset;    break;
-            case VDES_TEXCOORD:  texcoord_offset = di.offset; break;
+            case VDES_POSITION: position_offset = static_cast<int>(di.offset); break;
+            case VDES_COLOR: color_offset = static_cast<int>(di.offset); break;
+            case VDES_TEXCOORD: texcoord_offset = static_cast<int>(di.offset); break;
         }
     }
     size_t vertex_size = vb.get_declaration().get_vertex_size();
@@ -88,32 +90,11 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     // TODO: performance, push these to display lists and parallel process
     for (size_t i = 0; i < ib.get_count(); i += 3, ib_ptr += 3)
     {
-        // vertex color computations
-        const float* p_c0 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[0] * vertex_size);
-        const float* p_c1 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[1] * vertex_size);
-        const float* p_c2 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[2] * vertex_size);
-
-        // TODO: make a ptr-based vec3
-        vec3 c0{ p_c0[0], p_c0[1], p_c0[2] };
-        vec3 c1{ p_c1[0], p_c1[1], p_c1[2] };
-        vec3 c2{ p_c2[0], p_c2[1], p_c2[2] };
-
-        // vertex texcoord computations
-        const float* p_uv0 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[0] * vertex_size);
-        const float* p_uv1 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[1] * vertex_size);
-        const float* p_uv2 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[2] * vertex_size);
-
-        // TODO: make a ptr-based vec3
-        vec2 uv0{ p_uv0[0], p_uv0[1] };
-        vec2 uv1{ p_uv1[0], p_uv1[1] };
-        vec2 uv2{ p_uv2[0], p_uv2[1] };
-
         // vertex position computations
         const float* p_p0 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[0] * vertex_size);
         const float* p_p1 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[1] * vertex_size);
         const float* p_p2 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[2] * vertex_size);
 
-        // TODO: make a ptr-based vec3
         // transform to view-space
         vec4 v0v = mv * vec4{ p_p0[0], p_p0[1], p_p0[2], 1.0f };
         vec4 v1v = mv * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
@@ -153,9 +134,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const float wi2 = 1.0f / v2c.w();
 
         // perspective division
-        v0c *= 1.0f / v0c.w();
-        v1c *= 1.0f / v1c.w();
-        v2c *= 1.0f / v2c.w();
+        v0c *= wi0;
+        v1c *= wi1;
+        v2c *= wi2;
 
         // frustrum culling - left, right view planes
         if (v0c.x() < -1.0f && v1c.x() < -1.0f && v2c.x() < -1.0f)
@@ -180,11 +161,41 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const vec3 v1d = m_clip_matrix * v1c;
         const vec3 v2d = m_clip_matrix * v2c;
 
-        const DevicePoint dp0{ { v0d.x(), v0d.y(), v0c.z() }, c0 * wi0, uv0 * wi0, wi0 };
-        const DevicePoint dp1{ { v1d.x(), v1d.y(), v1c.z() }, c1 * wi1, uv1 * wi1, wi1 };
-        const DevicePoint dp2{ { v2d.x(), v2d.y(), v2c.z() }, c2 * wi2, uv2 * wi2, wi2 };
+        DevicePoint dp[3];
+        dp[0].position = vec3{ v0d.x(), v0d.y(), v0c.z() };
+        dp[1].position = vec3{ v1d.x(), v1d.y(), v1c.z() };
+        dp[2].position = vec3{ v2d.x(), v2d.y(), v2c.z() };
 
-        draw_tri(dp0, dp1, dp2);
+        dp[0].w_inv = wi0;
+        dp[1].w_inv = wi1;
+        dp[2].w_inv = wi2;
+
+        if (color_offset >= 0)
+        {
+            // vertex color computations
+            const float* p_c0 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[0] * vertex_size);
+            const float* p_c1 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[1] * vertex_size);
+            const float* p_c2 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[2] * vertex_size);
+
+            // TODO: make a ptr-based vec3
+            dp[0].color = vec3{ p_c0[0], p_c0[1], p_c0[2] } * wi0;
+            dp[1].color = vec3{ p_c1[0], p_c1[1], p_c1[2] } * wi1;
+            dp[2].color = vec3{ p_c2[0], p_c2[1], p_c2[2] } * wi2;
+        }
+
+        if (texcoord_offset >= 0)
+        {
+            // vertex texcoord computations
+            const float* p_uv0 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[0] * vertex_size);
+            const float* p_uv1 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[1] * vertex_size);
+            const float* p_uv2 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[2] * vertex_size);
+
+            dp[0].texcoord = vec2{ p_uv0[0], p_uv0[1] } * wi0;
+            dp[1].texcoord = vec2{ p_uv1[0], p_uv1[1] } * wi1;
+            dp[2].texcoord = vec2{ p_uv2[0], p_uv2[1] } * wi2;
+        }
+
+        draw_tri(dp[0], dp[1], dp[2]);
     }
 }
 

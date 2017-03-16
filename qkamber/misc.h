@@ -26,6 +26,72 @@ template <typename Func>
 using all_arg_t = decltype(detail::all_arg_helper(&Func::operator()));
 
 ///////////////////////////////////////////////////////////////////////////////
+// optional_t
+///////////////////////////////////////////////////////////////////////////////
+template <typename T>
+class optional_t
+{
+public:
+    optional_t(const T& rhs);
+    optional_t() = default;
+    ~optional_t() = default;
+
+    optional_t& operator=(const T& rhs);
+
+    operator bool() const;
+    bool has_value() const;
+
+     T& value();
+     const T& value() const;
+
+private:
+    T m_value;
+    bool m_has_value = false;
+};
+
+template <typename T>
+optional_t<T>::optional_t(const T& rhs) :
+    m_value(rhs),
+    m_has_value(true)
+{}
+
+template <typename T>
+optional_t<T>& optional_t<T>::operator=(const T& rhs)
+{
+    m_value = rhs;
+    m_has_value = true;
+    return *this;
+}
+
+template <typename T>
+optional_t<T>::operator bool() const
+{
+    return m_has_value;
+}
+
+template <typename T>
+bool optional_t<T>::has_value() const
+{
+    return m_has_value;
+}
+
+template <typename T>
+T& optional_t<T>::value()
+{
+    if (!m_has_value)
+        throw std::exception("optional_t doesnt have value");
+    return m_value;
+}
+
+template <typename T>
+const T& optional_t<T>::value() const
+{
+    if (!m_has_value)
+        throw std::exception("optional_t doesnt have value");
+    return m_value;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // dirty_t
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename Func, typename FuncArgs = all_arg_t<Func>>
@@ -124,6 +190,23 @@ struct typelist_index<T, T, Rest...> :
 template <typename T, typename T0, typename... Rest>
 struct typelist_index<T, T0, Rest...> :
     std::integral_constant<std::size_t, 1 + typelist_index<T, Rest...>::value>
+{};
+
+///////////////////////////////////////////////////////////////////////////////
+// typelist_at
+///////////////////////////////////////////////////////////////////////////////
+template <size_t I, typename... Ts>
+struct typelist_at;
+
+template <typename T, typename... Rest>
+struct typelist_at<0, T, Rest...>
+{
+    using type = T;
+};
+
+template <size_t I, typename T, typename... Rest>
+struct typelist_at<I, T, Rest...> :
+    typelist_at<I-1, Rest...>
 {};
 
 ///////////////////////////////////////////////////////////////////////////////

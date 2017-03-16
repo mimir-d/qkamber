@@ -34,10 +34,11 @@ private:
     PolygonMode m_poly_mode = PolygonMode::Fill;
     bool m_poly_mode_changed = false;
 
-    FpsCamera m_camera { *this, { 0, 0, 15 } };
+    FpsCamera m_camera { *this, { 6, 6, 17 } };
     RectViewport m_viewport;
 
-    std::unique_ptr<EntitySystem::Entity> m_ent;
+    std::unique_ptr<EntitySystem::Entity> m_obj_axis;
+    std::unique_ptr<EntitySystem::Entity> m_obj_ship;
 };
 
 void Context::on_create()
@@ -54,10 +55,15 @@ void Context::on_create()
     dev.set_polygon_mode(m_poly_mode);
 
     auto& entity = get_entity();
-    m_ent = entity.create_entity("ship.3ds");
 
-    auto& srt = m_ent->get_component<SrtComponent>();
-    //srt.set_position({ (i/3 - 1) * 3.5f, (i%3 - 1) * 3.5f, 0 });
+    m_obj_axis = entity.create_entity("axis.3ds");
+    auto& srt_axis = m_obj_axis->get_component<SrtComponent>();
+    srt_axis.set_scale({ 2, 2, 2 });
+
+    m_obj_ship = entity.create_entity("ship.3ds");
+    auto& srt_ship = m_obj_ship->get_component<SrtComponent>();
+    srt_ship.set_position({ 6, 6, -6 });
+    srt_ship.set_scale({ .5, .5, .5 });
 }
 
 void Context::on_destroy()
@@ -109,11 +115,8 @@ void Context::on_update()
 
     // TODO: check paren identation formatting
 
-    // for (int i = 0; i < 0; i++)
-    // {
-    //     auto& srt = m_ent[i]->get_component<SrtComponent>();
-    //     srt.set_rotation(vec3{ 1, 1, 1 } * ((i / 3 + i % 3 + 1) * abs_time));
-    // }
+    //auto& srt = m_obj_ship->get_component<SrtComponent>();
+    //srt.set_rotation(vec3{ 1, 1, 1 } * abs_time);
 }
 
 void Context::on_render()
