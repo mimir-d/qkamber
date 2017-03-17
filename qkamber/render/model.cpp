@@ -31,6 +31,12 @@ Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
         m_materials.emplace_back(new Material);
 
         auto& mat = geometry.get_materials()[obj.material_index];
+
+        last(m_materials)->set_ambient(mat.ambient);
+        last(m_materials)->set_diffuse(mat.diffuse);
+        last(m_materials)->set_specular(mat.specular, mat.specular_shininess);
+        last(m_materials)->set_emissive(mat.emissive);
+
         if (mat.tex_filename.size() > 0)
         {
             auto im = asset.load_image(mat.tex_filename);

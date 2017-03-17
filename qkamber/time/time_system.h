@@ -29,11 +29,11 @@ inline TimeSystem::TimeSystem(QkEngine::Context& context) :
     Subsystem(context)
 {
     flog("id = %#x", this);
-    log_info("Created timer");
+    log_info("Created time system");
 }
 
 inline TimeSystem::~TimeSystem()
 {
     flog();
-    log_info("Destroyed timer");
+    log_info("Destroyed time system");
 }

@@ -418,7 +418,8 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                 }
                 else if (p0.texcoord.has_value())
                 {
-                    SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_texture);
+                    // TODO: only 1 texture available atm
+                    SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_material->get_textures()[0]);
                     const vec2 uv = attrs.get<3>().value() * w;
                     const uint8_t* c = tex->sample(uv.x(), uv.y());
                     // ignore alpha atm
@@ -426,8 +427,8 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                 }
                 else
                 {
-                    // TODO: get material colors when shading
-                    color_ptr[x] = RGB(255, 255, 255);
+                    Color amb = m_material->get_ambient() * 255.0f;
+                    color_ptr[x] = RGB(amb.b(), amb.g(), amb.r());
                 }
 
                 depth_ptr[x] = z;
