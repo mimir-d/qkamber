@@ -57,7 +57,7 @@ public:
     void set_polygon_mode(PolygonMode mode) final;
     void set_render_target(RenderTarget* target);
 
-    void set_texture(Texture* texture) final;
+    void set_material(Material* material) final;
 
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
@@ -72,7 +72,7 @@ protected:
     RenderTarget* m_render_target;
     std::unique_ptr<RenderTarget> m_null_target;
 
-    Texture* m_texture = nullptr;
+    Material* m_material = nullptr;
 
 private:
     mat4 m_world_matrix, m_view_matrix, m_proj_matrix;
@@ -131,7 +131,7 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
     log_info("Set render target %#x", target);
 }
 
-inline void SoftwareDevice::set_texture(Texture* texture)
+inline void SoftwareDevice::set_material(Material* material)
 {
-    m_texture = texture;
+    m_material = material;
 }

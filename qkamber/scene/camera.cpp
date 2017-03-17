@@ -9,7 +9,7 @@
 void FpsCamera::set_proj_params(int width, int height)
 {
     const float aspect = static_cast<float>(width) / height;
-    m_proj = mat4::proj_perspective(PI_4, aspect, 0.1f, 100.0f);
+    m_proj = mat4::proj_perspective(PI_4, aspect, 1.0f, 100.0f);
 }
 
 void FpsCamera::update()

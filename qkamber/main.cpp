@@ -34,7 +34,7 @@ private:
     PolygonMode m_poly_mode = PolygonMode::Fill;
     bool m_poly_mode_changed = false;
 
-    FpsCamera m_camera { *this, { 6, 6, 17 } };
+    FpsCamera m_camera { *this, { 6, 6, 23 } };
     RectViewport m_viewport;
 
     std::unique_ptr<EntitySystem::Entity> m_obj_axis;
@@ -59,10 +59,11 @@ void Context::on_create()
     m_obj_axis = entity.create_entity("axis.3ds");
     auto& srt_axis = m_obj_axis->get_component<SrtComponent>();
     srt_axis.set_scale({ 2, 2, 2 });
+    srt_axis.set_rotation({ PI/2, 0, 0, });
 
     m_obj_ship = entity.create_entity("ship.3ds");
     auto& srt_ship = m_obj_ship->get_component<SrtComponent>();
-    srt_ship.set_position({ 6, 6, -6 });
+    srt_ship.set_position({ 6, 6, 6 });
     srt_ship.set_scale({ .5, .5, .5 });
 }
 

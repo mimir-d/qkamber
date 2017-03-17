@@ -46,7 +46,7 @@ public:
     virtual void set_render_target(RenderTarget* target) = 0;
     virtual void set_polygon_mode(PolygonMode mode) = 0;
 
-    virtual void set_texture(Texture* texture) = 0;
+    virtual void set_material(Material* material) = 0;
 
     // resource management methods
     virtual std::unique_ptr<RenderTarget> create_render_target(int width, int height) = 0;
