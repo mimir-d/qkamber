@@ -32,8 +32,6 @@ public:
 
 private:
     std::unique_ptr<RenderTarget> m_target;
-    PolygonMode m_poly_mode = PolygonMode::Fill;
-    bool m_poly_mode_changed = false;
 
     FpsCamera m_camera { *this, { 6, 6, 23 } };
     RectViewport m_viewport;
@@ -51,9 +49,7 @@ void Context::on_create()
     // initialize a render target for the app
     auto& dev = get_render().get_device();
     m_target = dev.create_render_target(640, 480);
-
     dev.set_render_target(m_target.get());
-    dev.set_polygon_mode(m_poly_mode);
 
     auto& entity = get_entity();
 
@@ -68,7 +64,7 @@ void Context::on_create()
     srt_ship.set_scale({ .5, .5, .5 });
 
     // TODO: temporary debug
-    static_cast<SoftwareDevice&>(dev).debug_normals(true);
+    //static_cast<SoftwareDevice&>(dev).debug_normals(true);
 }
 
 void Context::on_destroy()
@@ -88,40 +84,25 @@ void Context::on_update()
     auto& time = get_time();
     float abs_time = time.get_abs_time();
 
-    auto& render = get_render();
-    auto& mouse = get_input().get_mouse();
-    // TODO: should encode button transitions somehow
-    if (mouse.get_button_pressed(MouseDevice::RMB))
-    {
-        if (!m_poly_mode_changed)
-        {
-            switch (m_poly_mode)
-            {
-                case PolygonMode::Point: m_poly_mode = PolygonMode::Line; break;
-                case PolygonMode::Line:  m_poly_mode = PolygonMode::Fill; break;
-                case PolygonMode::Fill:  m_poly_mode = PolygonMode::Point; break;
-            }
-            render.get_device().set_polygon_mode(m_poly_mode);
-
-            m_poly_mode_changed = true;
-        }
-    }
-    else
-    {
-        m_poly_mode_changed = false;
-    }
-
     auto& keyboard = get_input().get_keyboard();
+    // TODO: should encode button transitions somehow
+
+    auto& dev = get_render().get_device();
+    if (keyboard.get_key_pressed('1'))
+        dev.set_polygon_mode(PolygonMode::Point);
+    else if (keyboard.get_key_pressed('2'))
+        dev.set_polygon_mode(PolygonMode::Line);
+    else if (keyboard.get_key_pressed('3'))
+        dev.set_polygon_mode(PolygonMode::Fill);
+
     // TODO: translate keys to platform independent
     if (keyboard.get_key_pressed(VK_ESCAPE))
         notify_exit();
 
     m_camera.update();
 
-    // TODO: check paren identation formatting
-
     auto& srt = m_obj_ship->get_component<SrtComponent>();
-    srt.set_rotation(vec3{ 1, 1, 1 } * abs_time);
+    srt.set_rotation(vec3{ 0.5f, 0.5f, 0.5f } * abs_time);
 }
 
 void Context::on_render()
