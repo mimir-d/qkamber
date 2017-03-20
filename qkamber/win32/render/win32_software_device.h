@@ -23,6 +23,7 @@ public:
 
 protected:
     void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) final;
+    void draw_line(const DevicePoint& p0, const DevicePoint& p1) final;
 
 private:
     void draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);

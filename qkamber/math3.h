@@ -312,6 +312,8 @@ public:
     mat(Args&&... args);
     mat(no_init_tag) {}
 
+    mat<T, D1, D0> transpose() const;
+
     row operator[](int index)
     {
         return row(m_data.data() + D1 * index);
@@ -345,6 +347,12 @@ private:
     struct scale_op
     {
         void operator()(mat& out, const mat& lhs, T rhs) const;
+    };
+
+    template <int I, int J>
+    struct transpose_op
+    {
+        void operator()(mat<T, D1, D0>& out, const mat& rhs) const;
     };
 
     // NOTE: this needs to have increasing K such that the compiler sees the instructions sequentially forward
@@ -485,11 +493,19 @@ public:
 
 public:
     static mat4 identity();
+
     static mat4 translate(float x, float y, float z);
+    static mat4 translate_inv(float x, float y, float z);
+
     static mat4 rotate(float x, float y, float z);
+    static mat4 rotate_inv(float x, float y, float z);
+
     static mat4 scale(float x, float y, float z);
+    static mat4 scale_inv(float x, float y, float z);
 
     static mat4 lookat(const vec3& eye, const vec3& at, const vec3& up);
+    static mat4 lookat_inv(const vec3& eye, const vec3& at, const vec3& up);
+
     static mat4 proj_perspective(float fov, float aspect, float near_plane, float far_plane);
     // static mat4 proj_ortho();
     // TODO: maybe move this?
@@ -1020,6 +1036,13 @@ inline mat<T, D0, D1>::mat(Args&&... args) :
 {}
 
 template <typename T, size_t D0, size_t D1>
+mat<T, D1, D0> mat<T, D0, D1>::transpose() const
+{
+    mat<T, D1, D0> ret{ no_init_tag{} };
+    return detail::iterate2<D0, D1, transpose_op>()(ret, *this);
+}
+
+template <typename T, size_t D0, size_t D1>
 inline mat<T, D0, D1>& mat<T, D0, D1>::operator=(const mat& rhs)
 {
     return detail::iterate1<D0 * D1, eq_op>()(*this, rhs);
@@ -1086,6 +1109,16 @@ inline void mat<T, D0, D1>::scale_op<I>::operator()(mat& out, const mat& lhs, T 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// mat4::transpose_op impl
+///////////////////////////////////////////////////////////////////////////////
+template <typename T, size_t D0, size_t D1>
+template <int I, int J>
+inline void mat<T, D0, D1>::transpose_op<I, J>::operator()(mat<T, D1, D0>& out, const mat& rhs) const
+{
+    out.m_data[J*D0 + I] = rhs.m_data[I*D1 + J];
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // mat4::mul_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
@@ -1138,7 +1171,7 @@ inline void mat<T, D0, D1>::transform_op<I, 0>::operator()(vec<T, D0>& out, cons
 ///////////////////////////////////////////////////////////////////////////////
 inline mat4 mat4::identity()
 {
-    return mat4 {
+    return mat4{
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -1148,10 +1181,20 @@ inline mat4 mat4::identity()
 
 inline mat4 mat4::translate(float x, float y, float z)
 {
-    return mat4 {
+    return mat4{
         1, 0, 0, x,
         0, 1, 0, y,
         0, 0, 1, z,
+        0, 0, 0, 1
+    };
+}
+
+inline mat4 mat4::translate_inv(float x, float y, float z)
+{
+    return mat4{
+        1, 0, 0, -x,
+        0, 1, 0, -y,
+        0, 0, 1, -z,
         0, 0, 0, 1
     };
 }
@@ -1163,10 +1206,25 @@ inline mat4 mat4::rotate(float x, float y, float z)
     const float cb = cos(y), sb = sin(y);
     const float cc = cos(z), sc = sin(z);
 
-    return mat4 {
+    return mat4{
         cc*cb, -sc*ca + cc*sb*sa,  sc*sa + cc*sb*ca, 0,
         sc*cb,  cc*ca + sc*sb*sa, -cc*sa + sc*sb*ca, 0,
         -sb, cb*sa, cb*ca, 0,
+        0, 0, 0, 1
+    };
+}
+
+inline mat4 mat4::rotate_inv(float x, float y, float z)
+{
+    // yaw pitch roll = y x z (directx)
+    const float ca = cos(x), sa = sin(x);
+    const float cb = cos(y), sb = sin(y);
+    const float cc = cos(z), sc = sin(z);
+
+    return mat4{
+        cc*cb, sc*cb, -sb, 0,
+        -sc*ca + cc*sb*sa,  cc*ca + sc*sb*sa, cb*sa, 0,
+         sc*sa + cc*sb*ca, -cc*sa + sc*sb*ca, cb*ca, 0,
         0, 0, 0, 1
     };
 }
@@ -1181,16 +1239,40 @@ inline mat4 mat4::scale(float x, float y, float z)
     };
 }
 
+inline mat4 mat4::scale_inv(float x, float y, float z)
+{
+    return mat4{
+        1.0f / x, 0, 0, 0,
+        0, 1.0f / y, 0, 0,
+        0, 0, 1.0f / z, 0,
+        0, 0, 0, 1
+    };
+};
+
 inline mat4 mat4::lookat(const vec3& eye, const vec3& at, const vec3& up)
 {
     vec3 cz = (eye - at).normalize();
     vec3 cx = (up ^ cz).normalize();
     vec3 cy = cz ^ cx;
 
-    return mat4 {
+    return mat4{
         cx.x(), cx.y(), cx.z(), -cx * eye,
         cy.x(), cy.y(), cy.z(), -cy * eye,
         cz.x(), cz.y(), cz.z(), -cz * eye,
+        0, 0, 0, 1
+    };
+}
+
+inline mat4 mat4::lookat_inv(const vec3& eye, const vec3& at, const vec3& up)
+{
+    vec3 cz = (eye - at).normalize();
+    vec3 cx = (up ^ cz).normalize();
+    vec3 cy = cz ^ cx;
+
+    return mat4{
+        cx.x(), cy.x(), cz.x(), eye.x(),
+        cx.y(), cy.y(), cz.y(), eye.y(),
+        cx.z(), cy.z(), cz.z(), eye.z(),
         0, 0, 0, 1
     };
 }
@@ -1200,7 +1282,7 @@ inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
     const float h = 1.0f / tan(fov / 2);
     const float r = f / (n - f);
 
-    return mat4 {
+    return mat4{
         h / aspect, 0, 0, 0,
         0, h, 0, 0,
         0, 0, r, r * n,
@@ -1210,7 +1292,7 @@ inline mat4 mat4::proj_perspective(float fov, float aspect, float n, float f)
 
 inline mat3x4 mat4::clip(float x, float y, float w, float h, float n, float f)
 {
-    return mat3x4 {
+    return mat3x4{
         w/2, 0, 0, x + w / 2,
         0, h/2, 0, y + h / 2,
         0, 0, (f - n) / 2, (f + n) / 2

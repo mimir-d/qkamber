@@ -306,13 +306,13 @@ namespace
         for (auto& f : m_faces)
         {
             // compute normal for this face
-            vec3 v0 = m_obj->vertices[f.vertex_index[0]];
-            vec3 v1 = m_obj->vertices[f.vertex_index[1]];
-            vec3 v2 = m_obj->vertices[f.vertex_index[2]];
+            const vec3 v0 = m_obj->vertices[f.vertex_index[0]];
+            const vec3 v1 = m_obj->vertices[f.vertex_index[1]];
+            const vec3 v2 = m_obj->vertices[f.vertex_index[2]];
 
-            vec3 v10 = v1 - v0;
-            vec3 v20 = v2 - v0;
-            vec3 normal = (v20 ^ v10).normalize();
+            const vec3 v10 = v1 - v0;
+            const vec3 v20 = v2 - v0;
+            const vec3 normal = (v10 ^ v20).normalize();
 
             // store per-vertex face normal
             m_obj->normals[f.vertex_index[0]] = normal;

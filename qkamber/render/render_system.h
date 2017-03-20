@@ -43,6 +43,9 @@ public:
     virtual void set_proj_matrix(mat4 proj_matrix) = 0;
     virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
 
+    virtual void set_world_inv_matrix(mat4 world_inv_matrix) = 0;
+    virtual void set_view_inv_matrix(mat4 view_inv_matrix) = 0;
+
     virtual void set_render_target(RenderTarget* target) = 0;
     virtual void set_polygon_mode(PolygonMode mode) = 0;
 

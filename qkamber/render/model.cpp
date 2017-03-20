@@ -12,15 +12,6 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 // Model impl
 ///////////////////////////////////////////////////////////////////////////////
-namespace
-{
-    template <typename T>
-    T& last(vector<T>& v)
-    {
-        return v[v.size() - 1];
-    }
-}
-
 Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
 {
     flog("id = %#x", this);
@@ -30,21 +21,24 @@ Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
         m_meshes.emplace_back(new Mesh{ obj, dev });
         m_materials.emplace_back(new Material);
 
-        auto& mat = geometry.get_materials()[obj.material_index];
+        Mesh* mesh = m_meshes[m_meshes.size() - 1].get();
+        Material* mat = m_materials[m_materials.size() - 1].get();
 
-        last(m_materials)->set_ambient(mat.ambient);
-        last(m_materials)->set_diffuse(mat.diffuse);
-        last(m_materials)->set_specular(mat.specular, mat.specular_shininess);
-        last(m_materials)->set_emissive(mat.emissive);
+        auto& raw_mat = geometry.get_materials()[obj.material_index];
 
-        if (mat.tex_filename.size() > 0)
+        mat->set_ambient(raw_mat.ambient);
+        mat->set_diffuse(raw_mat.diffuse);
+        mat->set_specular(raw_mat.specular, raw_mat.specular_shininess);
+        mat->set_emissive(raw_mat.emissive);
+
+        if (raw_mat.tex_filename.size() > 0)
         {
-            auto im = asset.load_image(mat.tex_filename);
+            auto im = asset.load_image(raw_mat.tex_filename);
             m_textures.push_back(dev.create_texture(im.get()));
-            last(m_materials)->set_texture(last(m_textures).get());
+            mat->set_texture(m_textures[m_textures.size() - 1].get());
         }
 
-        m_units.emplace_back(last(m_meshes).get(), last(m_materials).get());
+        m_units.emplace_back(mesh, mat);
     }
 
     log_info("Created model %#x", this);

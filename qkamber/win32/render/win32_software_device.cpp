@@ -132,6 +132,18 @@ void Win32SoftwareDevice::draw_tri(const DevicePoint& p0, const DevicePoint& p1,
     }
 }
 
+void Win32SoftwareDevice::draw_line(const DevicePoint& p0, const DevicePoint& p1)
+{
+    const int x0 = static_cast<int>(p0.position.x()), y0 = static_cast<int>(p0.position.y());
+    const int x1 = static_cast<int>(p1.position.x()), y1 = static_cast<int>(p1.position.y());
+
+    auto& color_buf = static_cast<Win32ColorBuffer&>(m_render_target->get_color_buffer());
+    HDC dc = color_buf.get_dc();
+
+    MoveToEx(dc, x0, y0, nullptr);
+    LineTo(dc, x1, y1);
+}
+
 void Win32SoftwareDevice::draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
     const int r = 3;
@@ -384,7 +396,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     lerp_pack<float, float, Color, vec2> attrs
     {
         { he, { p0.position.z(), p1.position.z(), p2.position.z() } },
-        { he, { p0.w_inv, p1.w_inv, p2.w_inv } },
+        { he, { p0.position.w(), p1.position.w(), p2.position.w() } },
         { he, cs },
         { he, uvs }
     };
