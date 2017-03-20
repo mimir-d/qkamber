@@ -16,8 +16,9 @@ namespace
     class NullCamera : public Camera
     {
     public:
-        const mat4& get_view() const;
-        const mat4& get_proj() const;
+        const mat4& get_view() const final;
+        const mat4& get_proj() const final;
+        const mat4& get_view_inv() const final;
     };
 
     class NullViewport : public Viewport
@@ -32,6 +33,11 @@ namespace
     }
 
     inline const mat4& NullCamera::get_proj() const
+    {
+        throw std::exception("Attempted to use null camera");
+    }
+
+    inline const mat4& NullCamera::get_view_inv() const
     {
         throw std::exception("Attempted to use null camera");
     }
@@ -73,6 +79,6 @@ void SceneSystem::process()
 
         // TODO: add any visibility algorithms here
         for (auto& unit : model.get_model()->get_units())
-            q.add(srt.get_world(), unit);
+            q.add(srt.get_world(), srt.get_world_inv(), unit);
     }
 }

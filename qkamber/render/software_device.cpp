@@ -56,14 +56,16 @@ template <typename T> int sgn(T val)
 
 void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 {
-    auto& mv = m_mv_matrix.get();
-    auto& mvp = m_mvp_matrix.get();
+    auto& mv_matrix = m_mv_matrix.get();
+    auto& mvp_matrix = m_mvp_matrix.get();
+    auto& normal_matrix = m_normal_matrix.get();
 
     auto& vb = static_cast<const SoftwareVertexBuffer&>(primitive.vertices);
     auto& ib = static_cast<const SoftwareIndexBuffer&>(primitive.indices);
 
     // go thru declaration and figure out the offsets and data size
     int position_offset = -1;
+    int normal_offset = -1;
     int color_offset = -1;
     int texcoord_offset = -1;
     for (auto& di : vb.get_declaration())
@@ -71,6 +73,7 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         switch (di.semantic)
         {
             case VDES_POSITION: position_offset = static_cast<int>(di.offset); break;
+            case VDES_NORMAL: normal_offset = static_cast<int>(di.offset); break;
             case VDES_COLOR: color_offset = static_cast<int>(di.offset); break;
             case VDES_TEXCOORD: texcoord_offset = static_cast<int>(di.offset); break;
         }
@@ -79,13 +82,6 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 
     // TODO: this will need to change when index size is != uint16_t
     const uint16_t* ib_ptr = reinterpret_cast<const uint16_t*>(ib.data());
-//
-//     mat4 n_mat4 = mv.transpose().invert();
-//     mat3 nmat = {
-//         n_mat4[0][0], n_mat4[0][1], n_mat4[0][2],
-//         n_mat4[1][0], n_mat4[1][1], n_mat4[1][2],
-//         n_mat4[2][0], n_mat4[2][1], n_mat4[2][2]
-//     };
 
     // TODO: performance, push these to display lists and parallel process
     for (size_t i = 0; i < ib.get_count(); i += 3, ib_ptr += 3)
@@ -96,20 +92,20 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const float* p_p2 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[2] * vertex_size);
 
         // transform to view-space
-        vec4 v0v = mv * vec4{ p_p0[0], p_p0[1], p_p0[2], 1.0f };
-        vec4 v1v = mv * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
-        vec4 v2v = mv * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
+        const vec4 v0v = mv_matrix * vec4{ p_p0[0], p_p0[1], p_p0[2], 1.0f };
+        const vec4 v1v = mv_matrix * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
+        const vec4 v2v = mv_matrix * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
         // TODO: make a vecN to vecM ctor
-        vec3 v0v_3 = { v0v[0], v0v[1], v0v[2] };
-        vec3 v1v_3 = { v1v[0], v1v[1], v1v[2] };
-        vec3 v2v_3 = { v2v[0], v2v[1], v2v[2] };
+        const vec3 v0v_3 = { v0v[0], v0v[1], v0v[2] };
+        const vec3 v1v_3 = { v1v[0], v1v[1], v1v[2] };
+        const vec3 v2v_3 = { v2v[0], v2v[1], v2v[2] };
 
         // compute view-space normal
-        vec3 dv1 = (v2v_3 - v0v_3);
-        vec3 dv2 = (v1v_3 - v0v_3);
+        const vec3 dv1 = (v2v_3 - v0v_3);
+        const vec3 dv2 = (v1v_3 - v0v_3);
         // TODO: fix cross operator to work with temporaries
-        vec3 vnv = (dv1 ^ dv2).normalize();
+        const vec3 vnv = (dv1 ^ dv2).normalize();
 
         if (v0v_3 * vnv < 0)
         {
@@ -118,9 +114,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         }
 
         // transform to clip-space
-        vec4 v0c = mvp * vec4{ p_p0[0], p_p0[1], p_p0[2], 1.0f };
-        vec4 v1c = mvp * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
-        vec4 v2c = mvp * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
+        vec4 v0c = mvp_matrix * vec4{ p_p0[0], p_p0[1], p_p0[2], 1.0f };
+        vec4 v1c = mvp_matrix * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
+        vec4 v2c = mvp_matrix * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
         // infinity transition when any vertices of the triangles are on +plane and the other on -plane
         const int s0 = sgn(v0c.w());
@@ -162,17 +158,27 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const vec3 v2d = m_clip_matrix * v2c;
 
         DevicePoint dp[3];
-        dp[0].position = vec3{ v0d.x(), v0d.y(), v0c.z() };
-        dp[1].position = vec3{ v1d.x(), v1d.y(), v1c.z() };
-        dp[2].position = vec3{ v2d.x(), v2d.y(), v2c.z() };
+        dp[0].position = vec4{ v0d.x(), v0d.y(), v0c.z(), wi0 };
+        dp[1].position = vec4{ v1d.x(), v1d.y(), v1c.z(), wi1 };
+        dp[2].position = vec4{ v2d.x(), v2d.y(), v2c.z(), wi2 };
 
-        dp[0].w_inv = wi0;
-        dp[1].w_inv = wi1;
-        dp[2].w_inv = wi2;
+        dp[0].view_position = v0v_3 * wi0;
+        dp[1].view_position = v1v_3 * wi1;
+        dp[2].view_position = v2v_3 * wi2;
+
+        if (normal_offset >= 0)
+        {
+            const float* p_n0 = reinterpret_cast<const float*>(vb.data() + normal_offset + ib_ptr[0] * vertex_size);
+            const float* p_n1 = reinterpret_cast<const float*>(vb.data() + normal_offset + ib_ptr[1] * vertex_size);
+            const float* p_n2 = reinterpret_cast<const float*>(vb.data() + normal_offset + ib_ptr[2] * vertex_size);
+
+            dp[0].view_normal = (normal_matrix * vec3{ p_n0[0], p_n0[1], p_n0[2] }) * wi0;
+            dp[1].view_normal = (normal_matrix * vec3{ p_n1[0], p_n1[1], p_n1[2] }) * wi1;
+            dp[2].view_normal = (normal_matrix * vec3{ p_n2[0], p_n2[1], p_n2[2] }) * wi2;
+        }
 
         if (color_offset >= 0)
         {
-            // vertex color computations
             const float* p_c0 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[0] * vertex_size);
             const float* p_c1 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[1] * vertex_size);
             const float* p_c2 = reinterpret_cast<const float*>(vb.data() + color_offset + ib_ptr[2] * vertex_size);
@@ -185,7 +191,6 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 
         if (texcoord_offset >= 0)
         {
-            // vertex texcoord computations
             const float* p_uv0 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[0] * vertex_size);
             const float* p_uv1 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[1] * vertex_size);
             const float* p_uv2 = reinterpret_cast<const float*>(vb.data() + texcoord_offset + ib_ptr[2] * vertex_size);
@@ -193,6 +198,23 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
             dp[0].texcoord = vec2{ p_uv0[0], p_uv0[1] } * wi0;
             dp[1].texcoord = vec2{ p_uv1[0], p_uv1[1] } * wi1;
             dp[2].texcoord = vec2{ p_uv2[0], p_uv2[1] } * wi2;
+        }
+
+        if (m_debug_normals)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                // compute screen-space (vertex + normal)
+                vec3 v_dn = dp[i].view_position.value() * (1.0f / wi0) + dp[i].view_normal.value().normalize() * 0.5f;
+                vec4 v_dnc = m_proj_matrix * vec4{ v_dn.x(), v_dn.y(), v_dn.z(), 1.0f };
+                v_dnc *= 1.0f / v_dnc.w();
+                vec3 v_dnd = m_clip_matrix * v_dnc;
+
+                DevicePoint n_dp[2];
+                n_dp[0].position = dp[i].position;
+                n_dp[1].position = vec4{ v_dnd.x(), v_dnd.y(), 0, 0 };
+                draw_line(n_dp[0], n_dp[1]);
+            }
         }
 
         draw_tri(dp[0], dp[1], dp[2]);

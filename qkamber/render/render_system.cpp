@@ -42,12 +42,14 @@ void RenderSystem::process()
     auto& viewport = scene.get_viewport();
 
     m_dev->set_view_matrix(camera.get_view());
+    m_dev->set_view_inv_matrix(camera.get_view_inv());
     m_dev->set_proj_matrix(camera.get_proj());
     m_dev->set_clip_matrix(viewport.get_clip());
 
     for (auto& qi : m_queue)
     {
         m_dev->set_world_matrix(qi.world_matrix);
+        m_dev->set_world_inv_matrix(qi.world_inv_matrix);
         // NOTE: should only be 1 tex here atm
         //for (auto& tex : qi.model_unit.get_material()->get_textures())
         //    m_dev->set_texture(tex);
@@ -66,6 +68,7 @@ void RenderSystem::begin_frame()
 
 void RenderSystem::end_frame()
 {
+    // TODO: move this to scene
     // finished drawing the queued objects
     m_queue.clear();
 

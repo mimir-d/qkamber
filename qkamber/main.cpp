@@ -6,6 +6,7 @@
 #include "engine.h"
 #include "math3.h"
 #include "render/render_system.h"
+#include "render/software_device.h"
 #include "scene/scene_system.h"
 #include "input/input_system.h"
 #include "input/input_device.h"
@@ -65,6 +66,9 @@ void Context::on_create()
     auto& srt_ship = m_obj_ship->get_component<SrtComponent>();
     srt_ship.set_position({ 6, 6, 6 });
     srt_ship.set_scale({ .5, .5, .5 });
+
+    // TODO: temporary debug
+    static_cast<SoftwareDevice&>(dev).debug_normals(true);
 }
 
 void Context::on_destroy()
@@ -116,8 +120,8 @@ void Context::on_update()
 
     // TODO: check paren identation formatting
 
-    //auto& srt = m_obj_ship->get_component<SrtComponent>();
-    //srt.set_rotation(vec3{ 1, 1, 1 } * abs_time);
+    auto& srt = m_obj_ship->get_component<SrtComponent>();
+    srt.set_rotation(vec3{ 1, 1, 1 } * abs_time);
 }
 
 void Context::on_render()

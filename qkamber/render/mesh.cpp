@@ -10,6 +10,7 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
 {
     flog("id = %#x", this);
 
+    bool has_normals = object.normals.size() > 0;
     bool has_colors = object.colors.size() > 0;
     bool has_texcoords = object.texcoords.size() > 0;
 
@@ -18,6 +19,12 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
 
     decl->add(offset, VDET_FLOAT3, VDES_POSITION);
     offset += VertexDecl::get_elem_size(VDET_FLOAT3);
+
+    if (has_normals)
+    {
+        decl->add(offset, VDET_FLOAT3, VDES_NORMAL);
+        offset += VertexDecl::get_elem_size(VDET_FLOAT3);
+    }
 
     if (has_colors)
     {
@@ -40,6 +47,14 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
             ptr[1] = object.vertices[i].y();
             ptr[2] = object.vertices[i].z();
             ptr += 3;
+
+            if (has_normals)
+            {
+                ptr[0] = object.normals[i].x();
+                ptr[1] = object.normals[i].y();
+                ptr[2] = object.normals[i].z();
+                ptr += 3;
+            }
 
             if (has_colors)
             {

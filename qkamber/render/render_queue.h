@@ -15,9 +15,10 @@ public:
     struct Item
     {
         const mat4& world_matrix;
+        const mat4& world_inv_matrix;
         const Model::Unit& model_unit;
 
-        Item(const mat4& world_matrix, const Model::Unit& model_unit);
+        Item(const mat4& world_matrix, const mat4& world_inv_matrix, const Model::Unit& model_unit);
     };
 
     using iterator = std::vector<Item>::const_iterator;
@@ -37,8 +38,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // RenderQueue::Item impl
 ///////////////////////////////////////////////////////////////////////////////
-inline RenderQueue::Item::Item(const mat4& world_matrix, const Model::Unit& model_unit) :
-    world_matrix(world_matrix), model_unit(model_unit)
+inline RenderQueue::Item::Item(const mat4& world_matrix, const mat4& world_inv_matrix, const Model::Unit& model_unit) :
+    world_matrix(world_matrix),
+    world_inv_matrix(world_inv_matrix),
+    model_unit(model_unit)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////

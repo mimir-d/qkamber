@@ -9,7 +9,7 @@
 void FpsCamera::set_proj_params(int width, int height)
 {
     const float aspect = static_cast<float>(width) / height;
-    m_proj = mat4::proj_perspective(PI_4, aspect, 1.0f, 100.0f);
+    m_proj = mat4::proj_perspective(PI_4, aspect, 0.1f, 100.0f);
 }
 
 void FpsCamera::update()
@@ -35,6 +35,7 @@ void FpsCamera::update()
     m_position += rotation * position_delta;
 
     m_view = mat4::lookat(m_position, m_position - ahead, up);
+    m_view_inv = mat4::lookat_inv(m_position, m_position - ahead, up);
 }
 
 vec2 FpsCamera::get_rotation_delta()

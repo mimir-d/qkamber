@@ -10,6 +10,8 @@ public:
 
     virtual const mat4& get_view() const = 0;
     virtual const mat4& get_proj() const = 0;
+
+    virtual const mat4& get_view_inv() const = 0;
 };
 
 class FpsCamera : public Camera
@@ -21,6 +23,8 @@ public:
     const mat4& get_view() const final;
     const mat4& get_proj() const final;
 
+    const mat4& get_view_inv() const final;
+
     void set_proj_params(int width, int height);
     void update();
 
@@ -28,7 +32,7 @@ public:
     const vec2& get_rotation() const;
 
 private:
-    mat4 m_view;
+    mat4 m_view, m_view_inv;
     mat4 m_proj;
 
     vec2 get_rotation_delta();
@@ -80,6 +84,11 @@ inline const mat4& FpsCamera::get_view() const
 inline const mat4& FpsCamera::get_proj() const
 {
     return m_proj;
+}
+
+inline const mat4& FpsCamera::get_view_inv() const
+{
+    return m_view_inv;
 }
 
 inline const vec3& FpsCamera::get_position() const
