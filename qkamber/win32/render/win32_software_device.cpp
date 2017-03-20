@@ -371,13 +371,25 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const vec<fp4, 3> y = { p0.position.y(), p1.position.y(), p2.position.y() };
 
     // TODO: if-constexpr could really benefit this function
-    const vec<Color, 3> cs = {
+    const vec<vec3, 3> view_positions = {
+        p0.view_position.has_value() ? p0.view_position.value() : vec3{},
+        p1.view_position.has_value() ? p1.view_position.value() : vec3{},
+        p2.view_position.has_value() ? p2.view_position.value() : vec3{}
+    };
+
+    const vec<vec3, 3> normals = {
+        p0.view_normal.has_value() ? p0.view_normal.value() : vec3{},
+        p1.view_normal.has_value() ? p1.view_normal.value() : vec3{},
+        p2.view_normal.has_value() ? p2.view_normal.value() : vec3{}
+    };
+
+    const vec<Color, 3> colors = {
         p0.color.has_value() ? p0.color.value() : vec4{},
         p1.color.has_value() ? p1.color.value() : vec4{},
         p2.color.has_value() ? p2.color.value() : vec4{}
     };
 
-    const vec<vec2, 3> uvs = {
+    const vec<vec2, 3> texcoords = {
         p0.texcoord.has_value() ? p0.texcoord.value() : vec2{},
         p1.texcoord.has_value() ? p1.texcoord.value() : vec2{},
         p2.texcoord.has_value() ? p2.texcoord.value() : vec2{}
@@ -393,12 +405,14 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     lerp_halfedge he{ x, y, min_x, min_y };
 
     // attribute interpolation
-    lerp_pack<float, float, Color, vec2> attrs
+    lerp_pack<float, float, vec3, vec3, Color, vec2> attrs
     {
         { he, { p0.position.z(), p1.position.z(), p2.position.z() } },
         { he, { p0.position.w(), p1.position.w(), p2.position.w() } },
-        { he, cs },
-        { he, uvs }
+        { he, view_positions },
+        { he, normals },
+        { he, colors },
+        { he, texcoords }
     };
 
     // buffers
@@ -420,29 +434,51 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
 
             if (he.value()[0] > 0 && he.value()[1] > 0 && he.value()[2] > 0 && z < depth_ptr[x])
             {
-                // TODO: extract c when shading
-                if (p0.color.has_value())
+                // TODO: alpha transparency
+                const Color ambient = m_material->get_ambient();
+                const Color diffuse = [&]
                 {
-                     const Color c = attrs.get<2>().value() * w;
-                     // TODO: alpha transparency
-                     // ignore alpha atm
-                     color_ptr[x] = RGB(c.b(), c.g(), c.r());
-                }
-                else if (p0.texcoord.has_value())
-                {
-                    // TODO: only 1 texture available atm
-                    SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_material->get_textures()[0]);
-                    const vec2 uv = attrs.get<3>().value() * w;
-                    const uint8_t* c = tex->sample(uv.x(), uv.y());
-                    // ignore alpha atm
-                    color_ptr[x] = RGB(c[2], c[1], c[0]);
-                }
-                else
-                {
-                    Color amb = m_material->get_ambient() * 255.0f;
-                    color_ptr[x] = RGB(amb.b(), amb.g(), amb.r());
-                }
+                    if (p0.color.has_value())
+                        return static_cast<Color>(attrs.get<4>().value() * w);
 
+                    if (p0.texcoord.has_value())
+                    {
+                        // TODO: only 1 texture available atm
+                        SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_material->get_textures()[0]);
+                        const vec2 uv = attrs.get<5>().value() * w;
+                        const uint8_t* c = tex->sample(uv.x(), uv.y());
+                        // not quite like this
+                        return Color{ c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f };
+                    }
+
+                    return m_material->get_diffuse();
+                }();
+
+                // lighting calculations in camera-space
+                const vec3 view_pos = attrs.get<2>().value() * w;
+                const vec3 n = (attrs.get<3>().value() * w).normalize();
+
+                // TODO: temp
+                const vec3 light_dir_denorm = vec3{ m_light_pos.x(), m_light_pos.y(), m_light_pos.z() } - view_pos;
+                const vec3 light_dir = light_dir_denorm.normalize();
+                const float light_dist = light_dir_denorm.length();
+
+                const float light_attenuation_coef[3] = { 0.0f, 0.0005f, 0.0025f };
+                const float light_atten = 1.0f / (
+                    light_attenuation_coef[0] +
+                    light_attenuation_coef[1] * light_dist,
+                    light_attenuation_coef[2] * light_dist * light_dist
+                );
+
+                float amb_coef = 0.2f;
+                float diff_coef = max(0.0f, n * light_dir) * light_atten;
+
+                const Color frag_color = ambient * amb_coef + diffuse * diff_coef;
+                color_ptr[x] = RGB(
+                    static_cast<uint8_t>(clamp(frag_color.b(), 0.0f, 1.0f) * 255.0f),
+                    static_cast<uint8_t>(clamp(frag_color.g(), 0.0f, 1.0f) * 255.0f),
+                    static_cast<uint8_t>(clamp(frag_color.r(), 0.0f, 1.0f) * 255.0f)
+                );
                 depth_ptr[x] = z;
             }
 

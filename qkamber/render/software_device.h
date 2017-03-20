@@ -93,6 +93,8 @@ protected:
     std::unique_ptr<RenderTarget> m_null_target;
 
     Material* m_material = nullptr;
+    // TODO: temp
+    vec4 m_light_pos;
 
 private:
     mat4 m_world_matrix, m_world_inv_matrix;
@@ -122,6 +124,9 @@ inline void SoftwareDevice::set_view_matrix(mat4 view_matrix)
     m_view_matrix = view_matrix;
     m_mvp_matrix.set_dirty();
     m_mv_matrix.set_dirty();
+
+    // TODO: temporary
+    m_light_pos = m_view_matrix * vec4{ 20, 20, 20, 1 };
 }
 
 inline void SoftwareDevice::set_proj_matrix(mat4 proj_matrix)
