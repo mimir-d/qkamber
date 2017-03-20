@@ -31,12 +31,7 @@ namespace detail
     {
         mat3 operator()(const mat4& view_inv, const mat4& world_inv) const
         {
-            const mat4 n = (world_inv * view_inv).transpose();
-            return mat3{
-                n[0][0], n[0][1], n[0][2],
-                n[1][0], n[1][1], n[1][2],
-                n[2][0], n[2][1], n[2][2]
-            };
+            return mat3{ (world_inv * view_inv).transpose() };
         }
     };
 }
