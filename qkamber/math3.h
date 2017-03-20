@@ -103,17 +103,41 @@ using fp8 = FixedPoint<int32_t, 8>;
 template <typename T, size_t N>
 class vec
 {
+    template <typename T2 = T, size_t RN>
+    friend class vec;
 public:
     vec();
     vec(const vec& rhs);
 
+    // narrowing ctor
+    template <size_t RN, typename = std::enable_if_t<(N < RN)>>
+    explicit vec(const vec<T, RN>& rhs);
+
+    // expanding ctor
+    template <
+        size_t RN,
+        typename... Args,
+        typename = std::enable_if_t<(N > RN)>,
+        typename = std::enable_if_t<std::is_convertible<std::tuple<Args...>, repeat_t<T, N - RN>>::value>
+    >
+    explicit vec(const vec<T, RN>& rhs, Args&&... args);
+
+    // component ctor
     template <
         typename... Args,
         typename = std::enable_if_t<std::is_convertible<std::tuple<Args...>, repeat_t<T, N>>::value>
     >
     vec(Args&&... args);
+
+    // zero init ctor
     vec(no_init_tag) {}
 
+private:
+    // TODO: can we get an I... of length sizeof...(Args) without std::index_sequence ?
+    template <size_t RN, typename... Args, size_t... I>
+    vec(std::index_sequence<I...>, const vec<T, RN>& rhs, Args&&... args);
+
+public:
     T length() const;
     T length_sq() const;
     vec normalize() const;
@@ -261,6 +285,8 @@ public:
 template <typename T, size_t D0, size_t D1 = D0>
 class mat
 {
+    template <typename T2 = T, size_t RD0, size_t RD1>
+    friend class mat;
 public:
     template <bool is_const>
     class row_t
@@ -305,11 +331,21 @@ public:
     mat();
     mat(const mat& rhs);
 
+    // narrowing ctor
+    template <
+        size_t RD0, size_t RD1,
+        typename = std::enable_if_t<((D0 < RD0 && D1 <= RD1) || (D0 == RD0 && D1 < RD1))>
+    >
+    explicit mat(const mat<T, RD0, RD1>& rhs);
+
+    // component ctor
     template <
         typename... Args,
         typename = std::enable_if_t<std::is_convertible<std::tuple<Args...>, repeat_t<T, D0 * D1>>::value>
     >
     mat(Args&&... args);
+
+    // zero init ctor
     mat(no_init_tag) {}
 
     mat<T, D1, D0> transpose() const;
@@ -338,15 +374,16 @@ public:
 
 private:
     template <int I>
-    struct eq_op
-    {
-        void operator()(mat& out, const mat& rhs) const;
-    };
-
-    template <int I>
     struct scale_op
     {
         void operator()(mat& out, const mat& lhs, T rhs) const;
+    };
+
+    template <int I, int J>
+    struct eq_op
+    {
+        template <size_t RD0, size_t RD1>
+        void operator()(mat& out, const mat<T, RD0, RD1>& rhs) const;
     };
 
     template <int I, int J>
@@ -730,13 +767,33 @@ inline vec<T, N>::vec()
 
 template <typename T, size_t N>
 inline vec<T, N>::vec(const vec& rhs) :
-    m_data(rhs.m_data)
+    m_data{ rhs.m_data }
+{}
+
+// narrowing ctor, N < NR, copy just N items
+template <typename T, size_t N>
+template <size_t RN, typename>
+inline vec<T, N>::vec(const vec<T, RN>& rhs) :
+    vec{ std::make_index_sequence<N>{}, rhs }
+{}
+
+// expanding ctor, N > RN, copy RN items and fill in the rest
+template <typename T, size_t N>
+template <size_t RN, typename... Args, typename, typename>
+inline vec<T, N>::vec(const vec<T, RN>& rhs, Args&&... args) :
+    vec{ std::make_index_sequence<RN>{}, rhs, std::forward<Args>(args)... }
 {}
 
 template <typename T, size_t N>
 template <typename... Args, typename>
 inline vec<T, N>::vec(Args&&... args) :
     m_data { static_cast<T>(args)... }
+{}
+
+template <typename T, size_t N>
+template <size_t RN, typename... Args, size_t... I>
+inline vec<T, N>::vec(std::index_sequence<I...>, const vec<T, RN>& rhs, Args&&... args) :
+    m_data{ rhs.m_data[I]..., static_cast<T>(args)... }
 {}
 
 template <typename T, size_t N>
@@ -1030,6 +1087,13 @@ inline mat<T, D0, D1>::mat(const mat& rhs) :
 {}
 
 template <typename T, size_t D0, size_t D1>
+template <size_t RD0, size_t RD1, typename>
+inline mat<T, D0, D1>::mat(const mat<T, RD0, RD1>& rhs)
+{
+    detail::iterate2<D0, D1, eq_op>{}(*this, rhs);
+}
+
+template <typename T, size_t D0, size_t D1>
 template <typename... Args, typename>
 inline mat<T, D0, D1>::mat(Args&&... args) :
     m_data { static_cast<T>(args)... }
@@ -1045,7 +1109,7 @@ mat<T, D1, D0> mat<T, D0, D1>::transpose() const
 template <typename T, size_t D0, size_t D1>
 inline mat<T, D0, D1>& mat<T, D0, D1>::operator=(const mat& rhs)
 {
-    return detail::iterate1<D0 * D1, eq_op>()(*this, rhs);
+    return detail::iterate2<D0, D1, eq_op>()(*this, rhs);
 }
 
 template <typename T, size_t D0, size_t D1>
@@ -1057,7 +1121,7 @@ mat<T, D0, D1>& mat<T, D0, D1>::operator*=(const mat& rhs)
     mat result(no_init_tag {});
 
     detail::iterate2<D0, D1, mul_op<>::mul_row>()(result, *this, rhs);
-    return detail::iterate1<D0 * D1, eq_op>()(*this, result);
+    return detail::iterate2<D0, D1, eq_op>()(*this, result);
 }
 
 template <typename T, size_t D0, size_t D1>
@@ -1089,16 +1153,6 @@ inline mat<T, D0, D1> mat<T, D0, D1>::operator*(T rhs) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// mat4::eq_op impl
-///////////////////////////////////////////////////////////////////////////////
-template <typename T, size_t D0, size_t D1>
-template <int I>
-inline void mat<T, D0, D1>::eq_op<I>::operator()(mat& out, const mat& rhs) const
-{
-    out.m_data[I] = rhs.m_data[I];
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // mat4::scale_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
@@ -1106,6 +1160,17 @@ template <int I>
 inline void mat<T, D0, D1>::scale_op<I>::operator()(mat& out, const mat& lhs, T rhs) const
 {
     out.m_data[I] = lhs.m_data[I] * rhs;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// mat4::eq_op impl
+///////////////////////////////////////////////////////////////////////////////
+template <typename T, size_t D0, size_t D1>
+template <int I, int J>
+template <size_t RD0, size_t RD1>
+inline void mat<T, D0, D1>::eq_op<I, J>::operator()(mat& out, const mat<T, RD0, RD1>& rhs) const
+{
+    out.m_data[I*D1 + J] = rhs.m_data[I*RD1 + J];
 }
 
 ///////////////////////////////////////////////////////////////////////////////

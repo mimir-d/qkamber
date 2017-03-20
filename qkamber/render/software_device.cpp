@@ -97,9 +97,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const vec4 v2v = mv_matrix * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
         // TODO: make a vecN to vecM ctor
-        const vec3 v0v_3 = { v0v[0], v0v[1], v0v[2] };
-        const vec3 v1v_3 = { v1v[0], v1v[1], v1v[2] };
-        const vec3 v2v_3 = { v2v[0], v2v[1], v2v[2] };
+        const vec3 v0v_3 = vec3{ v0v };
+        const vec3 v1v_3 = vec3{ v1v };
+        const vec3 v2v_3 = vec3{ v2v };
 
         // compute view-space normal
         const vec3 dv1 = (v2v_3 - v0v_3);
@@ -206,7 +206,7 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
             {
                 // compute screen-space (vertex + normal)
                 vec3 v_dn = dp[i].view_position.value() * (1.0f / wi0) + dp[i].view_normal.value().normalize() * 0.5f;
-                vec4 v_dnc = m_proj_matrix * vec4{ v_dn.x(), v_dn.y(), v_dn.z(), 1.0f };
+                vec4 v_dnc = m_proj_matrix * vec4{ v_dn, 1.0f };
                 v_dnc *= 1.0f / v_dnc.w();
                 vec3 v_dnd = m_clip_matrix * v_dnc;
 

@@ -459,7 +459,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                 const vec3 n = (attrs.get<3>().value() * w).normalize();
 
                 // TODO: temp
-                const vec3 light_dir_denorm = vec3{ m_light_pos.x(), m_light_pos.y(), m_light_pos.z() } - view_pos;
+                const vec3 light_dir_denorm = vec3{ m_light_pos } - view_pos;
                 const vec3 light_dir = light_dir_denorm.normalize();
                 const float light_dist = light_dir_denorm.length();
 
