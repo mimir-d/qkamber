@@ -65,6 +65,7 @@ void Context::on_create()
 
     // TODO: temporary debug
     //static_cast<SoftwareDevice&>(dev).debug_normals(true);
+    //dev.set_polygon_mode(PolygonMode::Line);
 }
 
 void Context::on_destroy()
@@ -102,7 +103,7 @@ void Context::on_update()
     m_camera.update();
 
     auto& srt = m_obj_ship->get_component<SrtComponent>();
-    srt.set_rotation(vec3{ 0.5f, 0.5f, 0.5f } * abs_time);
+    srt.set_rotation(vec3{ 0.25f, 0.25f, 0.25f } * abs_time);
 }
 
 void Context::on_render()
