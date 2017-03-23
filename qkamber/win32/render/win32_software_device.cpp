@@ -441,10 +441,11 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                     if (p0.color.has_value())
                         return static_cast<Color>(attrs.get<4>().value() * w);
 
-                    if (p0.texcoord.has_value())
+                    const auto& textures = m_material->get_textures();
+                    if (p0.texcoord.has_value() && textures.size() > 0)
                     {
                         // TODO: only 1 texture available atm
-                        SoftwareTexture* tex = static_cast<SoftwareTexture*>(m_material->get_textures()[0]);
+                        SoftwareTexture* tex = static_cast<SoftwareTexture*>(textures[0]);
                         const vec2 uv = attrs.get<5>().value() * w;
                         const uint8_t* c = tex->sample(uv.x(), uv.y());
                         // not quite like this

@@ -281,6 +281,10 @@ namespace
         uint16_t count;
         read(&count);
 
+        // some objects are invalid (lights, etc), ignore them
+        if (count == 0)
+            return;
+
         m_obj->vertices.resize(count);
         m_obj->normals.resize(count);
 
@@ -314,7 +318,7 @@ namespace
             const vec3 v20 = v2 - v0;
             const vec3 normal = (v10 ^ v20).normalize();
 
-            // store per-vertex face normal
+            // store per-vertex face normal (may overwrite if indices are repeated)
             m_obj->normals[f.vertex_index[0]] = normal;
             m_obj->normals[f.vertex_index[1]] = normal;
             m_obj->normals[f.vertex_index[2]] = normal;
@@ -323,10 +327,84 @@ namespace
 
     void Max3dsGeometry::Parser::compute_smoothing()
     {
-        vector<uint32_t> groups(m_faces.size(), 0);
-        read(&groups[0], m_faces.size());
+        const size_t face_count = m_faces.size();
+        vector<uint32_t> groups(face_count, 0);
+        read(&groups[0], face_count);
 
-        // TODO: on shading
+        struct adjancency_node
+        {
+            size_t face_index;
+            vec3 normal;
+            adjancency_node* next = nullptr;
+        };
+
+        // build linked lists of adjancent vertices and sum the face normals
+        vector<adjancency_node*> adj_heads{ m_obj->vertices.size() };
+        vector<adjancency_node> adj_verts{ face_count * 3 };
+
+        // compute face normals and vertex adjancency
+        for (size_t i = 0; i < face_count; i++)
+        {
+            const auto& f = m_faces[i];
+            // compute normal for this face
+            const vec3 v0 = m_obj->vertices[f.vertex_index[0]];
+            const vec3 v1 = m_obj->vertices[f.vertex_index[1]];
+            const vec3 v2 = m_obj->vertices[f.vertex_index[2]];
+
+            const vec3 v10 = v1 - v0;
+            const vec3 v20 = v2 - v0;
+            const vec3 face_normal = (v10 ^ v20).normalize();
+
+            for (size_t j = 0; j < 3; j++)
+            {
+                const auto vi = f.vertex_index[j];
+
+                // populate list node
+                auto v = &adj_verts[3*i + j];
+                v->face_index = i;
+                v->normal = face_normal;
+
+                // append to list
+                v->next = adj_heads[vi];
+                adj_heads[vi] = v;
+            }
+        }
+
+        // use the smoothing groups
+        for (size_t i = 0; i < face_count; i++)
+        {
+            const auto& f = m_faces[i];
+            if (groups[i])
+            {
+                for (size_t j = 0; j < 3; j++)
+                {
+                    const auto vi = f.vertex_index[j];
+                    uint32_t g = groups[i];
+
+                    // get all tangent group mask
+                    for (auto p = adj_heads[vi]; p; p = p->next)
+                        if (groups[i] & groups[p->face_index])
+                            g |= groups[p->face_index];
+
+                    // sum normals per group mask
+                    vec3 avg_normal;
+                    for (auto p = adj_heads[vi]; p; p = p->next)
+                        if (g & groups[p->face_index])
+                            avg_normal += p->normal;
+
+                    avg_normal = avg_normal.normalize();
+                    m_obj->normals[f.vertex_index[0]] = avg_normal;
+                    m_obj->normals[f.vertex_index[1]] = avg_normal;
+                    m_obj->normals[f.vertex_index[2]] = avg_normal;
+                }
+            }
+            else
+            {
+                m_obj->normals[f.vertex_index[0]] = adj_verts[3*i + 0].normal;
+                m_obj->normals[f.vertex_index[1]] = adj_verts[3*i + 1].normal;
+                m_obj->normals[f.vertex_index[2]] = adj_verts[3*i + 2].normal;
+            }
+        }
     }
 
     void Max3dsGeometry::Parser::read_texcoords()

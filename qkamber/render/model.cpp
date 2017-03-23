@@ -16,6 +16,11 @@ Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
 {
     flog("id = %#x", this);
 
+    size_t unit_count = geometry.get_objects().size();
+    m_meshes.reserve(unit_count);
+    m_materials.reserve(unit_count);
+    m_units.reserve(unit_count);
+
     for (auto& obj : geometry.get_objects())
     {
         m_meshes.emplace_back(new Mesh{ obj, dev });
