@@ -1,7 +1,9 @@
 #pragma once
 
+#include "asset/asset_system.h"
 #include "math3.h"
 
+class RenderDevice;
 class Texture;
 
 class Material
@@ -10,72 +12,34 @@ public:
     using Textures = std::vector<Texture*>;
 
 public:
-    Material();
+    Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetSystem& asset);
     ~Material();
 
     // colors
-    void set_ambient(const Color& color);
-    void set_diffuse(const Color& color);
-    void set_specular(const Color& color, float shininess = 1.0f);
-    void set_emissive(const Color& color);
-
     const Color& get_ambient() const;
     const Color& get_diffuse() const;
     const Color& get_specular() const;
-    float get_specular_shininess() const;
     const Color& get_emissive() const;
+    float get_shininess() const;
 
     // textures
     // TODO: support multiple textures
-    void set_texture(Texture* texture);
     const Textures& get_textures() const;
 
 private:
     Color m_ambient;
     Color m_diffuse;
     Color m_specular;
-    float m_specular_shininess = 1.0f;
     Color m_emissive;
+    float m_shininess = 1.0f;
 
+    std::vector<std::unique_ptr<Texture>> m_tex_storage;
     Textures m_textures;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
-inline Material::Material()
-{
-    flog("id = %#x", this);
-    log_info("Created material %#x", this);
-}
-
-inline Material::~Material()
-{
-    flog();
-    log_info("Destroyed material %#x", this);
-}
-
-inline void Material::set_ambient(const Color& color)
-{
-    m_ambient = color;
-}
-
-inline void Material::set_diffuse(const Color& color)
-{
-    m_diffuse = color;
-}
-
-inline void Material::set_specular(const Color& color, float shininess)
-{
-    m_specular = color;
-    m_specular_shininess = shininess;
-}
-
-inline void Material::set_emissive(const Color& color)
-{
-    m_emissive = color;
-}
-
 inline const Color& Material::get_ambient() const
 {
     return m_ambient;
@@ -91,21 +55,14 @@ inline const Color& Material::get_specular() const
     return m_specular;
 }
 
-inline float Material::get_specular_shininess() const
-{
-    return m_specular_shininess;
-}
-
 inline const Color& Material::get_emissive() const
 {
     return m_emissive;
 }
 
-inline void Material::set_texture(Texture* texture)
+inline float Material::get_shininess() const
 {
-    if (m_textures.size() < 1)
-        m_textures.resize(1);
-    m_textures[0] = texture;
+    return m_shininess;
 }
 
 inline const Material::Textures& Material::get_textures() const

@@ -209,6 +209,7 @@
     <ClCompile Include="$(src)\asset\image_loader.cpp" />
     <ClCompile Include="$(src)\entity\entity_system.cpp" />
     <ClCompile Include="$(src)\input\input_system.cpp" />
+    <ClCompile Include="$(src)\render\material.cpp" />
     <ClCompile Include="$(src)\render\mesh.cpp" />
     <ClCompile Include="$(src)\render\model.cpp" />
     <ClCompile Include="$(src)\render\render_buffers.cpp" />

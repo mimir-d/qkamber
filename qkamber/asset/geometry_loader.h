@@ -21,7 +21,7 @@ public:
     {
         std::string name;
         Color ambient, diffuse, specular, emissive;
-        float specular_shininess;
+        float shininess;
         std::string tex_filename;
     };
     using Materials = std::vector<Material>;
