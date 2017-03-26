@@ -12,7 +12,7 @@ using namespace std;
 
 EntitySystem::EntitySystem(QkEngine::Context& context) :
     Subsystem(context),
-    m_config{ new EntityConfig{ "entities.ini" } }
+    m_config{ new EntityConfig{ "entities.ini", context.get_render() } }
 {
     flog("id = %#x", this);
     log_info("Created entity system");
@@ -35,7 +35,7 @@ unique_ptr<EntitySystem::Entity> EntitySystem::create_entity(const string& name)
 
     // TODO: small block allocator or value-type
     auto ret = unique_ptr<Entity>(new Entity{ *this, eid, private_tag{} });
-    m_config->config(name, *ret.get(), m_context.get_render(), m_context.get_asset());
+    m_config->config(name, *ret.get());
 
     log_info("Created entity id = %d...", eid);
     return ret;

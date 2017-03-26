@@ -3,7 +3,7 @@
 #include "asset/asset_system.h"
 #include "math3.h"
 
-class RenderDevice;
+class RenderSystem;
 class Texture;
 
 class Material
@@ -12,7 +12,7 @@ public:
     using Textures = std::vector<Texture*>;
 
 public:
-    Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetSystem& asset);
+    Material(const GeometryAsset::Material& raw, RenderSystem& render);
     ~Material();
 
     // colors

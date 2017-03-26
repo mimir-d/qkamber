@@ -184,6 +184,9 @@
     <ClInclude Include="$(src)\entity\entity_config.h">
       <Filter>Header Files\entity</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\render\render_cache.h">
+      <Filter>Header Files\render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -252,10 +255,13 @@
     <ClCompile Include="$(src)\asset\geometry_loader.cpp">
       <Filter>Source Files\asset</Filter>
     </ClCompile>
-	<ClCompile Include="$(src)\entity\entity_config.cpp">
+    <ClCompile Include="$(src)\render\software_buffers.cpp">
+      <Filter>Source Files\render</Filter>
+    </ClCompile>
+    <ClCompile Include="$(src)\entity\entity_config.cpp">
       <Filter>Source Files\entity</Filter>
     </ClCompile>
-    <ClCompile Include="$(src)\render\software_buffers.cpp">
+    <ClCompile Include="$(src)\render\render_cache.cpp">
       <Filter>Source Files\render</Filter>
     </ClCompile>
     <ClCompile Include="$(src)\render\material.cpp">

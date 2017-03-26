@@ -6,13 +6,14 @@
 #include "render/render_buffers.h"
 #include "math3.h"
 
-Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
+Mesh::Mesh(const GeometryAsset::Object& raw, RenderSystem& render)
 {
     flog("id = %#x", this);
+    auto& dev = render.get_device();
 
-    bool has_normals = object.normals.size() > 0;
-    bool has_colors = object.colors.size() > 0;
-    bool has_texcoords = object.texcoords.size() > 0;
+    bool has_normals = raw.normals.size() > 0;
+    bool has_colors = raw.colors.size() > 0;
+    bool has_texcoords = raw.texcoords.size() > 0;
 
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
     size_t offset = 0;
@@ -38,49 +39,49 @@ Mesh::Mesh(const GeometryAsset::Object& object, RenderDevice& dev)
         offset += VertexDecl::get_elem_size(VDET_FLOAT2);
     }
 
-    m_vertices = dev.create_vertex_buffer(std::move(decl), object.vertices.size());
+    m_vertices = dev.create_vertex_buffer(std::move(decl), raw.vertices.size());
     lock_buffer(m_vertices.get(), [&](float* ptr)
     {
-        for (size_t i = 0; i < object.vertices.size(); i++)
+        for (size_t i = 0; i < raw.vertices.size(); i++)
         {
-            ptr[0] = object.vertices[i].x();
-            ptr[1] = object.vertices[i].y();
-            ptr[2] = object.vertices[i].z();
+            ptr[0] = raw.vertices[i].x();
+            ptr[1] = raw.vertices[i].y();
+            ptr[2] = raw.vertices[i].z();
             ptr += 3;
 
             if (has_normals)
             {
-                ptr[0] = object.normals[i].x();
-                ptr[1] = object.normals[i].y();
-                ptr[2] = object.normals[i].z();
+                ptr[0] = raw.normals[i].x();
+                ptr[1] = raw.normals[i].y();
+                ptr[2] = raw.normals[i].z();
                 ptr += 3;
             }
 
             if (has_colors)
             {
-                ptr[0] = object.colors[i].r();
-                ptr[1] = object.colors[i].g();
-                ptr[2] = object.colors[i].b();
-                ptr[3] = object.colors[i].a();
+                ptr[0] = raw.colors[i].r();
+                ptr[1] = raw.colors[i].g();
+                ptr[2] = raw.colors[i].b();
+                ptr[3] = raw.colors[i].a();
                 ptr += 4;
             }
 
             if (has_texcoords)
             {
-                ptr[0] = object.texcoords[i].x();
-                ptr[1] = object.texcoords[i].y();
+                ptr[0] = raw.texcoords[i].x();
+                ptr[1] = raw.texcoords[i].y();
                 ptr += 2;
             }
         }
     });
 
-    m_indices = dev.create_index_buffer(object.indices.size());
+    m_indices = dev.create_index_buffer(raw.indices.size());
     lock_buffer(m_indices.get(), [&](uint16_t* ptr)
     {
-        std::copy(object.indices.begin(), object.indices.end(), ptr);
+        std::copy(raw.indices.begin(), raw.indices.end(), ptr);
     });
 
-    log_info("Created mesh %#x", this);
+    log_info("Created mesh name = %s, id = %#x", raw.name.c_str(), this);
 }
 
 Mesh::~Mesh()

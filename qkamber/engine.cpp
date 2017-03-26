@@ -17,14 +17,15 @@ QkEngine::Context::Context()
 {
     flog();
 
-    // init subsystems? all of these will have context as parent
+    // TODO: these have deps between them, refactor to release those
+    // TODO: keep these in a tuple type thing
     m_time.reset(new TimeSystem{ *this });
-    m_entity.reset(new EntitySystem{ *this });
+    m_asset.reset(new AssetSystem{ *this });
     m_render.reset(new RenderSystem{ *this });
     m_scene.reset(new SceneSystem{ *this });
     m_input.reset(new InputSystem{ *this });
+    m_entity.reset(new EntitySystem{ *this });
     m_stats.reset(new StatsSystem{ *this });
-    m_asset.reset(new AssetSystem{ *this });
 
     log_info("Finished creating engine context");
 }
@@ -34,12 +35,12 @@ QkEngine::Context::~Context()
     flog();
 
     // i want to manually destroy systems
-    m_asset = nullptr;
     m_stats = nullptr;
+    m_entity = nullptr;
     m_input = nullptr;
     m_scene = nullptr;
     m_render = nullptr;
-    m_entity = nullptr;
+    m_asset = nullptr;
     m_time = nullptr;
 
     log_info("Destroyed engine context");
