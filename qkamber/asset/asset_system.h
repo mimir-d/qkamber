@@ -15,7 +15,7 @@ public:
     void process() final {}
 
 public:
-    std::shared_ptr<Image> load_image(
+    std::shared_ptr<ImageAsset> load_image(
         const std::string& filename,
         ImageLoader::FileFormat format = ImageLoader::FileFormat::Unknown
     );
@@ -27,23 +27,25 @@ public:
 
 private:
     template <typename T>
-    using AssetCache = std::unordered_map<std::string, std::shared_ptr<T>>;
+    using cache_t = std::unordered_map<std::string, std::shared_ptr<T>>;
 
     template <typename T, typename Loader, typename... Args>
-    std::shared_ptr<T> cache_load(AssetCache<T>& cache, Loader& loader, const std::string& filename, Args&&... args);
+    std::shared_ptr<T> cache_load(cache_t<T>& cache, Loader& loader, const std::string& filename, Args&&... args);
 
     ImageLoader m_image_loader;
     GeometryLoader m_geometry_loader;
 
-    AssetCache<Image> m_image_cache;
-    AssetCache<GeometryAsset> m_geometry_cache;
+    cache_t<ImageAsset> m_image_cache;
+    cache_t<GeometryAsset> m_geometry_cache;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
 inline AssetSystem::AssetSystem(QkEngine::Context& context) :
-    Subsystem(context)
+    Subsystem(context),
+    m_image_loader(*this),
+    m_geometry_loader(*this)
 {
     flog("id = %#x", this);
     log_info("Created asset system");
@@ -55,7 +57,7 @@ inline AssetSystem::~AssetSystem()
     log_info("Destroyed asset system");
 }
 
-inline std::shared_ptr<Image>
+inline std::shared_ptr<ImageAsset>
 AssetSystem::load_image(const std::string& filename, ImageLoader::FileFormat format)
 {
     flog();
@@ -70,17 +72,17 @@ AssetSystem::load_geometry(const std::string& filename, GeometryLoader::FileForm
 }
 
 template <typename T, typename Loader, typename... Args>
-std::shared_ptr<T> AssetSystem::cache_load(
-    AssetCache<T>& cache, Loader& loader,
+inline std::shared_ptr<T> AssetSystem::cache_load(
+    cache_t<T>& cache, Loader& loader,
     const std::string& filename, Args&&... args
 ) {
     auto search = cache.find(filename);
     if (search == cache.end())
     {
-        auto ret = std::shared_ptr<T>{ loader.load(filename, std::forward<Args>(args)...) };
-        return cache[filename] = ret;
+        dlog("Asset cache miss, creating filename = %s", filename.c_str());
+        return cache[filename] = std::shared_ptr<T>{ loader.load(filename, std::forward<Args>(args)...) };
     }
 
-    dlog("cache hit, filename = %s", filename.c_str());
+    dlog("Asset cache hit, filename = %s", filename.c_str());
     return search->second;
 }

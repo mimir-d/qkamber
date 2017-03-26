@@ -16,14 +16,13 @@ Material::Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetS
 {
     flog("id = %#x", this);
 
-    if (raw.tex_filename.size() > 0)
+    if (raw.diffuse_map)
     {
-        auto diffuse_map = asset.load_image(raw.tex_filename);
-        size_t width = diffuse_map->get_width();
-        size_t height = diffuse_map->get_height();
+        size_t width = raw.diffuse_map->get_width();
+        size_t height = raw.diffuse_map->get_height();
         const PixelFormat format = [&]
         {
-            switch (diffuse_map->get_format())
+            switch (raw.diffuse_map->get_format())
             {
                 case ImageFormat::Rgba8: return PixelFormat::RgbaU8;
                 case ImageFormat::Rgb8: return PixelFormat::RgbU8;
@@ -35,7 +34,7 @@ Material::Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetS
         lock_buffer(tex.get(), [&](uint8_t* data)
         {
             const size_t size = height * width * Texture::get_elem_size(format);
-            std::copy(diffuse_map->data(), diffuse_map->data() + size, data);
+            std::copy(raw.diffuse_map->data(), raw.diffuse_map->data() + size, data);
         });
 
         m_textures.push_back(tex.get());

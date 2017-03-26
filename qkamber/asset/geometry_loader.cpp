@@ -2,6 +2,8 @@
 #include "precompiled.h"
 #include "geometry_loader.h"
 
+#include "asset_system.h"
+
 using namespace std;
 
 unique_ptr<GeometryAsset> GeometryLoader::load(const std::string& filename, FileFormat format)
@@ -56,22 +58,19 @@ namespace
         {
             uint16_t id;
             uint32_t length;
-            //size_t bytes_read;
         };
 
         struct Face
         {
             uint16_t vertex_index[3];
-            //size_t texcoord_index[3];
             uint16_t flags;
-            //uint32_t smoothing_group;
         };
 #pragma pack(pop)
 
         class Parser
         {
         public:
-            Parser(const string& filename);
+            Parser(AssetSystem& asset, const string& filename);
             ~Parser() = default;
 
             void parse(Objects& objects, Materials& materials);
@@ -89,9 +88,11 @@ namespace
             void read_faces();
             void compute_smoothing();
             void read_texcoords();
-            void read_object_material(Materials& materials);
+            void read_object_material();
 
         private:
+            AssetSystem& m_asset;
+            string m_prefix;
             ifstream m_file;
 
             vector<Face> m_faces;
@@ -100,18 +101,26 @@ namespace
         };
 
     public:
-        Max3dsGeometry(const string& filename);
+        Max3dsGeometry(AssetSystem& asset, const string& filename);
         ~Max3dsGeometry() = default;
 
+        const string& get_name() const final;
         const Objects& get_objects() const final;
         const Materials& get_materials() const final;
 
     private:
+        string m_name;
         Objects m_objects;
         Materials m_materials;
     };
 
-    Max3dsGeometry::Parser::Parser(const string& filename) :
+    ///////////////////////////////////////////////////////////////////////////
+    // Max3dsGeometry impl
+    ///////////////////////////////////////////////////////////////////////////
+
+    Max3dsGeometry::Parser::Parser(AssetSystem& asset, const string& filename) :
+        m_asset(asset),
+        m_prefix(print_fmt("%s/", filename.c_str())),
         m_file(filename, ios::binary)
     {}
 
@@ -140,7 +149,7 @@ namespace
                 case M3DS_OBJECT:
                     objects.emplace_back();
                     m_obj = &objects[objects.size() - 1];
-                    m_obj->name = read_string();
+                    m_obj->name = m_prefix + read_string();
                     dlog("3ds object #%d, name = %s", objects.size(), m_obj->name.c_str());
                     break;
 
@@ -170,8 +179,8 @@ namespace
                     break;
 
                 case M3DS_OBJECT_MATERIAL:
-                    read_object_material(materials);
-                    dlog("3ds object material index = %d", m_obj->material_index);
+                    read_object_material();
+                    dlog("3ds object material name = %s", m_obj->material_name);
                     break;
 
                 case M3DS_MATERIAL:
@@ -181,7 +190,7 @@ namespace
                     break;
 
                 case M3DS_MATERIAL_NAME:
-                    m_mat->name = read_string();
+                    m_mat->name = m_prefix + read_string();
                     dlog("3ds material name = %s", m_mat->name.c_str());
                     break;
 
@@ -205,8 +214,8 @@ namespace
                     break;
 
                 case M3DS_MATERIAL_TEXFILE:
-                    m_mat->tex_filename = read_string();
-                    dlog("3ds material texture file = %s", m_mat->tex_filename.c_str());
+                    m_mat->diffuse_map = m_asset.load_image(read_string());
+                    //dlog("3ds material texture file = %s", m_mat->tex_filename.c_str());
                     break;
 
                 default:
@@ -420,17 +429,9 @@ namespace
             uv.y() = 1.0f - uv.y();
     }
 
-    void Max3dsGeometry::Parser::read_object_material(Materials& materials)
+    void Max3dsGeometry::Parser::read_object_material()
     {
-        string mat_name = read_string();
-        auto it = std::find_if(
-            materials.begin(), materials.end(),
-            [&mat_name](auto& m) { return m.name == mat_name; }
-        );
-
-        if (it == materials.end())
-            throw exception(print_fmt("3ds material not found as defined, name = %s", mat_name.c_str()).c_str());
-        m_obj->material_index = static_cast<int>(it - materials.begin());
+        m_obj->material_name = m_prefix + read_string();
 
         // NOTE: apparently 3ds might say to just render a subset of the vertices
         uint16_t face_count;
@@ -448,10 +449,16 @@ namespace
         }
     }
 
-    Max3dsGeometry::Max3dsGeometry(const string& filename)
+    Max3dsGeometry::Max3dsGeometry(AssetSystem& asset, const string& filename) :
+        m_name(filename)
     {
         flog("id = %#x", this);
-        Parser{ filename }.parse(m_objects, m_materials);
+        Parser{ asset, filename }.parse(m_objects, m_materials);
+    }
+
+    const string& Max3dsGeometry::get_name() const
+    {
+        return m_name;
     }
 
     const GeometryAsset::Objects& Max3dsGeometry::get_objects() const
@@ -470,12 +477,12 @@ GeometryLoader::FileFormat GeometryLoader::get_format(const std::string& filenam
     if (filename.substr(filename.size() - 4, 4) == ".3ds")
         return GeometryLoader::FileFormat::Max3ds;
 
-    return GeometryLoader::FileFormat::Unknown;
+    return FileFormat::Unknown;
 }
 
 unique_ptr<GeometryAsset> GeometryLoader::load_3ds(const std::string& filename)
 {
     flog();
     log_info("Loading geometry filename = %s...", filename.c_str());
-    return unique_ptr<GeometryAsset>{ new Max3dsGeometry{ filename } };
+    return unique_ptr<GeometryAsset>{ new Max3dsGeometry{ m_asset, filename } };
 }
