@@ -73,7 +73,7 @@ public:
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) final;
-    std::unique_ptr<Texture> create_texture(Image* image) final;
+    std::unique_ptr<Texture> create_texture(size_t width, size_t height, PixelFormat format) final;
 
     // debug
     void debug_normals(bool enable);
