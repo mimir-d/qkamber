@@ -16,6 +16,9 @@ unique_ptr<GeometryAsset> GeometryLoader::load(const std::string& filename, File
 
     switch (format)
     {
+        case FileFormat::Prefab:
+            return load_prefab(filename);
+
         case FileFormat::Max3ds:
             return load_3ds(filename);
     }
@@ -25,6 +28,247 @@ unique_ptr<GeometryAsset> GeometryLoader::load(const std::string& filename, File
 
 namespace
 {
+    ///////////////////////////////////////////////////////////////////////////
+    // PrefabGeometry
+    ///////////////////////////////////////////////////////////////////////////
+    class PrefabGeometry : public GeometryAsset
+    {
+    public:
+        PrefabGeometry(AssetSystem& asset, const string& name);
+        ~PrefabGeometry() = default;
+
+        const string& get_name() const final;
+        const Objects& get_objects() const final;
+        const Materials& get_materials() const final;
+
+    private:
+        void make_cubes(AssetSystem& asset, const string& name);
+        void make_tris(AssetSystem& asset, const string& name);
+
+    private:
+        string m_name;
+        Objects m_objects;
+        Materials m_materials;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // PrefabGeometry impl
+    ///////////////////////////////////////////////////////////////////////////
+    PrefabGeometry::PrefabGeometry(AssetSystem& asset, const string& name) :
+        m_name(name)
+    {
+        string model_name = basename(name);
+
+        // NOTE: hardcoded names intentional
+        if (model_name == "color_cube" || model_name == "tex_cube")
+            make_cubes(asset, name);
+        else if (model_name == "triangle" || model_name == "axis_triangle")
+            make_tris(asset, name);
+        else
+            throw exception(print_fmt("unknown static geometry, name = %s", name.c_str()).c_str());
+    }
+
+    const string& PrefabGeometry::get_name() const
+    {
+        return m_name;
+    }
+
+    const GeometryAsset::Objects& PrefabGeometry::get_objects() const
+    {
+        return m_objects;
+    }
+
+    const GeometryAsset::Materials& PrefabGeometry::get_materials() const
+    {
+        return m_materials;
+    }
+
+    void PrefabGeometry::make_cubes(AssetSystem& asset, const string& name)
+    {
+        m_objects.emplace_back();
+        m_materials.emplace_back();
+
+        Object& obj = m_objects[m_objects.size() - 1];
+        obj.name = print_fmt("%s/mesh", name.c_str());
+
+        const size_t face_indices[] =
+        {
+            0, 1, 2, 3, // front
+            1, 5, 3, 7, // right
+            5, 4, 7, 6, // back
+            4, 0, 6, 2, // left
+            4, 5, 0, 1, // top
+            2, 3, 6, 7  // bottom
+        };
+
+        const vec3 vertices[] =
+        {
+            { -1.0f,  1.0f,  1.0f },
+            { 1.0f,  1.0f,  1.0f },
+            { -1.0f, -1.0f,  1.0f },
+            { 1.0f, -1.0f,  1.0f },
+
+            { -1.0f,  1.0f, -1.0f },
+            { 1.0f,  1.0f, -1.0f },
+            { -1.0f, -1.0f, -1.0f },
+            { 1.0f, -1.0f, -1.0f }
+        };
+
+        const size_t vertex_count = sizeof(face_indices) / sizeof(face_indices[0]);
+
+        // vertices
+        obj.vertices.resize(vertex_count);
+        obj.normals.resize(vertex_count);
+
+        for (size_t i = 0; i < vertex_count; i++)
+        {
+            const size_t fi = face_indices[i];
+            obj.vertices[i] = vertices[fi];
+
+            // same normal for both face triangles, so compute only on indices 0,1,2
+            const size_t fi0 = face_indices[(i & ~3) + 0];
+            const size_t fi1 = face_indices[(i & ~3) + 1];
+            const size_t fi2 = face_indices[(i & ~3) + 2];
+            vec3 v10 = vertices[fi1] - vertices[fi0];
+            vec3 v20 = vertices[fi2] - vertices[fi0];
+
+            obj.normals[i] = (v20 ^ v10).normalize();
+        }
+
+        // indices
+        const uint16_t indices[] = { 0,  2,  1,  1,  2,  3 };
+        const size_t face_index_count = sizeof(indices) / sizeof(indices[0]);
+        const size_t index_count = 6 * face_index_count;
+
+        obj.indices.resize(index_count);
+
+        for (size_t i = 0; i < index_count; i++)
+        {
+            const size_t fi = i / 6;
+            obj.indices[i] = static_cast<uint16_t>(4 * fi) + indices[i % face_index_count];
+        }
+
+        // material
+        Material& mat = m_materials[m_materials.size() - 1];
+        mat.name = print_fmt("%s/material", name.c_str());
+        mat.ambient = Color(0.05f, 0.05f, 0.05f, 1.0f);
+        mat.diffuse = Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+        obj.material_name = mat.name;
+
+        if (name == ":prefab/color_cube")
+        {
+            obj.colors.resize(vertex_count);
+
+            const Color colors[] =
+            {
+                { 1.0f, 0.0f, 0.0f, 1.0f },
+                { 0.0f, 1.0f, 0.0f, 1.0f },
+                { 0.0f, 0.0f, 1.0f, 1.0f },
+                { 1.0f, 1.0f, 1.0f, 1.0f },
+
+                { 0.0f, 0.0f, 0.0f, 1.0f },
+                { 0.0f, 0.0f, 0.5f, 1.0f },
+                { 0.0f, 0.5f, 0.0f, 1.0f },
+                { 0.5f, 0.0f, 0.0f, 1.0f },
+            };
+
+            for (size_t i = 0; i < vertex_count; i++)
+            {
+                const size_t fi = face_indices[i];
+                obj.colors[i] = colors[fi];
+            }
+        }
+        else
+        {
+            obj.texcoords.resize(vertex_count);
+            mat.diffuse_map = asset.load_image("check_tex256.bmp");
+
+            const vec2 uvs[] =
+            {
+                // all faces have same uv
+                { 0.0f, 1.0f },
+                { 1.0f, 1.0f },
+                { 0.0f, 0.0f },
+                { 1.0f, 0.0f }
+            };
+
+            for (size_t i = 0; i < vertex_count; i++)
+                obj.texcoords[i] = uvs[i % 4];
+        }
+    }
+
+    void PrefabGeometry::make_tris(AssetSystem& asset, const string& name)
+    {
+        m_objects.emplace_back();
+        m_materials.emplace_back();
+
+        Object& obj = m_objects[m_objects.size() - 1];
+        obj.name = print_fmt("%s/mesh", name.c_str());
+
+        const Color colors[] =
+        {
+            { 1.0f, 0.0f, 0.0f, 1.0f },
+            { 0.0f, 1.0f, 0.0f, 1.0f },
+            { 0.0f, 0.0f, 1.0f, 1.0f }
+        };
+
+        // vertices
+        const size_t vertex_count = 3;
+        obj.vertices.resize(vertex_count);
+        obj.colors.resize(vertex_count);
+        obj.normals.resize(vertex_count);
+
+        for (size_t i = 0; i < vertex_count; i++)
+        {
+            obj.colors[i] = colors[i];
+            obj.normals[i] = vec3{ 0.0f, 0.0f, 1.0f };
+        }
+
+        // indices
+        const size_t index_count = 3;
+        obj.indices.resize(index_count);
+        obj.indices[0] = 0;
+        obj.indices[1] = 1;
+        obj.indices[2] = 2;
+
+        // material
+        Material& mat = m_materials[m_materials.size() - 1];
+        mat.name = print_fmt("%s/material", name.c_str());
+        mat.ambient = Color(0.05f, 0.05f, 0.05f, 1.0f);
+        mat.diffuse = Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+        obj.material_name = mat.name;
+
+        if (name == ":static/triangle")
+        {
+            const vec3 vertices[] =
+            {
+                { -1.0f, -0.5773f, 0.0f },
+                { 1.0f,  -0.5773f, 0.0f },
+                { 0.0f,   1.1547f, 0.0f }
+            };
+
+            for (size_t i = 0; i < vertex_count; i++)
+                obj.vertices[i] = vertices[i];
+        }
+        else
+        {
+            vec3 vertices[] =
+            {
+                { 0.0f, 0.0f, 0.0f },
+                { 2.0f, 0.0f, 0.0f },
+                { 0.0f, 1.0f, 0.0f }
+            };
+
+            for (size_t i = 0; i < vertex_count; i++)
+                obj.vertices[i] = vertices[i];
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Max3dsGeometry
+    ///////////////////////////////////////////////////////////////////////////
     constexpr uint16_t M3DS_PRIMARY = 0x4d4d;
     constexpr uint16_t M3DS_VERSION = 0x0002;
     constexpr uint16_t M3DS_SCENE = 0x3d3d;
@@ -101,7 +345,7 @@ namespace
         };
 
     public:
-        Max3dsGeometry(AssetSystem& asset, const string& filename);
+        Max3dsGeometry(AssetSystem& asset, const string& name);
         ~Max3dsGeometry() = default;
 
         const string& get_name() const final;
@@ -472,17 +716,27 @@ namespace
     }
 }
 
-GeometryLoader::FileFormat GeometryLoader::get_format(const std::string& filename)
+GeometryLoader::FileFormat GeometryLoader::get_format(const std::string& name)
 {
-    if (filename.substr(filename.size() - 4, 4) == ".3ds")
+    if (name.substr(name.size() - 4, 4) == ".3ds")
         return GeometryLoader::FileFormat::Max3ds;
+
+    if (dirname(name) == ":prefab")
+        return FileFormat::Prefab;
 
     return FileFormat::Unknown;
 }
 
-unique_ptr<GeometryAsset> GeometryLoader::load_3ds(const std::string& filename)
+unique_ptr<GeometryAsset> GeometryLoader::load_prefab(const std::string& name)
 {
     flog();
-    log_info("Loading geometry filename = %s...", filename.c_str());
-    return unique_ptr<GeometryAsset>{ new Max3dsGeometry{ m_asset, filename } };
+    log_info("Loading prefab geometry, name = %s...", name.c_str());
+    return unique_ptr<GeometryAsset>{ new PrefabGeometry{ m_asset, name } };
+}
+
+unique_ptr<GeometryAsset> GeometryLoader::load_3ds(const std::string& name)
+{
+    flog();
+    log_info("Loading geometry filename = %s...", name.c_str());
+    return unique_ptr<GeometryAsset>{ new Max3dsGeometry{ m_asset, name } };
 }
