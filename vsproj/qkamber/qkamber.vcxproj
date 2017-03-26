@@ -176,6 +176,7 @@
     <ClInclude Include="$(src)\asset\geometry_loader.h" />
     <ClInclude Include="$(src)\asset\image_loader.h" />
     <ClInclude Include="$(src)\entity\component_store.h" />
+    <ClInclude Include="$(src)\entity\entity_config.h" />
     <ClInclude Include="$(src)\entity\entity_system.h" />
     <ClInclude Include="$(src)\entity\model_component.h" />
     <ClInclude Include="$(src)\entity\srt_component.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="$(src)\main.cpp" />
     <ClCompile Include="$(src)\asset\geometry_loader.cpp" />
     <ClCompile Include="$(src)\asset\image_loader.cpp" />
+    <ClCompile Include="$(src)\entity\entity_config.cpp" />
     <ClCompile Include="$(src)\entity\entity_system.cpp" />
     <ClCompile Include="$(src)\input\input_system.cpp" />
     <ClCompile Include="$(src)\render\material.cpp" />

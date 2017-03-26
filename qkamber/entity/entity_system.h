@@ -4,6 +4,8 @@
 #include "engine.h"
 #include "component_store.h"
 
+class EntityConfig;
+
 class EntitySystem : public Subsystem
 {
     using eid_t = uintptr_t;
@@ -114,6 +116,7 @@ private:
     ComponentStore m_store;
     ComponentMask m_mask;
 
+    std::unique_ptr<EntityConfig> m_config;
     eid_t m_last_id = 0;
 };
 
