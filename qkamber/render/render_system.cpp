@@ -19,7 +19,8 @@ using namespace std;
 // Renderer
 ///////////////////////////////////////////////////////////////////////////////
 RenderSystem::RenderSystem(QkEngine::Context& context) :
-    Subsystem(context)
+    Subsystem{ context },
+    m_cache{ *this, context.get_asset() }
 {
     flog("id = %#x", this);
     m_dev = RenderDeviceFactory::create(context);

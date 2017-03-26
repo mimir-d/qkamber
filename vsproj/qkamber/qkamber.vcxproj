@@ -186,6 +186,7 @@
     <ClInclude Include="$(src)\render\mesh.h" />
     <ClInclude Include="$(src)\render\model.h" />
     <ClInclude Include="$(src)\render\render_buffers.h" />
+    <ClInclude Include="$(src)\render\render_cache.h" />
     <ClInclude Include="$(src)\render\render_primitive.h" />
     <ClInclude Include="$(src)\render\render_queue.h" />
     <ClInclude Include="$(src)\render\render_system.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="$(src)\render\mesh.cpp" />
     <ClCompile Include="$(src)\render\model.cpp" />
     <ClCompile Include="$(src)\render\render_buffers.cpp" />
+    <ClCompile Include="$(src)\render\render_cache.cpp" />
     <ClCompile Include="$(src)\render\render_queue.cpp" />
     <ClCompile Include="$(src)\render\render_system.cpp" />
     <ClCompile Include="$(src)\render\software_buffers.cpp" />

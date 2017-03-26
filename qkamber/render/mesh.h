@@ -10,7 +10,7 @@ class IndexBuffer;
 class Mesh
 {
 public:
-    Mesh(const GeometryAsset::Object& object, RenderDevice& dev);
+    Mesh(const GeometryAsset::Object& raw, RenderSystem& render);
     ~Mesh();
 
     RenderPrimitive get_primitive() const;

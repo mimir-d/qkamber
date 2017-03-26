@@ -2,6 +2,7 @@
 #include "precompiled.h"
 #include "win32_window.h"
 
+#include "time/time_system.h"
 #include "input/input_system.h"
 #include "win32/win32_app.h"
 #include "win32/render/win32_software_device.h"

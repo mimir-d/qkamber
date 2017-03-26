@@ -1,15 +1,12 @@
 #pragma once
 
-#include "engine.h"
 #include "subsystem.h"
 #include "render_buffers.h"
 #include "render_queue.h"
-#include "time/time_system.h"
-#include "scene/camera.h"
-#include "scene/viewport.h"
+#include "render_cache.h"
+#include "engine.h"
 
 struct RenderPrimitive;
-class Image;
 class Texture;
 
 enum class PolygonMode
@@ -73,6 +70,7 @@ public:
 public:
     RenderDevice& get_device();
     RenderQueue& get_queue();
+    RenderCache& get_cache();
 
 private:
     void begin_frame();
@@ -81,6 +79,7 @@ private:
 protected:
     std::unique_ptr<RenderDevice> m_dev;
     RenderQueue m_queue;
+    RenderCache m_cache;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,3 +94,9 @@ inline RenderQueue& RenderSystem::get_queue()
 {
     return m_queue;
 }
+
+inline RenderCache& RenderSystem::get_cache()
+{
+    return m_cache;
+}
+

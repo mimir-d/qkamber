@@ -7,7 +7,7 @@
 
 using namespace std;
 
-Material::Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetSystem& asset) :
+Material::Material(const GeometryAsset::Material& raw, RenderSystem& render) :
     m_ambient(raw.ambient),
     m_diffuse(raw.diffuse),
     m_specular(raw.specular),
@@ -30,7 +30,7 @@ Material::Material(const GeometryAsset::Material& raw, RenderDevice& dev, AssetS
             throw exception("unknown image format for material construction");
         }();
 
-        auto tex = dev.create_texture(width, height, format);
+        auto tex = render.get_device().create_texture(width, height, format);
         lock_buffer(tex.get(), [&](uint8_t* data)
         {
             const size_t size = height * width * Texture::get_elem_size(format);

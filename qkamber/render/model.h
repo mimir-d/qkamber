@@ -2,11 +2,8 @@
 
 #include "render_primitive.h"
 #include "mesh.h"
-#include "material.h"
-#include "render_buffers.h"
 
-class RenderDevice;
-class AssetSystem;
+class Material;
 class GeometryAsset;
 
 class Model
@@ -15,37 +12,33 @@ public:
     class Unit
     {
     public:
-        Unit(Mesh* mesh, Material* material);
+        Unit(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
         ~Unit();
 
         RenderPrimitive get_primitive() const;
         Material* get_material() const;
 
     private:
-        Mesh* m_mesh;
-        Material* m_material;
+        std::shared_ptr<Mesh> m_mesh;
+        std::shared_ptr<Material> m_material;
     };
 
     using Units = std::vector<Unit>;
 
 public:
-    Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset);
+    Model(const GeometryAsset& geometry, RenderSystem& render);
     ~Model();
 
     const Units& get_units() const;
 
 private:
     Units m_units;
-    // TODO: temporary until someone owns up to these
-    std::vector<std::unique_ptr<Mesh>> m_meshes;
-    std::vector<std::unique_ptr<Material>> m_materials;
-    std::vector<std::unique_ptr<Texture>> m_textures;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
-inline Model::Unit::Unit(Mesh* mesh, Material* material) :
+inline Model::Unit::Unit(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
     m_mesh(mesh), m_material(material)
 {
     flog("id = %#x");
@@ -65,7 +58,7 @@ inline RenderPrimitive Model::Unit::get_primitive() const
 
 inline Material* Model::Unit::get_material() const
 {
-    return m_material;
+    return m_material.get();
 }
 
 inline const Model::Units& Model::get_units() const
