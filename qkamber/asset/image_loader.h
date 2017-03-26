@@ -1,12 +1,14 @@
 #pragma once
 
+class AssetSystem;
+
 enum class ImageFormat
 {
     Rgba8,
     Rgb8
 };
 
-class Image
+class ImageAsset
 {
 public:
     virtual ImageFormat get_format() const = 0;
@@ -26,20 +28,23 @@ public:
     };
 
 public:
-    ImageLoader();
+    ImageLoader(AssetSystem& asset);
     ~ImageLoader();
 
-    std::unique_ptr<Image> load(const std::string& filename, FileFormat format = FileFormat::Unknown);
+    std::unique_ptr<ImageAsset> load(const std::string& filename, FileFormat format = FileFormat::Unknown);
 
 private:
     FileFormat get_format(const std::string& filename);
-    std::unique_ptr<Image> load_bmp(const std::string& filename);
+    std::unique_ptr<ImageAsset> load_bmp(const std::string& filename);
+
+    AssetSystem& m_asset;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
-inline ImageLoader::ImageLoader()
+inline ImageLoader::ImageLoader(AssetSystem& asset) :
+    m_asset(asset)
 {
     flog("id = %#x", this);
     log_info("Created image loader");

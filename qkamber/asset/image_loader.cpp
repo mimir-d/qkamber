@@ -4,7 +4,7 @@
 
 using namespace std;
 
-unique_ptr<Image> ImageLoader::load(const std::string& filename, FileFormat format)
+unique_ptr<ImageAsset> ImageLoader::load(const std::string& filename, FileFormat format)
 {
     flog();
 
@@ -25,7 +25,7 @@ namespace
 {
     constexpr uint16_t BitmapSignature = 0x4d42;
 
-    class BmpImage : public Image
+    class BmpImage : public ImageAsset
     {
     #pragma pack(push)
     #pragma pack(1)
@@ -213,9 +213,9 @@ ImageLoader::FileFormat ImageLoader::get_format(const std::string& filename)
     return FileFormat::Unknown;
 }
 
-unique_ptr<Image> ImageLoader::load_bmp(const std::string& filename)
+unique_ptr<ImageAsset> ImageLoader::load_bmp(const std::string& filename)
 {
     flog();
     log_info("Loading bitmap filename = %s...", filename.c_str());
-    return unique_ptr<Image>{ new BmpImage{ filename } };
+    return unique_ptr<ImageAsset>{ new BmpImage{ filename } };
 }

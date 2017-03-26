@@ -21,9 +21,16 @@ Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
     m_materials.reserve(unit_count);
     m_units.reserve(unit_count);
 
+    auto& materials = geometry.get_materials();
     for (auto& raw_obj : geometry.get_objects())
     {
-        auto& raw_mat = geometry.get_materials()[raw_obj.material_index];
+        auto search = std::find_if(
+            materials.begin(), materials.end(),
+            [&](auto& m) { return m.name == raw_obj.material_name; }
+        );
+        if (search == materials.end())
+            throw exception("material not found as defined");
+        auto& raw_mat = *search;
 
         m_meshes.emplace_back(new Mesh{ raw_obj, dev });
         m_materials.emplace_back(new Material{ raw_mat, dev, asset });
