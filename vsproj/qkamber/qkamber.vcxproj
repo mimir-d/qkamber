@@ -214,6 +214,7 @@
     <ClCompile Include="$(src)\render\render_buffers.cpp" />
     <ClCompile Include="$(src)\render\render_queue.cpp" />
     <ClCompile Include="$(src)\render\render_system.cpp" />
+    <ClCompile Include="$(src)\render\software_buffers.cpp" />
     <ClCompile Include="$(src)\render\software_device.cpp" />
     <ClCompile Include="$(src)\scene\camera.cpp" />
     <ClCompile Include="$(src)\scene\scene_system.cpp" />

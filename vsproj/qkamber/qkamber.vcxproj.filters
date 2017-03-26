@@ -249,6 +249,9 @@
     <ClCompile Include="$(src)\asset\geometry_loader.cpp">
       <Filter>Source Files\asset</Filter>
     </ClCompile>
+    <ClCompile Include="$(src)\render\software_buffers.cpp">
+      <Filter>Source Files\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="qkamber.rc">

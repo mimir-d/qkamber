@@ -9,8 +9,8 @@ namespace detail
     class BufferStorage : public Buffer
     {
     public:
-        uint8_t* lock() final;
-        void unlock() final;
+        uint8_t* lock() override;
+        void unlock() override;
 
         const uint8_t* data() const;
 
@@ -41,8 +41,11 @@ public:
 class SoftwareTexture : public detail::BufferStorage<Texture>
 {
 public:
-    SoftwareTexture(Image* image);
+    SoftwareTexture(size_t width, size_t height, PixelFormat format);
     ~SoftwareTexture() = default;
+
+    uint8_t* lock() final;
+    void unlock() final;
 
     size_t get_width() const final;
     size_t get_height() const final;
@@ -53,6 +56,7 @@ public:
 private:
     size_t m_width, m_height;
     PixelFormat m_format;
+    std::vector<uint8_t> m_rgb8u_data;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -99,34 +103,6 @@ inline SoftwareIndexBuffer::SoftwareIndexBuffer(size_t count) :
 ///////////////////////////////////////////////////////////////////////////////
 // SoftwareTexture impl
 ///////////////////////////////////////////////////////////////////////////////
-inline SoftwareTexture::SoftwareTexture(Image* image) :
-    BufferStorage(image->get_width() * image->get_height() * 4),
-    m_width(image->get_width()),
-    m_height(image->get_height())
-{
-    // NOTE: simplification for software rasterizer, always convert to RgbaU8
-    m_format = PixelFormat::RgbaU8;
-    if (image->get_format() == ImageFormat::Rgba8)
-    {
-        std::copy(image->data(), image->data() + m_data.size(), m_data.data());
-        return;
-    }
-
-    // this is Rgb8, add in a check for the hell of it
-    if (image->get_format() != ImageFormat::Rgb8)
-        throw std::exception("invalid image format while trying to create software texture");
-
-    uint8_t* pi = image->data();
-    uint8_t* po = m_data.data();
-    for (; pi != image->data() + m_height * m_width * 3; pi += 3, po += 4)
-    {
-        po[0] = pi[0];
-        po[1] = pi[1];
-        po[2] = pi[2];
-        po[3] = 0xff;
-    }
-}
-
 inline size_t SoftwareTexture::get_width() const
 {
     return m_width;

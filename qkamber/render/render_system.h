@@ -55,7 +55,7 @@ public:
     virtual std::unique_ptr<RenderTarget> create_render_target(int width, int height) = 0;
     virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;
     virtual std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) = 0;
-    virtual std::unique_ptr<Texture> create_texture(Image* image) = 0;
+    virtual std::unique_ptr<Texture> create_texture(size_t width, size_t height, PixelFormat format) = 0;
 
     // framebuffer methods
     virtual void clear() = 0;

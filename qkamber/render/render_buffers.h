@@ -108,6 +108,8 @@ public:
     virtual size_t get_width() const = 0;
     virtual size_t get_height() const = 0;
     virtual PixelFormat get_format() const = 0;
+
+    static size_t get_elem_size(PixelFormat format);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

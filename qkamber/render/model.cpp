@@ -39,7 +39,24 @@ Model::Model(GeometryAsset& geometry, RenderDevice& dev, AssetSystem& asset)
         if (raw_mat.tex_filename.size() > 0)
         {
             auto im = asset.load_image(raw_mat.tex_filename);
-            m_textures.push_back(dev.create_texture(im.get()));
+            const PixelFormat format = [&]
+            {
+                switch (im->get_format())
+                {
+                    case ImageFormat::Rgba8: return PixelFormat::RgbaU8;
+                    case ImageFormat::Rgb8: return PixelFormat::RgbU8;
+                }
+                throw exception("unknown image format for material construction");
+            }();
+
+            auto tex = dev.create_texture(im->get_width(), im->get_height(), format);
+            lock_buffer(tex.get(), [&](uint8_t* data)
+            {
+                const size_t size = im->get_height() * im->get_width() * Texture::get_elem_size(format);
+                std::copy(im->data(), im->data() + size, data);
+            });
+
+            m_textures.push_back(std::move(tex));
             mat->set_texture(m_textures[m_textures.size() - 1].get());
         }
 

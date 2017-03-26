@@ -238,9 +238,9 @@ unique_ptr<IndexBuffer> SoftwareDevice::create_index_buffer(size_t count)
     return ret;
 }
 
-unique_ptr<Texture> SoftwareDevice::create_texture(Image* image)
+unique_ptr<Texture> SoftwareDevice::create_texture(size_t width, size_t height, PixelFormat format)
 {
-    auto ret = unique_ptr<Texture>{ new SoftwareTexture{ image } };
+    auto ret = unique_ptr<Texture>{ new SoftwareTexture{ width, height, format } };
     dlog("Created texture %#x", ret.get());
     return ret;
 }

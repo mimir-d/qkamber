@@ -25,6 +25,15 @@ size_t VertexDecl::get_elem_size(VertexType type)
         case VDET_FLOAT4:
             return 4 * sizeof(float);
     }
-    // TODO: this should fail somehow at compile time because reasons
     throw exception("unknown vertex decl element");
+}
+
+size_t Texture::get_elem_size(PixelFormat format)
+{
+    switch (format)
+    {
+        case PixelFormat::RgbaU8: return 4;
+        case PixelFormat::RgbU8: return 3;
+    }
+    throw exception("unknown pixel format");
 }
