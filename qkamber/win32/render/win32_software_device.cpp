@@ -3,6 +3,7 @@
 #include "win32_software_device.h"
 
 #include "win32_window.h"
+#include "render/material.h"
 #include "render/render_primitive.h"
 #include "render/render_buffers.h"
 #include "render/software_buffers.h"
