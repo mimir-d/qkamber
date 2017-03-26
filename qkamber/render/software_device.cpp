@@ -96,7 +96,6 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
         const vec4 v1v = mv_matrix * vec4{ p_p1[0], p_p1[1], p_p1[2], 1.0f };
         const vec4 v2v = mv_matrix * vec4{ p_p2[0], p_p2[1], p_p2[2], 1.0f };
 
-        // TODO: make a vecN to vecM ctor
         const vec3 v0v_3 = vec3{ v0v };
         const vec3 v1v_3 = vec3{ v1v };
         const vec3 v2v_3 = vec3{ v2v };

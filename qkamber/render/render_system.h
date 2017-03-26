@@ -14,19 +14,6 @@ enum class PolygonMode
     Point, Line, Fill
 };
 
-class RenderTarget
-{
-public:
-    virtual ~RenderTarget() = default;
-
-    // NOTE: this always has these 2 attachments (should provide more in the future)
-    virtual ColorBuffer& get_color_buffer() = 0;
-    virtual DepthBuffer& get_depth_buffer() = 0;
-
-    virtual int get_width() const = 0;
-    virtual int get_height() const = 0;
-};
-
 class RenderDevice
 {
 public:
@@ -72,10 +59,6 @@ public:
     RenderQueue& get_queue();
     RenderCache& get_cache();
 
-private:
-    void begin_frame();
-    void end_frame();
-
 protected:
     std::unique_ptr<RenderDevice> m_dev;
     RenderQueue m_queue;
@@ -99,4 +82,3 @@ inline RenderCache& RenderSystem::get_cache()
 {
     return m_cache;
 }
-

@@ -69,7 +69,7 @@ SceneSystem::~SceneSystem()
 void SceneSystem::process()
 {
     auto& q = m_context.get_render().get_queue();
-    // TODO: move queue clear here (wm_paint doesnt need to call update anymore)
+    q.clear();
 
     for (auto& agg : m_context.get_entity().filter_comp<SrtComponent, ModelComponent>())
     {

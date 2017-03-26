@@ -35,7 +35,7 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::process()
 {
-    begin_frame();
+    m_dev->clear();
 
     // set camera and viewport
     auto& scene = m_context.get_scene();
@@ -59,21 +59,5 @@ void RenderSystem::process()
     }
 
     m_context.on_render();
-    end_frame();
-}
-
-void RenderSystem::begin_frame()
-{
-    m_dev->clear();
-}
-
-void RenderSystem::end_frame()
-{
-    // TODO: move this to scene
-    // finished drawing the queued objects
-    m_queue.clear();
-
     m_dev->swap_buffers();
 }
-
-

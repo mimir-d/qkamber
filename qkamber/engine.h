@@ -37,7 +37,6 @@ public:
         AssetSystem& get_asset();
 
     private:
-        // TODO: context will be the keeper of systems
         std::unique_ptr<TimeSystem> m_time;
         std::unique_ptr<EntitySystem> m_entity;
         std::unique_ptr<RenderSystem> m_render;

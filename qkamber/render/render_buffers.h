@@ -17,6 +17,19 @@ public:
     virtual ~DepthBuffer() = default;
 };
 
+class RenderTarget
+{
+public:
+    virtual ~RenderTarget() = default;
+
+    // NOTE: this always has these 2 attachments (should provide more in the future)
+    virtual ColorBuffer& get_color_buffer() = 0;
+    virtual DepthBuffer& get_depth_buffer() = 0;
+
+    virtual int get_width() const = 0;
+    virtual int get_height() const = 0;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // DeviceBuffer
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,7 +108,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // Texture
 ///////////////////////////////////////////////////////////////////////////////
-// TODO: might do away with this in favor of ImageFormat
 enum class PixelFormat
 {
     RgbaU8,

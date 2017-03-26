@@ -12,7 +12,7 @@
 using namespace std;
 
 constexpr char* WINDOW_CLASS = "WIN32_QK_RENDERER";
-constexpr char* WINDOW_TITLE = "Qukamber renderer";
+constexpr char* WINDOW_TITLE = "Qkamber";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Win32ColorBuffer impl
@@ -322,7 +322,6 @@ LRESULT Win32Window::wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             if (m_window_state != WindowState::Sizing)
                 return DefWindowProc(hwnd, msg, wp, lp);
 
-            m_context.on_update();
             m_context.on_render();
             break;
         }

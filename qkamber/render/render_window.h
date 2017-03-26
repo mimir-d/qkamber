@@ -1,10 +1,9 @@
 #pragma once
 
-#include "render_system.h"
+#include "render_buffers.h"
 
 class RenderWindow : public RenderTarget
 {
 public:
     virtual ~RenderWindow() = default;
 };
-
