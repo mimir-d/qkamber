@@ -11,7 +11,6 @@ public:
     EntityConfig(const std::string& filename, RenderSystem& render);
     ~EntityConfig() = default;
 
-    // TODO: dont like the rendersystem here
     void config(const std::string& name, EntitySystem::Entity& entity);
 
 private:

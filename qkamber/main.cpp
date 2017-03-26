@@ -105,7 +105,6 @@ void Context::on_update()
     float abs_time = time.get_abs_time();
 
     auto& keyboard = get_input().get_keyboard();
-    // TODO: should encode button transitions somehow
 
     auto& dev = get_render().get_device();
     if (keyboard.get_key_pressed('1'))
@@ -162,30 +161,5 @@ int main()
 }
 
 // TODO:
-// refactoir happlication
-// display lists + sorting
+// triange display lists/parallel? + sorting
 // scene tree
-//
-
-/*
-renderer draws primitives
-    primitive has a vdata and idata
->> drawing:
->> go thru decl and get vecref ptrs
-
-model has model units
-    model unit has a mesh and material, local transform
-        mesh has a vertex data and index data, get primitive
-
-vdata has vertex buffer + decl
-idata has index buffer
-
-decl has decl elements
-    elem has offset, size, semantic
-
-scene has scene nodes
-    scene node maybe has a model + world transform
-    */
-
-// scene has a renderer ref
-// find visible objects, put in render queue

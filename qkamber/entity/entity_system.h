@@ -91,7 +91,6 @@ public:
     void process() final {}
 
     // TODO: create delete + freelist
-    // TODO: extract factory to add all needed comp + config
     std::unique_ptr<Entity> create_entity(const std::string& name);
 
     template <typename... Components>

@@ -20,9 +20,8 @@ void FpsCamera::update()
     m_rotation.y() = fmod(m_rotation.y(), 2 * PI);
 
     const mat3 rotation = mat3{ mat4::rotate(m_rotation.x(), m_rotation.y(), 0.0f) };
-    // TODO: can optimize these muls
-    const vec3 ahead = rotation * vec3 { 0, 0, 1 };
-    const vec3 up = rotation * vec3 { 0, 1, 0 };
+    const vec3 ahead = vec3{ rotation[0][2], rotation[1][2], rotation[2][2] };
+    const vec3 up = vec3{ rotation[0][1], rotation[1][1], rotation[2][1] };
 
     // compute camera movement
     const vec3 position_delta = get_position_delta();
