@@ -41,6 +41,7 @@ class GeometryLoader
 public:
     enum class FileFormat
     {
+        Prefab,
         Max3ds,
         Unknown
     };
@@ -49,11 +50,12 @@ public:
     GeometryLoader(AssetSystem& asset);
     ~GeometryLoader();
 
-    std::unique_ptr<GeometryAsset> load(const std::string& filename, FileFormat format = FileFormat::Unknown);
+    std::unique_ptr<GeometryAsset> load(const std::string& name, FileFormat format = FileFormat::Unknown);
 
 private:
-    FileFormat get_format(const std::string& filename);
-    std::unique_ptr<GeometryAsset> load_3ds(const std::string& filename);
+    FileFormat get_format(const std::string& name);
+    std::unique_ptr<GeometryAsset> load_prefab(const std::string& name);
+    std::unique_ptr<GeometryAsset> load_3ds(const std::string& name);
 
     AssetSystem& m_asset;
 };

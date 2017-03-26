@@ -36,8 +36,7 @@ private:
     FpsCamera m_camera { *this, { 6, 6, 23 } };
     RectViewport m_viewport;
 
-    std::unique_ptr<EntitySystem::Entity> m_obj_axis;
-    std::unique_ptr<EntitySystem::Entity> m_obj_ship;
+    vector<unique_ptr<EntitySystem::Entity>> m_objects;
 };
 
 void Context::on_create()
@@ -53,19 +52,39 @@ void Context::on_create()
 
     auto& entity = get_entity();
 
-    m_obj_axis = entity.create_entity("axis.3ds");
-    auto& srt_axis = m_obj_axis->get_component<SrtComponent>();
+    const string names[] =
+    {
+        "axis.3ds",
+        "ship.3ds",
+        ":prefab/color_cube",
+        ":prefab/tex_cube",
+        ":prefab/color_cube",
+        ":prefab/tex_cube"
+    };
+
+    const vec3 positions[] =
+    {
+        { 0, 0, 0 },
+        { 6, 6, 6 },
+        { -8, 8, 6 },
+        { -8, 4, 6 },
+        { -4, 8, 6 },
+        { -4, 4, 6 }
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        m_objects.push_back(entity.create_entity(names[i]));
+        auto& srt = m_objects[i]->get_component<SrtComponent>();
+        srt.set_position(positions[i]);
+    }
+
+    auto& srt_axis = m_objects[0]->get_component<SrtComponent>();
     srt_axis.set_scale({ 2, 2, 2 });
     srt_axis.set_rotation({ PI/2, 0, 0, });
 
-    m_obj_ship = entity.create_entity("ship.3ds");
-    auto& srt_ship = m_obj_ship->get_component<SrtComponent>();
-    srt_ship.set_position({ 6, 6, 6 });
+    auto& srt_ship = m_objects[1]->get_component<SrtComponent>();
     srt_ship.set_scale({ .5, .5, .5 });
-
-    // TODO: temporary debug
-    //static_cast<SoftwareDevice&>(dev).debug_normals(true);
-    //dev.set_polygon_mode(PolygonMode::Line);
 }
 
 void Context::on_destroy()
@@ -95,6 +114,10 @@ void Context::on_update()
         dev.set_polygon_mode(PolygonMode::Line);
     else if (keyboard.get_key_pressed('3'))
         dev.set_polygon_mode(PolygonMode::Fill);
+    else if (keyboard.get_key_pressed('4'))
+        static_cast<SoftwareDevice&>(dev).debug_normals(true);
+    else if (keyboard.get_key_pressed('5'))
+        static_cast<SoftwareDevice&>(dev).debug_normals(false);
 
     // TODO: translate keys to platform independent
     if (keyboard.get_key_pressed(VK_ESCAPE))
@@ -102,8 +125,12 @@ void Context::on_update()
 
     m_camera.update();
 
-    auto& srt = m_obj_ship->get_component<SrtComponent>();
-    srt.set_rotation(vec3{ 0.25f, 0.25f, 0.25f } * abs_time);
+    size_t rotate_indices[] = { 1, 4, 5 };
+    for (size_t i : rotate_indices)
+    {
+        auto& srt = m_objects[i]->get_component<SrtComponent>();
+        srt.set_rotation(vec3{ 0.25f, 0.25f, 0.25f } * abs_time);
+    }
 }
 
 void Context::on_render()

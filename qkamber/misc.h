@@ -319,3 +319,23 @@ inline std::string print_fmt(const std::string& fmt, const Args&... args)
     snprintf(buf.get(), size + 1, fmt.c_str(), args...);
     return std::string(buf.get());
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// path utilities
+///////////////////////////////////////////////////////////////////////////////
+// TODO: move these to a path class, zip assets, etc
+inline std::string dirname(const std::string& path)
+{
+    size_t pos = path.find_last_of('/');
+    if (pos == std::string::npos)
+        return path;
+    return path.substr(0, pos);
+}
+
+inline std::string basename(const std::string& path)
+{
+    size_t pos = path.find_last_of('/');
+    if (pos == std::string::npos)
+        return path;
+    return path.substr(pos + 1);
+}

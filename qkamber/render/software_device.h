@@ -121,7 +121,7 @@ inline void SoftwareDevice::set_view_matrix(mat4 view_matrix)
     m_mv_matrix.set_dirty();
 
     // TODO: temporary
-    m_light_pos = m_view_matrix * vec4{ 20, 20, 20, 1 };
+    m_light_pos = m_view_matrix * vec4{ 10, 20, 20, 1 };
 }
 
 inline void SoftwareDevice::set_proj_matrix(mat4 proj_matrix)
