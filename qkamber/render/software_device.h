@@ -68,7 +68,7 @@ public:
     void set_polygon_mode(PolygonMode mode) final;
     void set_render_target(RenderTarget* target);
 
-    void set_material(Material* material) final;
+    void set_material(const Material* material) final;
 
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
@@ -87,7 +87,7 @@ protected:
     RenderTarget* m_render_target;
     std::unique_ptr<RenderTarget> m_null_target;
 
-    Material* m_material = nullptr;
+    const Material* m_material = nullptr;
     // TODO: temp
     vec4 m_light_pos;
 
@@ -168,7 +168,7 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
     log_info("Set render target %#x", target);
 }
 
-inline void SoftwareDevice::set_material(Material* material)
+inline void SoftwareDevice::set_material(const Material* material)
 {
     m_material = material;
 }

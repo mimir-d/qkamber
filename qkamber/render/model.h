@@ -16,7 +16,7 @@ public:
         ~Unit();
 
         RenderPrimitive get_primitive() const;
-        Material* get_material() const;
+        const Material& get_material() const;
 
     private:
         std::shared_ptr<Mesh> m_mesh;
@@ -39,7 +39,8 @@ private:
 // impl
 ///////////////////////////////////////////////////////////////////////////////
 inline Model::Unit::Unit(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
-    m_mesh(mesh), m_material(material)
+    m_mesh(mesh),
+    m_material(material)
 {
     flog("id = %#x");
     log_info("Created model unit %#x", this);
@@ -56,9 +57,9 @@ inline RenderPrimitive Model::Unit::get_primitive() const
     return m_mesh->get_primitive();
 }
 
-inline Material* Model::Unit::get_material() const
+inline const Material& Model::Unit::get_material() const
 {
-    return m_material.get();
+    return *m_material.get();
 }
 
 inline const Model::Units& Model::get_units() const

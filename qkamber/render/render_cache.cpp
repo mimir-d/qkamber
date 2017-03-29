@@ -27,7 +27,21 @@ shared_ptr<Material> RenderCache::get_material(const string& name)
         );
 
         if (raw_mat == raw_materials.end())
-            throw exception(print_fmt("material not found, name = %s", name.c_str()).c_str());
+        {
+            log_warn("Material not found [name = %s], using default material...", name.c_str());
+            // TODO: this needs to stay somewhere else
+            GeometryAsset::Material default_mat
+            {
+                "default_material",
+                Color{ 0.2f, 0.2f, 0.2f, 1.0f },
+                Color{ 0.8f, 0.8f, 0.8f, 1.0f },
+                Color{ 1.0f, 1.0f, 1.0f, 1.0f },
+                Color{ 0.0f, 0.0f, 0.0f, 0.0f },
+                1.0f
+            };
+            default_mat.diffuse_map = m_asset.load_image("default_tex.bmp");
+            return make_unique<Material>(default_mat, m_render);
+        }
         return make_unique<Material>(*raw_mat, m_render);
     });
 }
@@ -49,7 +63,7 @@ shared_ptr<Mesh> RenderCache::get_mesh(const std::string& name)
         );
 
         if (raw_obj == raw_objects.end())
-            throw exception(print_fmt("mesh not found, name = %s", name.c_str()).c_str());
+            throw exception(print_fmt("Mesh not found [name = %s]", name.c_str()).c_str());
 
         return std::make_unique<Mesh>(*raw_obj, m_render);
     });
