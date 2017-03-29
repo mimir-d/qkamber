@@ -204,12 +204,6 @@
     <ClCompile Include="$(src)\input\input_system.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
-    <ClCompile Include="$(src)\render\render_buffers.cpp">
-      <Filter>Source Files\render</Filter>
-    </ClCompile>
-    <ClCompile Include="$(src)\render\render_queue.cpp">
-      <Filter>Source Files\render</Filter>
-    </ClCompile>
     <ClCompile Include="$(src)\render\render_system.cpp">
       <Filter>Source Files\render</Filter>
     </ClCompile>

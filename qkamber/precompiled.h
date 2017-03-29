@@ -29,6 +29,7 @@
 #include <random>
 #include <memory>
 #include <chrono>
+#include <numeric>
 
 #include <cstdint>
 

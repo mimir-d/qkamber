@@ -16,28 +16,16 @@ Mesh::Mesh(const GeometryAsset::Object& raw, RenderSystem& render)
     bool has_texcoords = raw.texcoords.size() > 0;
 
     std::unique_ptr<VertexDecl> decl(new VertexDecl);
-    size_t offset = 0;
-
-    decl->add(offset, VDET_FLOAT3, VDES_POSITION);
-    offset += VertexDecl::get_elem_size(VDET_FLOAT3);
+    decl->add(VertexType::Float3, VertexSemantic::Position);
 
     if (has_normals)
-    {
-        decl->add(offset, VDET_FLOAT3, VDES_NORMAL);
-        offset += VertexDecl::get_elem_size(VDET_FLOAT3);
-    }
+        decl->add(VertexType::Float3, VertexSemantic::Normal);
 
     if (has_colors)
-    {
-        decl->add(offset, VDET_FLOAT4, VDES_COLOR);
-        offset += VertexDecl::get_elem_size(VDET_FLOAT4);
-    }
+        decl->add(VertexType::Color, VertexSemantic::Color);
 
     if (has_texcoords)
-    {
-        decl->add(offset, VDET_FLOAT2, VDES_TEXCOORD);
-        offset += VertexDecl::get_elem_size(VDET_FLOAT2);
-    }
+        decl->add(VertexType::Float2, VertexSemantic::Texcoord);
 
     m_vertices = dev.create_vertex_buffer(std::move(decl), raw.vertices.size());
     lock_buffer(m_vertices.get(), [&](float* ptr)

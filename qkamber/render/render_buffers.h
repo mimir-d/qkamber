@@ -48,19 +48,20 @@ inline void lock_buffer(DeviceBuffer* buffer, Func fun);
 ///////////////////////////////////////////////////////////////////////////////
 // VertexBuffer
 ///////////////////////////////////////////////////////////////////////////////
-enum VertexSemantic
+enum class VertexSemantic
 {
-    VDES_POSITION,
-    VDES_NORMAL,
-    VDES_COLOR,
-    VDES_TEXCOORD
+    Position,
+    Normal,
+    Color,
+    Texcoord
 };
 
-enum VertexType
+enum class VertexType
 {
-    VDET_FLOAT2,
-    VDET_FLOAT3,
-    VDET_FLOAT4
+    Float2,
+    Float3,
+    // rgba color
+    Color
 };
 
 class VertexDecl
@@ -80,16 +81,18 @@ public:
     typedef std::vector<Element>::const_iterator iterator;
 
 public:
-    void add(size_t offset, VertexType type, VertexSemantic semantic);
+    void add(VertexType type, VertexSemantic semantic);
     iterator begin() const;
     iterator end() const;
 
     size_t get_vertex_size() const;
 
+private:
     static size_t get_elem_size(VertexType type);
 
 private:
     std::vector<Element> m_elems;
+    size_t m_offset = 0;
 };
 
 class VertexBuffer : public DeviceBuffer
@@ -151,9 +154,10 @@ inline void lock_buffer(DeviceBuffer* buffer, Func fun)
 ///////////////////////////////////////////////////////////////////////////////
 // VertexDecl impl
 ///////////////////////////////////////////////////////////////////////////////
-inline void VertexDecl::add(size_t offset, VertexType type, VertexSemantic semantic)
+inline void VertexDecl::add(VertexType type, VertexSemantic semantic)
 {
-    m_elems.emplace_back(offset, type, semantic);
+    m_elems.emplace_back(m_offset, type, semantic);
+    m_offset += get_elem_size(type);
 }
 
 inline VertexDecl::iterator VertexDecl::begin() const
@@ -164,6 +168,30 @@ inline VertexDecl::iterator VertexDecl::begin() const
 inline VertexDecl::iterator VertexDecl::end() const
 {
     return m_elems.end();
+}
+
+inline size_t VertexDecl::get_vertex_size() const
+{
+    return std::accumulate(
+        m_elems.begin(), m_elems.end(),
+        size_t(0), [](size_t v, auto& e) { return v + get_elem_size(e.type); }
+    );
+}
+
+inline size_t VertexDecl::get_elem_size(VertexType type)
+{
+    switch (type)
+    {
+        case VertexType::Float2:
+            return 2 * sizeof(float);
+
+        case VertexType::Float3:
+            return 3 * sizeof(float);
+
+        case VertexType::Color:
+            return 4 * sizeof(float);
+    }
+    throw std::exception("unknown vertex decl element");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -194,4 +222,17 @@ inline IndexBuffer::IndexBuffer(size_t count) :
 inline size_t IndexBuffer::get_count() const
 {
     return m_count;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Texture impl
+///////////////////////////////////////////////////////////////////////////////
+inline size_t Texture::get_elem_size(PixelFormat format)
+{
+    switch (format)
+    {
+        case PixelFormat::RgbaU8: return 4;
+        case PixelFormat::RgbU8: return 3;
+    }
+    throw std::exception("unknown pixel format");
 }

@@ -215,9 +215,7 @@
     <ClCompile Include="$(src)\render\material.cpp" />
     <ClCompile Include="$(src)\render\mesh.cpp" />
     <ClCompile Include="$(src)\render\model.cpp" />
-    <ClCompile Include="$(src)\render\render_buffers.cpp" />
     <ClCompile Include="$(src)\render\render_cache.cpp" />
-    <ClCompile Include="$(src)\render\render_queue.cpp" />
     <ClCompile Include="$(src)\render\render_system.cpp" />
     <ClCompile Include="$(src)\render\software_buffers.cpp" />
     <ClCompile Include="$(src)\render\software_device.cpp" />
