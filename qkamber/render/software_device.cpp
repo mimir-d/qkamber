@@ -72,10 +72,10 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     {
         switch (di.semantic)
         {
-            case VDES_POSITION: position_offset = static_cast<int>(di.offset); break;
-            case VDES_NORMAL: normal_offset = static_cast<int>(di.offset); break;
-            case VDES_COLOR: color_offset = static_cast<int>(di.offset); break;
-            case VDES_TEXCOORD: texcoord_offset = static_cast<int>(di.offset); break;
+            case VertexSemantic::Position: position_offset = static_cast<int>(di.offset); break;
+            case VertexSemantic::Normal: normal_offset = static_cast<int>(di.offset); break;
+            case VertexSemantic::Color: color_offset = static_cast<int>(di.offset); break;
+            case VertexSemantic::Texcoord: texcoord_offset = static_cast<int>(di.offset); break;
         }
     }
     size_t vertex_size = vb.get_declaration().get_vertex_size();
