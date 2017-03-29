@@ -54,7 +54,7 @@ void RenderSystem::process()
         // NOTE: should only be 1 tex here atm
         //for (auto& tex : qi.model_unit.get_material()->get_textures())
         //    m_dev->set_texture(tex);
-        m_dev->set_material(qi.model_unit.get_material());
+        m_dev->set_material(&qi.model_unit.get_material());
         m_dev->draw_primitive(qi.model_unit.get_primitive());
     }
 

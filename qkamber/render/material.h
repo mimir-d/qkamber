@@ -9,7 +9,7 @@ class Texture;
 class Material
 {
 public:
-    using Textures = std::vector<Texture*>;
+    using Textures = std::vector<const Texture*>;
 
 public:
     Material(const GeometryAsset::Material& raw, RenderSystem& render);
