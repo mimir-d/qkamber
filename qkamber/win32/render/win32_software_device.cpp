@@ -363,6 +363,8 @@ namespace
 //template <bool with_color, bool with_tex>
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
+    vec4 light_pos = m_params.get_view_matrix() * vec4{ 10, 20, 20, 1 };
+
     // NOTE: flush any gdi calls before drawing to backbuffer directly
     GdiFlush();
 
@@ -436,24 +438,23 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
             if (he.value()[0] > 0 && he.value()[1] > 0 && he.value()[2] > 0 && z < depth_ptr[x])
             {
                 // TODO: alpha transparency
-                const Color ambient = m_material->get_ambient();
+                const Color& ambient = m_params.get_material_ambient();
                 const Color diffuse = [&]
                 {
                     if (p0.color.has_value())
                         return static_cast<Color>(attrs.get<4>().value() * w);
 
-                    const auto& textures = m_material->get_textures();
-                    if (p0.texcoord.has_value() && textures.size() > 0)
+                    // TODO: only 1 texture available atm
+                    auto tex = static_cast<const SoftwareTexture*>(m_texture_units[0]);
+                    if (p0.texcoord.has_value() && tex)
                     {
-                        // TODO: only 1 texture available atm
-                        auto tex = static_cast<const SoftwareTexture*>(textures[0]);
                         const vec2 uv = attrs.get<5>().value() * w;
                         const uint8_t* c = tex->sample(uv.x(), uv.y());
                         // not quite like this
                         return Color{ c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f };
                     }
 
-                    return m_material->get_diffuse();
+                    return m_params.get_material_diffuse();
                 }();
 
                 // lighting calculations in camera-space
@@ -461,7 +462,7 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
                 const vec3 n = (attrs.get<3>().value() * w).normalize();
 
                 // TODO: temp
-                const vec3 light_dir_denorm = vec3{ m_light_pos } - view_pos;
+                const vec3 light_dir_denorm = vec3{ light_pos } - view_pos;
                 const vec3 light_dir = light_dir_denorm.normalize();
                 const float light_dist = light_dir_denorm.length();
 

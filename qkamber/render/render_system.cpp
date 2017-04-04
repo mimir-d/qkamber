@@ -37,24 +37,19 @@ void RenderSystem::process()
 {
     m_dev->clear();
 
-    // set camera and viewport
-    auto& scene = m_context.get_scene();
-    auto& camera = scene.get_camera();
-    auto& viewport = scene.get_viewport();
-
-    m_dev->set_view_matrix(camera.get_view());
-    m_dev->set_view_inv_matrix(camera.get_view_inv());
-    m_dev->set_proj_matrix(camera.get_proj());
-    m_dev->set_clip_matrix(viewport.get_clip());
-
+    auto& p = m_dev->get_params();
     for (auto& qi : m_queue)
     {
-        m_dev->set_world_matrix(qi.world_matrix);
-        m_dev->set_world_inv_matrix(qi.world_inv_matrix);
-        // NOTE: should only be 1 tex here atm
-        //for (auto& tex : qi.model_unit.get_material()->get_textures())
-        //    m_dev->set_texture(tex);
-        m_dev->set_material(&qi.model_unit.get_material());
+        p.set_world_matrix(qi.world_matrix);
+        p.set_world_inv_matrix(qi.world_inv_matrix);
+
+        const auto& material = qi.model_unit.get_material();
+        p.set_material(material);
+
+        const auto& textures = material.get_textures();
+        for (size_t i = 0; i < m_dev->get_texture_unit_count(); i++)
+            m_dev->set_texture_unit(i, i < textures.size() ? textures[i] : nullptr);
+
         m_dev->draw_primitive(qi.model_unit.get_primitive());
     }
 

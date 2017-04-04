@@ -56,9 +56,11 @@ template <typename T> int sgn(T val)
 
 void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
 {
-    auto& mv_matrix = m_mv_matrix.get();
-    auto& mvp_matrix = m_mvp_matrix.get();
-    auto& normal_matrix = m_normal_matrix.get();
+    const mat4& proj_matrix = m_params.get_proj_matrix();
+    const mat4& mv_matrix = m_params.get_mv_matrix();
+    const mat4& mvp_matrix = m_params.get_mvp_matrix();
+    const mat3& normal_matrix = m_params.get_normal_matrix();
+    const mat3x4& clip_matrix = m_params.get_clip_matrix();
 
     auto& vb = static_cast<const SoftwareVertexBuffer&>(primitive.vertices);
     auto& ib = static_cast<const SoftwareIndexBuffer&>(primitive.indices);
@@ -152,9 +154,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
             continue;
 
         // transform to device space
-        const vec3 v0d = m_clip_matrix * v0c;
-        const vec3 v1d = m_clip_matrix * v1c;
-        const vec3 v2d = m_clip_matrix * v2c;
+        const vec3 v0d = clip_matrix * v0c;
+        const vec3 v1d = clip_matrix * v1c;
+        const vec3 v2d = clip_matrix * v2c;
 
         DevicePoint dp[3];
         dp[0].position = vec4{ v0d.x(), v0d.y(), v0c.z(), wi0 };
@@ -205,9 +207,9 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
             {
                 // compute screen-space (vertex + normal)
                 vec3 v_dn = dp[i].view_position.value() * (1.0f / wi0) + dp[i].view_normal.value().normalize() * 0.5f;
-                vec4 v_dnc = m_proj_matrix * vec4{ v_dn, 1.0f };
+                vec4 v_dnc = proj_matrix * vec4{ v_dn, 1.0f };
                 v_dnc *= 1.0f / v_dnc.w();
-                vec3 v_dnd = m_clip_matrix * v_dnc;
+                vec3 v_dnd = clip_matrix * v_dnc;
 
                 DevicePoint n_dp[2];
                 n_dp[0].position = dp[i].position;
