@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_system.h"
+#include "material.h"
 #include "math3.h"
 #include "misc.h"
 
@@ -34,11 +35,68 @@ namespace detail
             return mat3{ (world_inv * view_inv).transpose() };
         }
     };
+
+    constexpr size_t SOFTWARE_TEXTURE_COUNT = 2;
 }
 
 class SoftwareDevice : public RenderDevice
 {
 protected:
+    class SoftwareParams : public Params
+    {
+    public:
+        SoftwareParams() = default;
+        SoftwareParams(const SoftwareParams&) = delete;
+        ~SoftwareParams() = default;
+
+    public:
+        void set_world_matrix(mat4 world_matrix) final;
+        void set_view_matrix(mat4 view_matrix) final;
+        void set_proj_matrix(mat4 proj_matrix) final;
+        void set_clip_matrix(mat3x4 clip_matrix) final;
+
+        void set_world_inv_matrix(mat4 world_inv_matrix) final;
+        void set_view_inv_matrix(mat4 view_inv_matrix) final;
+
+        void set_material(const Material& material) final;
+
+    public:
+        const mat4& get_world_matrix() const;
+        const mat4& get_view_matrix() const;
+        const mat4& get_proj_matrix() const;
+        const mat3x4& get_clip_matrix() const;
+
+        const mat4& get_mv_matrix();
+        const mat4& get_mvp_matrix();
+        const mat3& get_normal_matrix();
+
+        const mat4& get_world_inv_matrix() const;
+        const mat4& get_view_inv_matrix() const;
+
+        const Color& get_material_ambient() const;
+        const Color& get_material_diffuse() const;
+        const Color& get_material_specular() const;
+        const Color& get_material_emissive() const;
+        float get_material_shininess() const;
+
+    private:
+        mat4 m_world_matrix, m_world_inv_matrix;
+        mat4 m_view_matrix, m_view_inv_matrix;
+        mat4 m_proj_matrix;
+        mat3x4 m_clip_matrix;
+
+        Color m_material_ambient;
+        Color m_material_diffuse;
+        Color m_material_specular;
+        Color m_material_emissive;
+        float m_material_shininess = 0.0f;
+
+        // computed stuff
+        dirty_t<mat4, detail::make_mv> m_mv_matrix = { m_world_matrix, m_view_matrix };
+        dirty_t<mat4, detail::make_mvp> m_mvp_matrix = { m_world_matrix, m_view_matrix, m_proj_matrix };
+        dirty_t<mat3, detail::make_normal> m_normal_matrix = { m_view_inv_matrix, m_world_inv_matrix };
+    };
+
     struct DevicePoint
     {
         vec4 position;
@@ -57,23 +115,18 @@ public:
     void draw_primitive(const RenderPrimitive& primitive) final;
 
     // device state methods
-    void set_world_matrix(mat4 world_matrix) final;
-    void set_view_matrix(mat4 view_matrix) final;
-    void set_proj_matrix(mat4 proj_matrix) final;
-    void set_clip_matrix(mat3x4 clip_matrix) final;
-
-    void set_world_inv_matrix(mat4 world_inv_matrix) final;
-    void set_view_inv_matrix(mat4 view_inv_matrix) final;
-
+    void set_render_target(RenderTarget* target) override;
+    void set_texture_unit(size_t index, const Texture* texture) final;
     void set_polygon_mode(PolygonMode mode) final;
-    void set_render_target(RenderTarget* target);
-
-    void set_material(const Material* material) final;
+    Params& get_params() final;
 
     // resource management methods
     std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) final;
     std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) final;
     std::unique_ptr<Texture> create_texture(size_t width, size_t height, PixelFormat format) final;
+
+    // capabilities methods
+    size_t get_texture_unit_count() const final;
 
     // debug
     void debug_normals(bool enable);
@@ -83,30 +136,20 @@ protected:
     virtual void draw_line(const DevicePoint& p0, const DevicePoint& p1) = 0;
 
 protected:
+    SoftwareParams m_params;
+
     PolygonMode m_poly_mode = PolygonMode::Fill;
     RenderTarget* m_render_target;
+    std::array<const Texture*, detail::SOFTWARE_TEXTURE_COUNT> m_texture_units;
+
     std::unique_ptr<RenderTarget> m_null_target;
-
-    const Material* m_material = nullptr;
-    // TODO: temp
-    vec4 m_light_pos;
-
-private:
-    mat4 m_world_matrix, m_world_inv_matrix;
-    mat4 m_view_matrix, m_view_inv_matrix;
-    mat4 m_proj_matrix;
-    mat3x4 m_clip_matrix;
-
     bool m_debug_normals = false;
-
-    // computed stuff
-    dirty_t<mat4, detail::make_mv> m_mv_matrix = { m_world_matrix, m_view_matrix };
-    dirty_t<mat4, detail::make_mvp> m_mvp_matrix = { m_world_matrix, m_view_matrix, m_proj_matrix };
-    dirty_t<mat3, detail::make_normal> m_normal_matrix = { m_view_inv_matrix, m_world_inv_matrix };
 };
 
-// TODO: move this to a RenderContext
-inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
+///////////////////////////////////////////////////////////////////////////////
+// SoftwareDevice::SoftwareState impl
+///////////////////////////////////////////////////////////////////////////////
+inline void SoftwareDevice::SoftwareParams::set_world_matrix(mat4 world_matrix)
 {
     m_world_matrix = world_matrix;
     // TODO: encode the set_dirty inside operator=
@@ -114,45 +157,119 @@ inline void SoftwareDevice::set_world_matrix(mat4 world_matrix)
     m_mv_matrix.set_dirty();
 }
 
-inline void SoftwareDevice::set_view_matrix(mat4 view_matrix)
+inline void SoftwareDevice::SoftwareParams::set_view_matrix(mat4 view_matrix)
 {
     m_view_matrix = view_matrix;
     m_mvp_matrix.set_dirty();
     m_mv_matrix.set_dirty();
-
-    // TODO: temporary
-    m_light_pos = m_view_matrix * vec4{ 10, 20, 20, 1 };
 }
 
-inline void SoftwareDevice::set_proj_matrix(mat4 proj_matrix)
+inline void SoftwareDevice::SoftwareParams::set_proj_matrix(mat4 proj_matrix)
 {
     m_proj_matrix = proj_matrix;
     m_mvp_matrix.set_dirty();
     m_mv_matrix.set_dirty();
 }
 
-inline void SoftwareDevice::set_clip_matrix(mat3x4 clip_matrix)
+inline void SoftwareDevice::SoftwareParams::set_clip_matrix(mat3x4 clip_matrix)
 {
     m_clip_matrix = clip_matrix;
 }
 
-inline void SoftwareDevice::set_world_inv_matrix(mat4 world_inv_matrix)
+inline void SoftwareDevice::SoftwareParams::set_world_inv_matrix(mat4 world_inv_matrix)
 {
     m_world_inv_matrix = world_inv_matrix;
     m_normal_matrix.set_dirty();
 }
 
-inline void SoftwareDevice::set_view_inv_matrix(mat4 view_inv_matrix)
+inline void SoftwareDevice::SoftwareParams::set_view_inv_matrix(mat4 view_inv_matrix)
 {
     m_view_inv_matrix = view_inv_matrix;
     m_normal_matrix.set_dirty();
 }
 
-inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
+inline void SoftwareDevice::SoftwareParams::set_material(const Material& material)
 {
-    m_poly_mode = mode;
+    m_material_ambient = material.get_ambient();
+    m_material_diffuse = material.get_diffuse();
+    m_material_specular = material.get_specular();
+    m_material_emissive = material.get_emissive();
+    m_material_shininess = material.get_shininess();
 }
 
+inline const mat4& SoftwareDevice::SoftwareParams::get_world_matrix() const
+{
+    return m_world_matrix;
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_view_matrix() const
+{
+    return m_view_matrix;
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_proj_matrix() const
+{
+    return m_proj_matrix;
+}
+
+inline const mat3x4& SoftwareDevice::SoftwareParams::get_clip_matrix() const
+{
+    return m_clip_matrix;
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_mv_matrix()
+{
+    return m_mv_matrix.get();
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_mvp_matrix()
+{
+    return m_mvp_matrix.get();
+}
+
+inline const mat3& SoftwareDevice::SoftwareParams::get_normal_matrix()
+{
+    return m_normal_matrix.get();
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_world_inv_matrix() const
+{
+    return m_world_inv_matrix;
+}
+
+inline const mat4& SoftwareDevice::SoftwareParams::get_view_inv_matrix() const
+{
+    return m_view_inv_matrix;
+}
+
+inline const Color& SoftwareDevice::SoftwareParams::get_material_ambient() const
+{
+    return m_material_ambient;
+}
+
+inline const Color& SoftwareDevice::SoftwareParams::get_material_diffuse() const
+{
+    return m_material_diffuse;
+}
+
+inline const Color& SoftwareDevice::SoftwareParams::get_material_specular() const
+{
+    return m_material_specular;
+}
+
+inline const Color& SoftwareDevice::SoftwareParams::get_material_emissive() const
+{
+    return m_material_emissive;
+}
+
+inline float SoftwareDevice::SoftwareParams::get_material_shininess() const
+{
+    return m_material_shininess;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SoftwareDevice impl
+///////////////////////////////////////////////////////////////////////////////
 inline void SoftwareDevice::set_render_target(RenderTarget* target)
 {
     flog();
@@ -168,9 +285,24 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
     log_info("Set render target %#x", target);
 }
 
-inline void SoftwareDevice::set_material(const Material* material)
+inline void SoftwareDevice::set_texture_unit(size_t index, const Texture* texture)
 {
-    m_material = material;
+    m_texture_units[index] = texture;
+}
+
+inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
+{
+    m_poly_mode = mode;
+}
+
+inline RenderDevice::Params& SoftwareDevice::get_params()
+{
+    return m_params;
+}
+
+inline size_t SoftwareDevice::get_texture_unit_count() const
+{
+    return detail::SOFTWARE_TEXTURE_COUNT;
 }
 
 inline void SoftwareDevice::debug_normals(bool enable)

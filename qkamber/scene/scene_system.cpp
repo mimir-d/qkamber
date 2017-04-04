@@ -68,17 +68,26 @@ SceneSystem::~SceneSystem()
 
 void SceneSystem::process()
 {
-    auto& q = m_context.get_render().get_queue();
+    auto& render = m_context.get_render();
+
+    // set render state
+    auto& p = render.get_device().get_params();
+    p.set_view_matrix(m_camera->get_view());
+    p.set_proj_matrix(m_camera->get_proj());
+    p.set_clip_matrix(m_viewport->get_clip());
+    p.set_view_inv_matrix(m_camera->get_view_inv());
+
+    // add items in render queue
+    auto& q = render.get_queue();
     q.clear();
 
     for (auto& agg : m_context.get_entity().filter_comp<SrtComponent, ModelComponent>())
     {
-        // NOTE: maybe have const srt and compute the world matrix in entity_system.process
         auto& srt = std::get<0>(agg);
         auto& model = std::get<1>(agg);
 
         // TODO: add any visibility algorithms here
-        for (auto& unit : model.get_model()->get_units())
+        for (const auto& unit : model.get_model()->get_units())
             q.add(srt.get_world(), srt.get_world_inv(), unit);
     }
 }

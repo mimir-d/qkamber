@@ -7,6 +7,7 @@
 #include "engine.h"
 
 struct RenderPrimitive;
+class Material;
 class Texture;
 
 enum class PolygonMode
@@ -17,29 +18,40 @@ enum class PolygonMode
 class RenderDevice
 {
 public:
+    // NOTE: render parameters, these will get inserted as uniforms in shaders
+    class Params
+    {
+    public:
+        virtual void set_world_matrix(mat4 world_matrix) = 0;
+        virtual void set_view_matrix(mat4 view_matrix) = 0;
+        virtual void set_proj_matrix(mat4 proj_matrix) = 0;
+        virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
+
+        virtual void set_world_inv_matrix(mat4 world_inv_matrix) = 0;
+        virtual void set_view_inv_matrix(mat4 view_inv_matrix) = 0;
+
+        virtual void set_material(const Material& material) = 0;
+    };
+
+public:
     // drawing methods
     virtual void draw_primitive(const RenderPrimitive& primitive) = 0;
     virtual void draw_text(const std::string& text, int x, int y) = 0;
 
     // device state methods
-    virtual void set_world_matrix(mat4 world_matrix) = 0;
-    virtual void set_view_matrix(mat4 view_matrix) = 0;
-    virtual void set_proj_matrix(mat4 proj_matrix) = 0;
-    virtual void set_clip_matrix(mat3x4 clip_matrix) = 0;
-
-    virtual void set_world_inv_matrix(mat4 world_inv_matrix) = 0;
-    virtual void set_view_inv_matrix(mat4 view_inv_matrix) = 0;
-
     virtual void set_render_target(RenderTarget* target) = 0;
+    virtual void set_texture_unit(size_t index, const Texture* texture) = 0;
     virtual void set_polygon_mode(PolygonMode mode) = 0;
-
-    virtual void set_material(const Material* material) = 0;
+    virtual Params& get_params() = 0;
 
     // resource management methods
     virtual std::unique_ptr<RenderTarget> create_render_target(int width, int height) = 0;
     virtual std::unique_ptr<VertexBuffer> create_vertex_buffer(std::unique_ptr<VertexDecl> decl, size_t count) = 0;
     virtual std::unique_ptr<IndexBuffer> create_index_buffer(size_t count) = 0;
     virtual std::unique_ptr<Texture> create_texture(size_t width, size_t height, PixelFormat format) = 0;
+
+    // capabilities methods
+    virtual size_t get_texture_unit_count() const = 0;
 
     // framebuffer methods
     virtual void clear() = 0;

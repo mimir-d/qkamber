@@ -14,15 +14,12 @@ public:
 
     void process() final;
 
-    void set_camera(Camera* camera);
-    const Camera& get_camera() const;
-
-    void set_viewport(Viewport* viewport);
-    const Viewport& get_viewport() const;
+    void set_camera(const Camera* camera);
+    void set_viewport(const Viewport* viewport);
 
 private:
-    Camera* m_camera;
-    Viewport* m_viewport;
+    const Camera* m_camera;
+    const Viewport* m_viewport;
 
     std::unique_ptr<Camera> m_null_camera;
     std::unique_ptr<Viewport> m_null_viewport;
@@ -31,7 +28,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
-inline void SceneSystem::set_camera(Camera* camera)
+inline void SceneSystem::set_camera(const Camera* camera)
 {
     flog();
 
@@ -46,12 +43,7 @@ inline void SceneSystem::set_camera(Camera* camera)
     log_info("Set camera id = %#x", camera);
 }
 
-inline const Camera& SceneSystem::get_camera() const
-{
-    return *m_camera;
-}
-
-inline void SceneSystem::set_viewport(Viewport* viewport)
+inline void SceneSystem::set_viewport(const Viewport* viewport)
 {
     flog();
 
@@ -64,9 +56,4 @@ inline void SceneSystem::set_viewport(Viewport* viewport)
 
     m_viewport = viewport;
     log_info("Set viewport id = %#x", viewport);
-}
-
-inline const Viewport& SceneSystem::get_viewport() const
-{
-    return *m_viewport;
 }
