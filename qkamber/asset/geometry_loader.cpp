@@ -450,6 +450,7 @@ namespace
 
                 case M3DS_MATERIAL_SPECULAR:
                     m_mat->specular = read_color();
+                    m_mat->shininess = 1.0f;
                     dlog("3ds material specular %.3f %.3f %.3f", m_mat->ambient.r(), m_mat->ambient.g(), m_mat->ambient.b());
                     break;
 
@@ -698,6 +699,13 @@ namespace
     {
         flog("id = %#x", this);
         Parser{ asset, filename }.parse(m_objects, m_materials);
+
+        // TODO: this should be covered by config files
+        if (filename.find("ship.3ds") != string::npos)
+        {
+            m_materials[0].specular = Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+            m_materials[0].shininess = 100.0f;
+        }
     }
 
     const string& Max3dsGeometry::get_name() const

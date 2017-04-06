@@ -77,6 +77,11 @@ void SceneSystem::process()
     p.set_clip_matrix(m_viewport->get_clip());
     p.set_view_inv_matrix(m_camera->get_view_inv());
 
+    // set lights
+    auto& dev = render.get_device();
+    for (size_t i = 0; i < dev.get_light_unit_count(); i++)
+        dev.set_light_unit(i, i < m_lights.size() ? m_lights[i] : nullptr);
+
     // add items in render queue
     auto& q = render.get_queue();
     q.clear();

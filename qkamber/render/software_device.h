@@ -2,6 +2,7 @@
 
 #include "render_system.h"
 #include "material.h"
+#include "scene/light.h"
 #include "math3.h"
 #include "misc.h"
 
@@ -37,6 +38,7 @@ namespace detail
     };
 
     constexpr size_t SOFTWARE_TEXTURE_COUNT = 2;
+    constexpr size_t SOFTWARE_LIGHT_COUNT = 2;
 }
 
 class SoftwareDevice : public RenderDevice
@@ -78,6 +80,7 @@ protected:
         const Color& get_material_specular() const;
         const Color& get_material_emissive() const;
         float get_material_shininess() const;
+        bool get_material_lighting() const;
 
     private:
         mat4 m_world_matrix, m_world_inv_matrix;
@@ -90,6 +93,7 @@ protected:
         Color m_material_specular;
         Color m_material_emissive;
         float m_material_shininess = 0.0f;
+        bool m_material_lighting = false;
 
         // computed stuff
         dirty_t<mat4, detail::make_mv> m_mv_matrix = { m_world_matrix, m_view_matrix };
@@ -115,9 +119,10 @@ public:
     void draw_primitive(const RenderPrimitive& primitive) final;
 
     // device state methods
+    void set_polygon_mode(PolygonMode mode) final;
     void set_render_target(RenderTarget* target) override;
     void set_texture_unit(size_t index, const Texture* texture) final;
-    void set_polygon_mode(PolygonMode mode) final;
+    void set_light_unit(size_t index, const Light* light) final;
     Params& get_params() final;
 
     // resource management methods
@@ -127,6 +132,7 @@ public:
 
     // capabilities methods
     size_t get_texture_unit_count() const final;
+    size_t get_light_unit_count() const final;
 
     // debug
     void debug_normals(bool enable);
@@ -141,6 +147,9 @@ protected:
     PolygonMode m_poly_mode = PolygonMode::Fill;
     RenderTarget* m_render_target;
     std::array<const Texture*, detail::SOFTWARE_TEXTURE_COUNT> m_texture_units;
+
+    std::array<vec3, detail::SOFTWARE_LIGHT_COUNT> m_light_view_positions;
+    std::array<const Light*, detail::SOFTWARE_LIGHT_COUNT> m_light_units;
 
     std::unique_ptr<RenderTarget> m_null_target;
     bool m_debug_normals = false;
@@ -195,6 +204,7 @@ inline void SoftwareDevice::SoftwareParams::set_material(const Material& materia
     m_material_specular = material.get_specular();
     m_material_emissive = material.get_emissive();
     m_material_shininess = material.get_shininess();
+    m_material_lighting = material.get_lighting_enable();
 }
 
 inline const mat4& SoftwareDevice::SoftwareParams::get_world_matrix() const
@@ -267,9 +277,19 @@ inline float SoftwareDevice::SoftwareParams::get_material_shininess() const
     return m_material_shininess;
 }
 
+inline bool SoftwareDevice::SoftwareParams::get_material_lighting() const
+{
+    return m_material_lighting;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SoftwareDevice impl
 ///////////////////////////////////////////////////////////////////////////////
+inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
+{
+    m_poly_mode = mode;
+}
+
 inline void SoftwareDevice::set_render_target(RenderTarget* target)
 {
     flog();
@@ -287,12 +307,19 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
 
 inline void SoftwareDevice::set_texture_unit(size_t index, const Texture* texture)
 {
+    if (index >= detail::SOFTWARE_TEXTURE_COUNT)
+        throw std::exception("invalid texture unit index");
     m_texture_units[index] = texture;
 }
 
-inline void SoftwareDevice::set_polygon_mode(PolygonMode mode)
+inline void SoftwareDevice::set_light_unit(size_t index, const Light* light)
 {
-    m_poly_mode = mode;
+    if (index >= detail::SOFTWARE_LIGHT_COUNT)
+        throw std::exception("invalid light unit index");
+
+    m_light_units[index] = light;
+    if (light)
+        m_light_view_positions[index] = vec3{ m_params.get_view_matrix() * light->get_position() };
 }
 
 inline RenderDevice::Params& SoftwareDevice::get_params()
@@ -303,6 +330,11 @@ inline RenderDevice::Params& SoftwareDevice::get_params()
 inline size_t SoftwareDevice::get_texture_unit_count() const
 {
     return detail::SOFTWARE_TEXTURE_COUNT;
+}
+
+inline size_t SoftwareDevice::get_light_unit_count() const
+{
+    return detail::SOFTWARE_LIGHT_COUNT;
 }
 
 inline void SoftwareDevice::debug_normals(bool enable)

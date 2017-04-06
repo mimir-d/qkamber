@@ -9,6 +9,7 @@
 struct RenderPrimitive;
 class Material;
 class Texture;
+class Light;
 
 enum class PolygonMode
 {
@@ -39,9 +40,10 @@ public:
     virtual void draw_text(const std::string& text, int x, int y) = 0;
 
     // device state methods
+    virtual void set_polygon_mode(PolygonMode mode) = 0;
     virtual void set_render_target(RenderTarget* target) = 0;
     virtual void set_texture_unit(size_t index, const Texture* texture) = 0;
-    virtual void set_polygon_mode(PolygonMode mode) = 0;
+    virtual void set_light_unit(size_t index, const Light* light) = 0;
     virtual Params& get_params() = 0;
 
     // resource management methods
@@ -52,6 +54,7 @@ public:
 
     // capabilities methods
     virtual size_t get_texture_unit_count() const = 0;
+    virtual size_t get_light_unit_count() const = 0;
 
     // framebuffer methods
     virtual void clear() = 0;

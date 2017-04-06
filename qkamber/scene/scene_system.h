@@ -5,9 +5,13 @@
 
 class Camera;
 class Viewport;
+class Light;
 
 class SceneSystem : public Subsystem
 {
+public:
+    using Lights = std::vector<const Light*>;
+
 public:
     SceneSystem(QkEngine::Context& context);
     ~SceneSystem();
@@ -16,10 +20,12 @@ public:
 
     void set_camera(const Camera* camera);
     void set_viewport(const Viewport* viewport);
+    void set_lights(const Lights& lights);
 
 private:
     const Camera* m_camera;
     const Viewport* m_viewport;
+    Lights m_lights;
 
     std::unique_ptr<Camera> m_null_camera;
     std::unique_ptr<Viewport> m_null_viewport;
@@ -56,4 +62,9 @@ inline void SceneSystem::set_viewport(const Viewport* viewport)
 
     m_viewport = viewport;
     log_info("Set viewport id = %#x", viewport);
+}
+
+inline void SceneSystem::set_lights(const Lights& lights)
+{
+    m_lights = lights;
 }

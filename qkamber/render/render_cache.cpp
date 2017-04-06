@@ -14,7 +14,7 @@ shared_ptr<Material> RenderCache::get_material(const string& name)
 {
     flog();
 
-    return cache_get(m_materials, name, [&]
+    auto ret = cache_get(m_materials, name, [&]
     {
         string filename = dirname(name);
 
@@ -44,6 +44,11 @@ shared_ptr<Material> RenderCache::get_material(const string& name)
         }
         return make_unique<Material>(*raw_mat, m_render);
     });
+
+    // TODO: some factory customization here (and COW materials)
+    if (name.find("axis.3ds") != string::npos)
+        ret->set_lighting_enable(false);
+    return ret;
 }
 
 shared_ptr<Mesh> RenderCache::get_mesh(const std::string& name)
