@@ -15,6 +15,11 @@ public:
     Material(const GeometryAsset::Material& raw, RenderSystem& render);
     ~Material();
 
+    // lighting
+    // TODO: this would come from config file
+    void set_lighting_enable(bool enable);
+    bool get_lighting_enable() const;
+
     // colors
     const Color& get_ambient() const;
     const Color& get_diffuse() const;
@@ -27,6 +32,7 @@ public:
     const Textures& get_textures() const;
 
 private:
+    bool m_lighting_enabled = true;
     Color m_ambient;
     Color m_diffuse;
     Color m_specular;
@@ -40,6 +46,16 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // impl
 ///////////////////////////////////////////////////////////////////////////////
+inline void Material::set_lighting_enable(bool enable)
+{
+    m_lighting_enabled = enable;
+}
+
+inline bool Material::get_lighting_enable() const
+{
+    return m_lighting_enabled;
+}
+
 inline const Color& Material::get_ambient() const
 {
     return m_ambient;

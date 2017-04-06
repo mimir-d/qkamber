@@ -7,6 +7,7 @@
 #include "render/render_primitive.h"
 #include "render/render_buffers.h"
 #include "render/software_buffers.h"
+#include "scene/light.h"
 
 using namespace std;
 
@@ -363,8 +364,6 @@ namespace
 //template <bool with_color, bool with_tex>
 void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
 {
-    vec4 light_pos = m_params.get_view_matrix() * vec4{ 10, 20, 20, 1 };
-
     // NOTE: flush any gdi calls before drawing to backbuffer directly
     GdiFlush();
 
@@ -438,45 +437,86 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
             if (he.value()[0] > 0 && he.value()[1] > 0 && he.value()[2] > 0 && z < depth_ptr[x])
             {
                 // TODO: alpha transparency
-                const Color& ambient = m_params.get_material_ambient();
-                const Color diffuse = [&]
+                const Color mat_diffuse = [&]
                 {
                     if (p0.color.has_value())
                         return static_cast<Color>(attrs.get<4>().value() * w);
 
-                    // TODO: only 1 texture available atm
-                    auto tex = static_cast<const SoftwareTexture*>(m_texture_units[0]);
-                    if (p0.texcoord.has_value() && tex)
+                    if (p0.texcoord.has_value())
                     {
                         const vec2 uv = attrs.get<5>().value() * w;
-                        const uint8_t* c = tex->sample(uv.x(), uv.y());
-                        // not quite like this
-                        return Color{ c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f };
+                        Color tex_color;
+                        float count = 0;
+
+                        // average all the texture units
+                        for (auto unit : m_texture_units)
+                        {
+                            if (!unit)
+                                continue;
+
+                            auto tex = static_cast<const SoftwareTexture*>(unit);
+                            tex_color += tex->sample(uv.x(), uv.y());
+                            count += 1;
+                        }
+                        return Color{ tex_color * (1.0f / count) };
                     }
 
                     return m_params.get_material_diffuse();
                 }();
 
-                // lighting calculations in camera-space
-                const vec3 view_pos = attrs.get<2>().value() * w;
-                const vec3 n = (attrs.get<3>().value() * w).normalize();
+                const Color frag_color = [&]
+                {
+                    if (!m_params.get_material_lighting())
+                        return mat_diffuse;
 
-                // TODO: temp
-                const vec3 light_dir_denorm = vec3{ light_pos } - view_pos;
-                const vec3 light_dir = light_dir_denorm.normalize();
-                const float light_dist = light_dir_denorm.length();
+                    const Color& mat_ambient = m_params.get_material_ambient();
+                    const Color& mat_specular = m_params.get_material_specular();
+                    const Color& mat_emissive = m_params.get_material_emissive();
+                    const float mat_shininess = m_params.get_material_shininess();
 
-                const float light_attenuation_coef[3] = { 0.0f, 0.0005f, 0.0025f };
-                const float light_atten = 1.0f / (
-                    light_attenuation_coef[0] +
-                    light_attenuation_coef[1] * light_dist,
-                    light_attenuation_coef[2] * light_dist * light_dist
-                );
+                    // lighting calculations in camera-space
+                    const vec3 view_pos = attrs.get<2>().value() * w;
+                    const vec3 view_norm = (attrs.get<3>().value() * w).normalize();
 
-                float amb_coef = 0.2f;
-                float diff_coef = max(0.0f, n * light_dir) * light_atten;
+                    Color ambient, diffuse, specular;
+                    float light_count = 0;
+                    for (size_t i = 0; i < m_light_units.size(); i++)
+                    {
+                        auto light = m_light_units[i];
+                        if (!light)
+                            continue;
 
-                const Color frag_color = ambient * amb_coef + diffuse * diff_coef;
+                        const vec3 light_dir_denorm = m_light_view_positions[i] - view_pos;
+                        const vec3 light_dir = light_dir_denorm.normalize();
+                        const float light_dist = light_dir_denorm.length();
+
+                        auto& atten_coef = light->get_attenuation();
+                        const float light_atten = 1.0f / (
+                            atten_coef[1] +
+                            atten_coef[2] * light_dist,
+                            atten_coef[3] * light_dist * light_dist
+                        );
+
+                        // ambient color
+                        ambient += mat_ambient % light->get_ambient() * light_atten;
+
+                        // diffuse color
+                        const float diff_coef = std::max(0.0f, view_norm * light_dir);
+                        diffuse += mat_diffuse % light->get_diffuse() * diff_coef * light_atten;
+
+                        // specular color
+                        if (diff_coef > 0)
+                        {
+                            const vec3 half_vec = (light_dir - view_pos).normalize();
+                            const float spec_coef = pow(std::max(0.0f, view_norm * half_vec), mat_shininess);
+                            specular += mat_specular % light->get_specular() * spec_coef * light_atten;
+                        }
+                        light_count ++;
+                    }
+
+                    return Color{ (ambient + diffuse + specular) * (1.0f / light_count) + mat_emissive };
+                }();
+
                 color_ptr[x] = RGB(
                     static_cast<uint8_t>(clamp(frag_color.b(), 0.0f, 1.0f) * 255.0f),
                     static_cast<uint8_t>(clamp(frag_color.g(), 0.0f, 1.0f) * 255.0f),

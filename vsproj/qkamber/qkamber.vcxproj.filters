@@ -187,6 +187,9 @@
     <ClInclude Include="$(src)\render\render_cache.h">
       <Filter>Header Files\render</Filter>
     </ClInclude>
+    <ClInclude Include="$(src)\scene\light.h">
+      <Filter>Header Files\scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

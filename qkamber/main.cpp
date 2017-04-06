@@ -12,6 +12,7 @@
 #include "input/input_device.h"
 #include "scene/camera.h"
 #include "scene/viewport.h"
+#include "scene/light.h"
 #include "render/model.h"
 #include "stats/stats_system.h"
 #include "time/time_system.h"
@@ -35,6 +36,7 @@ private:
 
     FpsCamera m_camera { *this, { 6, 6, 23 } };
     RectViewport m_viewport;
+    Light m_light;
 
     vector<unique_ptr<EntitySystem::Entity>> m_objects;
 };
@@ -44,6 +46,13 @@ void Context::on_create()
     auto& scene = get_scene();
     scene.set_camera(&m_camera);
     scene.set_viewport(&m_viewport);
+
+    m_light.set_position({ 10, 20, 20, 1 });
+    m_light.set_ambient({ 0.2, 0.2, 0.2, 1.0 });
+    m_light.set_diffuse({ 1.0, 1.0, 1.0, 1.0 });
+    m_light.set_specular({ 0.7, 0.7, 0.7, 1.0 });
+    m_light.set_attenuation({ 0.0f, 0.0f, 0.0005f, 0.0025f });
+    scene.set_lights({ &m_light });
 
     // initialize a render target for the app
     auto& dev = get_render().get_device();

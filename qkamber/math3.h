@@ -148,16 +148,22 @@ public:
     vec& operator=(const vec& rhs);
     vec& operator=(float rhs);
 
+    // addition, subtraction, component mul, scaling
     vec& operator+=(const vec& rhs);
     vec& operator-=(const vec& rhs);
+    vec& operator%=(const vec& rhs);
     vec& operator*=(T rhs);
 
+    // negation
     vec operator-() const;
 
+    // addition, subtraction, component mul, scaling
     vec operator+(const vec& rhs) const;
     vec operator-(const vec& rhs) const;
+    vec operator%(const vec& rhs) const;
     vec operator*(T rhs) const;
 
+    // dot product
     T operator*(const vec& rhs) const;
 
 private:
@@ -180,6 +186,7 @@ private:
     template <int I>
     struct mul_op
     {
+        void operator()(vec& out, const vec& lhs, const vec& rhs) const;
         void operator()(vec& out, const vec& lhs, T rhs) const;
     };
     template <int I>
@@ -786,6 +793,12 @@ inline vec<T, N>& vec<T, N>::operator-=(const vec& rhs)
 }
 
 template <typename T, size_t N>
+inline vec<T, N>& vec<T, N>::operator%=(const vec& rhs)
+{
+    return detail::iterate1<N, mul_op>{}(*this, *this, rhs);
+}
+
+template <typename T, size_t N>
 inline vec<T, N>& vec<T, N>::operator*=(T rhs)
 {
     return detail::iterate1<N, mul_op>()(*this, *this, rhs);
@@ -810,6 +823,13 @@ inline vec<T, N> vec<T, N>::operator-(const vec& rhs) const
 {
     vec ret(no_init_tag {});
     return detail::iterate1<N, sub_op>()(ret, *this, rhs);
+}
+
+template <typename T, size_t N>
+inline vec<T, N> vec<T, N>::operator%(const vec& rhs) const
+{
+    vec ret(no_init_tag{});
+    return detail::iterate1<N, mul_op>()(ret, *this, rhs);
 }
 
 template <typename T, size_t N>
@@ -855,6 +875,13 @@ template <int I>
 inline void vec<T, N>::sub_op<I>::operator()(vec& out, const vec& lhs, const vec& rhs) const
 {
     out.m_data[I] = lhs.m_data[I] - rhs.m_data[I];
+}
+
+template <typename T, size_t N>
+template <int I>
+inline void vec<T, N>::mul_op<I>::operator()(vec& out, const vec& lhs, const vec& rhs) const
+{
+    out.m_data[I] = lhs.m_data[I] * rhs.m_data[I];
 }
 
 template <typename T, size_t N>

@@ -2,6 +2,7 @@
 
 #include "render_buffers.h"
 #include "asset/asset_system.h"
+#include "math3.h"
 
 namespace detail
 {
@@ -51,7 +52,7 @@ public:
     size_t get_height() const final;
     PixelFormat get_format() const final;
 
-    const uint8_t* sample(float u, float v) const;
+    Color sample(float u, float v) const;
 
 private:
     size_t m_width, m_height;
@@ -118,9 +119,10 @@ inline PixelFormat SoftwareTexture::get_format() const
     return m_format;
 }
 
-inline const uint8_t* SoftwareTexture::sample(float u, float v) const
+inline Color SoftwareTexture::sample(float u, float v) const
 {
     const size_t x = clamp(static_cast<size_t>(u * m_width), size_t(0), m_width - 1);
     const size_t y = clamp(static_cast<size_t>(v * m_height), size_t(0), m_height - 1);
-    return m_data.data() + (y * m_width + x) * 4;
+    const uint8_t* data = m_data.data() + (y * m_width + x) * 4;
+    return Color{ data[0] / 255.0f, data[1] / 255.0f, data[2] / 255.0f, data[3] / 255.0f };
 }
