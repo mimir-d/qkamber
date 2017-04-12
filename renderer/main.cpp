@@ -13,18 +13,18 @@ using namespace Gdiplus;
 class MyRenderer : public Renderer
 {
 public:
-	void update(float elapsed_time) override;
-	void draw(Graphics& g, float elapsed_time) override;
+	void update(float abs_time, float elapsed_time) override;
+	void draw(Graphics& g, float abs_time, float elapsed_time) override;
 };
 
-void MyRenderer::update(float elapsed_time)
+void MyRenderer::update(float abs_time, float elapsed_time)
 {
 }
 
-void MyRenderer::draw(Graphics& g, float elapsed_time)
+void MyRenderer::draw(Graphics& g, float abs_time, float elapsed_time)
 {
 	Pen p(Color(255, 255, 0, 255));
-	g.DrawLine(&p, 0, 0, 100, 100);
+	g.DrawLine(&p, 0.f, 0.f, 200.f + 100.f * sin(abs_time), 200.f + 100.f * cos(abs_time));
 }
 
 int main()
@@ -38,8 +38,8 @@ int main()
 		app.run();
 		int rc = app.shutdown();
 
-		cout << endl << "Press enter to continue ..." << endl;
-		cin.get();
+		//cout << endl << "Press enter to continue ..." << endl;
+		//cin.get();
 		return rc;
 	}
 	catch (exception& ex)
