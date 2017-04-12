@@ -1,5 +1,7 @@
 #pragma once
 
+#include "timer.h"
+
 class Renderer
 {
 public:
@@ -9,6 +11,12 @@ public:
 	void begin_frame();
 	void end_frame();
 
-	virtual void update(float elapsed_time) = 0;
-	virtual void draw(Gdiplus::Graphics& g, float elapsed_time) = 0;
+	void on_update();
+	void on_draw(Gdiplus::Graphics& g);
+
+	virtual void update(float abs_time, float elapsed_time) = 0;
+	virtual void draw(Gdiplus::Graphics& g, float abs_time, float elapsed_time) = 0;
+
+protected:
+	Timer m_timer;
 };

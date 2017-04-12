@@ -142,7 +142,7 @@ void Win32AppWindow::OnKeyPressed(int key_code)
 void Win32AppWindow::OnPaint(Graphics& g)
 {
 	m_renderer->begin_frame();
-	m_renderer->draw(g, 0);
+	m_renderer->on_draw(g);
 	m_renderer->end_frame();
 }
 
@@ -169,7 +169,8 @@ LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam,
 			switch (wParam)
 			{
 				case IDT_REDRAW:
-					window->m_renderer->update(0);
+					window->m_renderer->on_update();
+					RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE);
 					UpdateWindow(hWnd);
 					break;
 			}
