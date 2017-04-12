@@ -88,6 +88,7 @@ void SoftwareDevice::draw_primitive(const RenderPrimitive& primitive)
     // TODO: performance, push these to display lists and parallel process
     for (size_t i = 0; i < ib.get_count(); i += 3, ib_ptr += 3)
     {
+        // TODO: cache transformed vertices with index as key
         // vertex position computations
         const float* p_p0 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[0] * vertex_size);
         const float* p_p1 = reinterpret_cast<const float*>(vb.data() + position_offset + ib_ptr[1] * vertex_size);

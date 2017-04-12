@@ -8,9 +8,7 @@
 #ifdef WIN32
 #   define WIN32_LEAN_AND_MEAN
 #   include <Windows.h>
-#   include <windowsx.h>
 #   include <ntddkbd.h>
-#   include <objidl.h>
 // NOTE: these are defined by winapi and shadow std::min/max
 #   undef min
 #   undef max
@@ -27,6 +25,7 @@
 #include <unordered_map>
 
 #include <random>
+#include <new>
 #include <memory>
 #include <chrono>
 #include <numeric>
