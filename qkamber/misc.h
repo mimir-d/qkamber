@@ -32,33 +32,58 @@ template <typename T>
 class optional_t
 {
 public:
-    optional_t(const T& rhs);
     optional_t() = default;
-    ~optional_t() = default;
+    optional_t(const T& rhs);
+    optional_t(T&& rhs);
+    optional_t(const optional_t& rhs);
+    ~optional_t();
 
     optional_t& operator=(const T& rhs);
 
     operator bool() const;
     bool has_value() const;
 
-     T& value();
-     const T& value() const;
+    T& value();
+    const T& value() const;
 
 private:
-    T m_value;
+    std::aligned_storage_t<sizeof(T), alignof(T)> m_storage;
     bool m_has_value = false;
 };
 
 template <typename T>
 optional_t<T>::optional_t(const T& rhs) :
-    m_value(rhs),
     m_has_value(true)
-{}
+{
+    new (&m_storage) T{ rhs };
+}
+
+template <typename T>
+optional_t<T>::optional_t(T&& rhs) :
+    m_has_value(true)
+{
+    new (&m_storage) T{ std::move(rhs) };
+}
+
+template <typename T>
+optional_t<T>::optional_t(const optional_t& rhs) :
+    m_has_value(rhs.m_has_value)
+{
+    // NOTE: T may not be trivially copyable, so make a new one invoking copy ctor
+    new (&m_storage) T{ *reinterpret_cast<const T*>(&rhs.m_storage) };
+}
+
+template <typename T>
+optional_t<T>::~optional_t()
+{
+    if (m_has_value)
+        reinterpret_cast<T*>(&m_storage)->~T();
+}
 
 template <typename T>
 optional_t<T>& optional_t<T>::operator=(const T& rhs)
 {
-    m_value = rhs;
+    new (&m_storage) T{ rhs };
     m_has_value = true;
     return *this;
 }
@@ -80,7 +105,7 @@ T& optional_t<T>::value()
 {
     if (!m_has_value)
         throw std::exception("optional_t doesnt have value");
-    return m_value;
+    return *reinterpret_cast<T*>(&m_storage);
 }
 
 template <typename T>
@@ -88,7 +113,7 @@ const T& optional_t<T>::value() const
 {
     if (!m_has_value)
         throw std::exception("optional_t doesnt have value");
-    return m_value;
+    return *reinterpret_cast<const T*>(&m_storage);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

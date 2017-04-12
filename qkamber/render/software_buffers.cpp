@@ -21,6 +21,7 @@ uint8_t* SoftwareTexture::lock()
 
 void SoftwareTexture::unlock()
 {
+    // TODO: gamma correction, texture degamma + lighting gamma
     // NOTE: simplification for rasterizer, convert to rgba
     if (m_format == PixelFormat::RgbU8)
     {

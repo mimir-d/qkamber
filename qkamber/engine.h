@@ -37,6 +37,7 @@ public:
         AssetSystem& get_asset();
 
     private:
+        // TODO: subsystems tuple in context
         std::unique_ptr<TimeSystem> m_time;
         std::unique_ptr<EntitySystem> m_entity;
         std::unique_ptr<RenderSystem> m_render;
