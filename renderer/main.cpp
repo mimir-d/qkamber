@@ -24,7 +24,7 @@ void MyRenderer::update(float abs_time, float elapsed_time)
 void MyRenderer::draw(Graphics& g, float abs_time, float elapsed_time)
 {
 	Pen p(Color(255, 255, 0, 255));
-	g.DrawLine(&p, 0.f, 0.f, 200.f + 100.f * sin(abs_time), 200.f + 100.f * cos(abs_time));
+	g.DrawLine(&p, 200.f, 200.f, 200.f + 100.f * sin(abs_time), 200.f + 100.f * cos(abs_time));
 }
 
 int main()
