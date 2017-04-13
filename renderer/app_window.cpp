@@ -11,6 +11,7 @@ using namespace Gdiplus;
 void AppWindow::init(unique_ptr<Renderer> renderer)
 {
 	m_renderer = std::move(renderer);
+	m_renderer->init();
 }
 
 void AppWindow::mainloop()
@@ -18,6 +19,7 @@ void AppWindow::mainloop()
 
 int AppWindow::shutdown()
 {
+	m_renderer->shutdown();
 	return 0;
 }
 
@@ -33,8 +35,8 @@ public:
 	void mainloop() override;
 	int shutdown() override;
 
-	void OnKeyPressed(int key_code) override;
-	void OnPaint(Graphics& g) override;
+	void on_key_pressed(int key_code);
+	void on_paint(Graphics& g);
 
 private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -124,12 +126,13 @@ int Win32AppWindow::shutdown()
 {
 	flog();
 	KillTimer(m_windowHandle, IDT_REDRAW);
-
 	GdiplusShutdown(m_gdiplusToken);
+
+	AppWindow::shutdown();
     return static_cast<int>(m_msg.wParam);
 }
 
-void Win32AppWindow::OnKeyPressed(int key_code)
+void Win32AppWindow::on_key_pressed(int key_code)
 {
 	switch (key_code)
 	{
@@ -139,7 +142,7 @@ void Win32AppWindow::OnKeyPressed(int key_code)
 	}
 }
 
-void Win32AppWindow::OnPaint(Graphics& g)
+void Win32AppWindow::on_paint(Graphics& g)
 {
 	m_renderer->begin_frame();
 	m_renderer->on_draw(g);
@@ -156,13 +159,12 @@ LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam,
 	{
 		case WM_PAINT:
 			hdc = BeginPaint(hWnd, &ps);
-			window->OnPaint(Graphics(hdc));
+			window->on_paint(Graphics(hdc));
 			EndPaint(hWnd, &ps);
 			break;
 
 		case WM_KEYDOWN:
-			if (wParam == VK_ESCAPE)
-				PostMessage(hWnd, WM_CLOSE, 0, 0);
+			window->on_key_pressed(wParam);
 			break;
 
 		case WM_TIMER:

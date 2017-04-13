@@ -9,11 +9,6 @@ public:
 	virtual void mainloop();
 	virtual int shutdown();
 
-	// TODO: rename
-	virtual void OnKeyPressed(int key_code) = 0;
-	// TODO: extract Graphics interface
-	virtual void OnPaint(Gdiplus::Graphics& g) = 0;
-
 protected:
 	std::unique_ptr<Renderer> m_renderer;
 };
