@@ -18,11 +18,13 @@ void Timer::start()
 	QueryPerformanceCounter(&m_start_time);
 	m_last_count = m_start_time;
 	m_running = true;
+	dlog("Timer started");
 }
 
 void Timer::stop()
 {
 	m_running = false;
+	dlog("Timer stopped");
 }
 
 float Timer::get_abs_time()

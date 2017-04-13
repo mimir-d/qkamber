@@ -36,11 +36,18 @@ public:
 	int shutdown() override;
 
 	void on_key_pressed(int key_code);
-	void on_paint(Graphics& g);
+	void on_paint(HDC hdc);
 
 private:
+	void create_backbuffer();
+
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HWND m_windowHandle;
+
+	HBRUSH m_backbuffer_brush;
+	HBITMAP m_backbuffer_bitmap;
+	HDC m_backbuffer;
+
 	ULONG_PTR m_gdiplusToken;
 	MSG m_msg;
 };
@@ -110,6 +117,8 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
     UpdateWindow(m_windowHandle);
 
 	SetTimer(m_windowHandle, IDT_REDRAW, 16, nullptr);
+
+	create_backbuffer();
 }
 
 void Win32AppWindow::mainloop()
@@ -125,6 +134,12 @@ void Win32AppWindow::mainloop()
 int Win32AppWindow::shutdown()
 {
 	flog();
+
+	// delete backbuffer
+	DeleteObject(m_backbuffer_brush);
+	ReleaseDC(m_windowHandle, m_backbuffer);
+	DeleteObject(m_backbuffer_bitmap);
+	
 	KillTimer(m_windowHandle, IDT_REDRAW);
 	GdiplusShutdown(m_gdiplusToken);
 
@@ -142,11 +157,44 @@ void Win32AppWindow::on_key_pressed(int key_code)
 	}
 }
 
-void Win32AppWindow::on_paint(Graphics& g)
+void Win32AppWindow::on_paint(HDC hdc)
 {
+	// clear backbuffer
+	RECT rc;
+	GetClientRect(m_windowHandle, &rc);
+	FillRect(m_backbuffer, &rc, m_backbuffer_brush);
+
 	m_renderer->begin_frame();
-	m_renderer->on_draw(g);
+	m_renderer->on_draw(Graphics(m_backbuffer));
 	m_renderer->end_frame();
+
+	BitBlt(hdc,
+		rc.left, rc.top,
+		rc.right - rc.left, rc.bottom - rc.top,
+		m_backbuffer,
+		0, 0,
+		SRCCOPY
+	);
+}
+
+void Win32AppWindow::create_backbuffer()
+{
+	flog();
+
+	RECT rc;
+	GetClientRect(m_windowHandle, &rc);
+
+	HDC hdc = GetDC(m_windowHandle);
+    m_backbuffer = CreateCompatibleDC(hdc);
+	m_backbuffer_bitmap = CreateCompatibleBitmap(
+		hdc,
+        rc.right - rc.left,
+        rc.bottom - rc.top
+	);
+
+	SelectObject(m_backbuffer, m_backbuffer_bitmap);
+
+	m_backbuffer_brush = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
 }
 
 LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -159,7 +207,7 @@ LRESULT CALLBACK Win32AppWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam,
 	{
 		case WM_PAINT:
 			hdc = BeginPaint(hWnd, &ps);
-			window->on_paint(Graphics(hdc));
+			window->on_paint(hdc);
 			EndPaint(hWnd, &ps);
 			break;
 
