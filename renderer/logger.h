@@ -46,6 +46,12 @@ namespace details
 #define log_warn(msg, ...)  do { log(details::LoggerImpl::Warning, (msg), __VA_ARGS__); } while(0)
 #define log_error(msg, ...) do { log(details::LoggerImpl::Error, (msg), __VA_ARGS__); } while(0)
 
+#ifdef _DEBUG
+	#define dlog log_debug
+#else
+	#define dlog __noop
+#endif
+
 #define __CONCAT(x, y) x ## y
 #define __VARNAME(prefix) __CONCAT(prefix, __LINE__)
 #define flog() \

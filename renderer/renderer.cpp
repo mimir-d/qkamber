@@ -5,10 +5,12 @@ using namespace std;
 
 void Renderer::init()
 {
+	flog();
 	m_timer.start();
 }
 void Renderer::shutdown()
 {
+	flog();
 	m_timer.stop();
 }
 

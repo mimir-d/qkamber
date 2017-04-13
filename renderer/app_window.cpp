@@ -10,6 +10,7 @@ using namespace Gdiplus;
 ///////////////////////////////////////////////////////////////////////////////
 void AppWindow::init(unique_ptr<Renderer> renderer)
 {
+	flog();
 	m_renderer = std::move(renderer);
 	m_renderer->init();
 }
@@ -19,6 +20,7 @@ void AppWindow::mainloop()
 
 int AppWindow::shutdown()
 {
+	flog();
 	m_renderer->shutdown();
 	return 0;
 }
@@ -39,6 +41,9 @@ public:
 	void on_paint(HDC hdc);
 
 private:
+	static const char* mc_window_title;
+	static const char* mc_window_class;
+
 	void create_backbuffer();
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -51,6 +56,9 @@ private:
 	ULONG_PTR m_gdiplusToken;
 	MSG m_msg;
 };
+
+const char* Win32AppWindow::mc_window_title = "my little renderererererer";
+const char* Win32AppWindow::mc_window_class = "win32app";
 
 void Win32AppWindow::init(unique_ptr<Renderer> renderer)
 {
@@ -74,12 +82,12 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = nullptr;
-    wcex.lpszClassName  = L"win32app";
+    wcex.lpszClassName  = mc_window_class;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APPLICATION));
 
     if (!RegisterClassEx(&wcex))
 		throw exception("Call to RegisterClassEx failed!");
-	log_debug("Registered class %s", "win32app");
+	dlog("Registered class: %s", mc_window_class);
 
     // The parameters to CreateWindow explained:
     // szWindowClass: the name of the application
@@ -92,8 +100,8 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
     // hInstance: the first parameter from WinMain
     // NULL: not used in this application
     m_windowHandle = CreateWindow(
-        L"win32app",
-		L"my little renderererererer",
+        mc_window_class,
+		mc_window_title,
         WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         640, 480,
@@ -105,7 +113,7 @@ void Win32AppWindow::init(unique_ptr<Renderer> renderer)
 
     if (!m_windowHandle)
 		throw exception("Call to CreateWindow failed!");
-    log_debug("Created window %s", "my little render");
+	dlog("Created window %#x: %s", m_windowHandle, mc_window_title);
 
 	// save this pointer for wndproc
 	SetWindowLong(m_windowHandle, GWL_USERDATA, reinterpret_cast<LONG>(this));
@@ -149,6 +157,7 @@ int Win32AppWindow::shutdown()
 
 void Win32AppWindow::on_key_pressed(int key_code)
 {
+	dlog("Pressed %d", key_code);
 	switch (key_code)
 	{
 		case VK_ESCAPE:
@@ -244,6 +253,7 @@ unique_ptr<AppWindow> AppWindowFactory::create()
 {
 	// switch on platform
 #ifdef WIN32
+	dlog("AppWindowFactory creating a Win32AppWindow...");
 	return unique_ptr<AppWindow>(new Win32AppWindow);
 #endif
 }
