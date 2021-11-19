@@ -1,0 +1,2 @@
+
+#define IDI_QKAMBER 101

@@ -103,7 +103,7 @@ using fp8 = FixedPoint<int32_t, 8>;
 template <typename T, size_t N>
 class vec
 {
-    template <typename T2 = T, size_t RN>
+    template <typename T2 = T, size_t RN = 0>
     friend class vec;
 public:
     vec();
@@ -292,7 +292,7 @@ public:
 template <typename T, size_t D0, size_t D1 = D0>
 class mat
 {
-    template <typename T2 = T, size_t RD0, size_t RD1>
+    template <typename T2 = T, size_t RD0 = 0, size_t RD1 = 0>
     friend class mat;
 public:
     template <bool is_const>
