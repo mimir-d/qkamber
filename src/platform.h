@@ -4,6 +4,10 @@
     #include "platform/win32/win32_app.h"
     #include "platform/win32/render/win32_software_device.h"
     #include "platform/win32/input/win32_input_device.h"
+#else
+    #include "platform/sdl/sdl_app.h"
+    #include "platform/sdl/render/sdl_software_device.h"
+    #include "platform/sdl/input/sdl_input_device.h"
 #endif
 
 template <typename Intf, typename Impl>
@@ -21,7 +25,7 @@ public:
 #ifdef WIN32
     class AppFactory : public PlatformFactory<App, Win32App> {};
 #else
-    #error "No platform available for AppFactory"
+    using AppFactory = PlatformFactory<App, SdlApp>;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -30,7 +34,7 @@ public:
 #ifdef WIN32
     class RenderDeviceFactory : public PlatformFactory<RenderDevice, Win32SoftwareDevice> {};
 #else
-    #error "No platform available for RenderDeviceFactory"
+    using RenderDeviceFactory = PlatformFactory<RenderDevice, SdlSoftwareDevice>;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,13 +43,13 @@ public:
 #ifdef WIN32
     class MouseDeviceFactory : public PlatformFactory<MouseDevice, Win32MouseDevice> {};
 #else
-    #error "No platform available for RenderDeviceFactory"
+    using MouseDeviceFactory = PlatformFactory<MouseDevice, SdlMouseDevice>;
 #endif
 
 #ifdef WIN32
     class KeyboardDeviceFactory : public PlatformFactory<KeyboardDevice, Win32KeyboardDevice> {};
 #else
-    #error "No platform available for RenderDeviceFactory"
+    using KeyboardDeviceFactory = PlatformFactory<KeyboardDevice, SdlKeyboardDevice>;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,13 +62,18 @@ namespace detail
 
 #define DECL_TYPE_NAME(x) \
     template <> struct PlatformTypeTraits<x> \
-    { static constexpr char* name = #x; }
+    { static constexpr char name[] = #x; }
 
 #ifdef WIN32
     DECL_TYPE_NAME(Win32App);
     DECL_TYPE_NAME(Win32SoftwareDevice);
     DECL_TYPE_NAME(Win32MouseDevice);
     DECL_TYPE_NAME(Win32KeyboardDevice);
+#else
+    DECL_TYPE_NAME(SdlApp);
+    DECL_TYPE_NAME(SdlSoftwareDevice);
+    DECL_TYPE_NAME(SdlMouseDevice);
+    DECL_TYPE_NAME(SdlKeyboardDevice);
 #endif
 #undef DECL_TYPE_NAME
 

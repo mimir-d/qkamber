@@ -8,6 +8,8 @@
 // NOTE: these are defined by winapi and shadow std::min/max
 #   undef min
 #   undef max
+#else
+    #include "SDL.h"
 #endif
 
 #include <iostream>
@@ -19,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 #include <random>
 #include <new>

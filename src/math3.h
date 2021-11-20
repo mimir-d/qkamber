@@ -165,6 +165,9 @@ public:
     T operator*(const vec& rhs) const;
 
 private:
+    template <typename RT, size_t RN>
+    friend class vec;
+
     template <size_t I>
     struct eq_op
     {
@@ -380,6 +383,9 @@ public:
     mat operator*(T rhs) const;
 
 private:
+    template <typename RT, size_t RD0, size_t RD1>
+    friend class mat;
+
     template <size_t I>
     struct scale_op
     {

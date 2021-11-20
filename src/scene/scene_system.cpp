@@ -86,7 +86,7 @@ void SceneSystem::process()
     auto& q = render.get_queue();
     q.clear();
 
-    for (auto& agg : m_context.get_entity().filter_comp<SrtComponent, ModelComponent>())
+    for (const auto& agg : m_context.get_entity().filter_comp<SrtComponent, ModelComponent>())
     {
         auto& srt = std::get<0>(agg);
         auto& model = std::get<1>(agg);

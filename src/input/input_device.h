@@ -2,6 +2,8 @@
 
 #include "math3.h"
 
+#define KEY_ESCAPE 0x1ff
+
 class MouseDevice
 {
 public:

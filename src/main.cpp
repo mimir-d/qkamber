@@ -94,6 +94,8 @@ void Context::on_create()
 
     auto& srt_ship = m_objects[1]->get_component<SrtComponent>();
     srt_ship.set_scale({ .5, .5, .5 });
+
+    dev.set_polygon_mode(PolygonMode::Point);
 }
 
 void Context::on_destroy()
@@ -128,7 +130,7 @@ void Context::on_update()
         static_cast<SoftwareDevice&>(dev).debug_normals(false);
 
     // TODO: translate keys to platform independent
-    if (keyboard.get_key_pressed(VK_ESCAPE))
+    if (keyboard.get_key_pressed(KEY_ESCAPE))
         notify_exit();
 
     m_camera.update();
