@@ -27,7 +27,7 @@ Material::Material(const GeometryAsset::Material& raw, RenderSystem& render) :
                 case ImageFormat::Rgba8: return PixelFormat::RgbaU8;
                 case ImageFormat::Rgb8: return PixelFormat::RgbU8;
             }
-            throw exception("unknown image format for material construction");
+            throw std::runtime_error("unknown image format for material construction");
         }();
 
         auto tex = render.get_device().create_texture(width, height, format);

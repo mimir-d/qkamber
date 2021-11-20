@@ -23,7 +23,7 @@ unique_ptr<GeometryAsset> GeometryLoader::load(const std::string& filename, File
             return load_3ds(filename);
     }
 
-    throw exception("unknown file format");
+    throw std::runtime_error("unknown file format");
 }
 
 namespace
@@ -65,7 +65,7 @@ namespace
         else if (model_name == "triangle" || model_name == "axis_triangle")
             make_tris(asset, name);
         else
-            throw exception(print_fmt("unknown static geometry, name = %s", name.c_str()).c_str());
+            throw std::runtime_error(print_fmt("unknown static geometry, name = %s", name.c_str()).c_str());
     }
 
     const string& PrefabGeometry::get_name() const
@@ -374,7 +374,7 @@ namespace
 
         read(&ch);
         if (ch.id != M3DS_PRIMARY)
-            throw exception("no primary chunk in 3ds file");
+            throw std::runtime_error("no primary chunk in 3ds file");
 
         while (m_file)
         {
@@ -516,7 +516,7 @@ namespace
         }
         else
         {
-            throw exception("unknown 3ds color format");
+            throw std::runtime_error("unknown 3ds color format");
         }
 
         ret.a() = 1.0f;

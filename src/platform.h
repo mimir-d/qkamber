@@ -1,8 +1,10 @@
 #pragma once
 
-#include "platform/win32/win32_app.h"
-#include "platform/win32/render/win32_software_device.h"
-#include "platform/win32/input/win32_input_device.h"
+#ifdef WIN32
+    #include "platform/win32/win32_app.h"
+    #include "platform/win32/render/win32_software_device.h"
+    #include "platform/win32/input/win32_input_device.h"
+#endif
 
 template <typename Intf, typename Impl>
 class PlatformFactory
@@ -16,43 +18,35 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // AppFactory
 ///////////////////////////////////////////////////////////////////////////////
-class AppFactory : public
 #ifdef WIN32
-    PlatformFactory<App, Win32App>
+    class AppFactory : public PlatformFactory<App, Win32App> {};
 #else
-#   error "No platform available for AppFactory"
+    #error "No platform available for AppFactory"
 #endif
-{};
 
 ///////////////////////////////////////////////////////////////////////////////
 // RenderDeviceFactory
 ///////////////////////////////////////////////////////////////////////////////
-class RenderDeviceFactory : public
 #ifdef WIN32
-    PlatformFactory<RenderDevice, Win32SoftwareDevice>
+    class RenderDeviceFactory : public PlatformFactory<RenderDevice, Win32SoftwareDevice> {};
 #else
-#   error "No platform available for RenderDeviceFactory"
+    #error "No platform available for RenderDeviceFactory"
 #endif
-{};
 
 ///////////////////////////////////////////////////////////////////////////////
 // InputDeviceFactory
 ///////////////////////////////////////////////////////////////////////////////
-class MouseDeviceFactory : public
 #ifdef WIN32
-    PlatformFactory<MouseDevice, Win32MouseDevice>
+    class MouseDeviceFactory : public PlatformFactory<MouseDevice, Win32MouseDevice> {};
 #else
-#   error "No platform available for RenderDeviceFactory"
+    #error "No platform available for RenderDeviceFactory"
 #endif
-{};
 
-class KeyboardDeviceFactory : public
 #ifdef WIN32
-    PlatformFactory<KeyboardDevice, Win32KeyboardDevice>
+    class KeyboardDeviceFactory : public PlatformFactory<KeyboardDevice, Win32KeyboardDevice> {};
 #else
-#   error "No platform available for RenderDeviceFactory"
+    #error "No platform available for RenderDeviceFactory"
 #endif
-{};
 
 ///////////////////////////////////////////////////////////////////////////////
 // PlatformFactory impl
@@ -66,10 +60,12 @@ namespace detail
     template <> struct PlatformTypeTraits<x> \
     { static constexpr char* name = #x; }
 
+#ifdef WIN32
     DECL_TYPE_NAME(Win32App);
     DECL_TYPE_NAME(Win32SoftwareDevice);
     DECL_TYPE_NAME(Win32MouseDevice);
     DECL_TYPE_NAME(Win32KeyboardDevice);
+#endif
 #undef DECL_TYPE_NAME
 
 }

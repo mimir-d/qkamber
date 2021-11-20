@@ -86,7 +86,7 @@ namespace detail
 // ComponentMask impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename Component>
-constexpr static uint32_t ComponentMask::get_mask()
+constexpr uint32_t ComponentMask::get_mask()
 {
     return 1 << detail::ComponentId<Component>::value;
 }

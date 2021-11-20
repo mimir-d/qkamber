@@ -21,12 +21,12 @@ namespace
 
     inline ColorBuffer& NullTarget::get_color_buffer()
     {
-        throw std::exception("Attempted to draw in null target");
+        throw std::runtime_error("Attempted to draw in null target");
     }
 
     inline DepthBuffer& NullTarget::get_depth_buffer()
     {
-        throw std::exception("Attempted to draw in null target");
+        throw std::runtime_error("Attempted to draw in null target");
     }
 
     inline int NullTarget::get_width() const

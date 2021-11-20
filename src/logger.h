@@ -70,22 +70,22 @@ namespace detail
 
 #define log_any(level, msg, ...) \
     do { \
-        Logger::get().log(level, __FILE_SHORT__, __LINE__, (msg), __VA_ARGS__); \
+        Logger::get().log(level, __FILE_SHORT__, __LINE__, (msg), ## __VA_ARGS__); \
     } while (0)
 
-#define log_debug(msg, ...) log_any(LogLevel::Debug,   msg, __VA_ARGS__)
-#define log_info(msg, ...)  log_any(LogLevel::Info,    msg, __VA_ARGS__)
-#define log_warn(msg, ...)  log_any(LogLevel::Warning, msg, __VA_ARGS__)
-#define log_error(msg, ...) log_any(LogLevel::Error,   msg, __VA_ARGS__)
+#define log_debug(msg, ...) log_any(LogLevel::Debug,   (msg), ## __VA_ARGS__)
+#define log_info(msg, ...)  log_any(LogLevel::Info,    (msg), ## __VA_ARGS__)
+#define log_warn(msg, ...)  log_any(LogLevel::Warning, (msg), ## __VA_ARGS__)
+#define log_error(msg, ...) log_any(LogLevel::Error,   (msg), ## __VA_ARGS__)
 
 #ifdef _DEBUG
 #   define dlog log_debug
 #   define flog(...)                                                              \
         auto __LINE_VARNAME(__raiilogger_) =                                      \
-        detail::RaiiLogger(__FUNCTION__, __FILE_SHORT__, __LINE__, __VA_ARGS__)
+        detail::RaiiLogger(__FUNCTION__, __FILE_SHORT__, __LINE__, ## __VA_ARGS__)
 #else
-#   define dlog __noop
-#   define flog __noop
+#   define dlog(...)
+#   define flog(...)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -154,7 +154,7 @@ inline void Logger::set_output_file(const std::string& filename)
 
     m_file.open(filename, std::ios::out);
     if (!m_file)
-        throw std::exception("unable to open log file");
+        throw std::runtime_error("unable to open log file");
     m_file.rdbuf()->pubsetbuf(0, 0);
 }
 

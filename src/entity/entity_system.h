@@ -159,7 +159,7 @@ template <bool is_const, typename... Components>
 inline typename EntitySystem::filter_t<is_const, Components...>::iter_t::value_t
 EntitySystem::filter_t<is_const, Components...>::iter_t::operator*()
 {
-    return make_tuple(std::ref(m_es.m_store.get<Components>()[m_index])...);
+    return make_tuple(std::ref(m_es.m_store.template get<Components>()[m_index])...);
 }
 
 template <bool is_const, typename... Components>
@@ -178,7 +178,7 @@ inline EntitySystem::filter_t<is_const, Components...>::filter_t(es_t es) :
     using swallow = int[];
 
     m_mask = 0;
-    (void)swallow{ (m_mask |= es.m_mask.get_mask<Components>(), 0)... };
+    (void)swallow{ (m_mask |= es.m_mask.template get_mask<Components>(), 0)... };
 }
 
 template <bool is_const, typename... Components>
@@ -247,7 +247,7 @@ template <typename Component>
 inline Component& EntitySystem::get_component(eid_t id)
 {
     if (!(m_mask[id] & m_mask.get_mask<Component>()))
-        throw std::exception("no such component");
+        throw std::runtime_error("no such component");
 
     return m_store.get<Component>()[static_cast<int>(id)];
 }
@@ -256,7 +256,7 @@ template <typename Component>
 inline const Component& EntitySystem::get_component(eid_t id) const
 {
     if (!(m_mask[id] & m_mask.get_mask<Component>()))
-        throw std::exception("no such component");
+        throw std::runtime_error("no such component");
 
     return m_store.get<Component>()[static_cast<int>(id)];
 }

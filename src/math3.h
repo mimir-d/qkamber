@@ -103,8 +103,6 @@ using fp8 = FixedPoint<int32_t, 8>;
 template <typename T, size_t N>
 class vec
 {
-    template <typename T2 = T, size_t RN = 0>
-    friend class vec;
 public:
     vec();
     vec(const vec& rhs);
@@ -167,34 +165,34 @@ public:
     T operator*(const vec& rhs) const;
 
 private:
-    template <int I>
+    template <size_t I>
     struct eq_op
     {
         void operator()(vec& out, const vec& rhs) const;
         void operator()(vec& out, float rhs) const;
     };
-    template <int I>
+    template <size_t I>
     struct add_op
     {
         void operator()(vec& out, const vec& lhs, const vec& rhs) const;
     };
-    template <int I>
+    template <size_t I>
     struct sub_op
     {
         void operator()(vec& out, const vec& lhs, const vec& rhs) const;
     };
-    template <int I>
+    template <size_t I>
     struct mul_op
     {
         void operator()(vec& out, const vec& lhs, const vec& rhs) const;
         void operator()(vec& out, const vec& lhs, T rhs) const;
     };
-    template <int I>
+    template <size_t I>
     struct neg_op
     {
         void operator()(vec& out, const vec& rhs) const;
     };
-    template <int I>
+    template <size_t I>
     struct dot_op
     {
         void operator()(T& out, const vec& lhs, const vec& rhs) const;
@@ -289,13 +287,8 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // matrix types
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, size_t D0, size_t D1 = D0>
-class mat
-{
-    template <typename T2 = T, size_t RD0 = 0, size_t RD1 = 0>
-    friend class mat;
-public:
-    template <bool is_const>
+namespace detail {
+    template <typename T, size_t N, bool is_const>
     class row_t
     {
     public:
@@ -305,31 +298,39 @@ public:
 
     public:
         row_t(ptr_t start);
-        row_t(const row_t<false>& rhs);
+        row_t(const row_t<T, N, false>& rhs);
 
         ref_t operator[](int index);
         value_t operator[](int index) const;
 
-        row_t& operator=(const vec<T, D1>& rhs);
-        operator vec<T, D1>() const;
+        row_t& operator=(const vec<T, N>& rhs);
+        operator vec<T, N>() const;
 
     private:
-        template <int I>
+        template <size_t I>
         struct set_vec
         {
-            void operator()(row_t& out, const vec<T, D1>& rhs);
+            void operator()(row_t& out, const vec<T, N>& rhs);
         };
-        template <int I>
+        template <size_t I>
         struct get_vec
         {
-            void operator()(vec<T, D1>& out, const row_t& rhs);
+            void operator()(vec<T, N>& out, const row_t& rhs);
         };
 
     private:
         // needed because of the non-const to const copy ctor
-        friend row_t<is_const>;
+        //friend row_t<is_const>;
         ptr_t m_start;
     };
+}
+
+template <typename T, size_t D0, size_t D1 = D0>
+class mat
+{
+public:
+    template <bool is_const>
+    using row_t = detail::row_t<T, D1, is_const>;
 
     typedef row_t<false> row;
     typedef const row_t<true> const_row;
@@ -370,30 +371,29 @@ public:
 
     mat& operator=(const mat& rhs);
 
-    template <typename = std::enable_if_t<D0 == D1>>
-    mat& operator*=(const mat& rhs);
+    mat<T, D0, D0>& operator*=(const mat<T, D0, D0>& rhs);
     mat& operator*=(T rhs);
 
-    template <int D2>
+    template <size_t D2>
     mat<T, D0, D2> operator*(const mat<T, D1, D2>& rhs) const;
     vec<T, D0> operator*(const vec<T, D1>& rhs) const;
     mat operator*(T rhs) const;
 
 private:
-    template <int I>
+    template <size_t I>
     struct scale_op
     {
         void operator()(mat& out, const mat& lhs, T rhs) const;
     };
 
-    template <int I, int J>
+    template <size_t I, size_t J>
     struct eq_op
     {
         template <size_t RD0, size_t RD1>
         void operator()(mat& out, const mat<T, RD0, RD1>& rhs) const;
     };
 
-    template <int I, int J>
+    template <size_t I, size_t J>
     struct transpose_op
     {
         void operator()(mat<T, D1, D0>& out, const mat& rhs) const;
@@ -401,46 +401,46 @@ private:
 
     // NOTE: this needs to have increasing K such that the compiler sees the instructions sequentially forward
     // RANT: vs2015 can't deal with implicit D1 so a value copy needs to happen here
-    template <int _D1 = D1, int K = 0>
+    template <size_t _D1 = D1, size_t K = 0>
     struct mul_op
     {
-        template <int I, int J>
+        template <size_t I, size_t J>
         struct mul_row
         {
-            template <int D2>
+            template <size_t D2>
             void operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const;
         };
     };
 
-    template <int _D1>
+    template <size_t _D1>
     struct mul_op<_D1, 0>
     {
-        template <int I, int J>
+        template <size_t I, size_t J>
         struct mul_row
         {
-            template <int D2>
+            template <size_t D2>
             void operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const;
         };
     };
 
-    template <int _D1>
+    template <size_t _D1>
     struct mul_op<_D1, _D1>
     {
-        template <int I, int J>
+        template <size_t I, size_t J>
         struct mul_row
         {
-            template <int D2>
+            template <size_t D2>
             void operator()(mat<T, D0, D2>& out, const mat&, const mat<T, _D1, D2>&) const;
         };
     };
 
-    template <int I, int J>
+    template <size_t I, size_t J>
     struct transform_op
     {
         void operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const;
     };
 
-    template <int I>
+    template <size_t I>
     struct transform_op<I, 0>
     {
         void operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const;
@@ -671,7 +671,7 @@ inline bool FixedPoint<T, Digits>::operator==(const FixedPoint& rhs) const
 ///////////////////////////////////////////////////////////////////////////////
 namespace detail
 {
-    template <int D0, template<int> class Func, int I = 0>
+    template <size_t D0, template<size_t> class Func, size_t I = 0>
     struct iterate1
     {
         template <typename Result, typename... Args>
@@ -682,7 +682,7 @@ namespace detail
         }
     };
 
-    template <int D0, template<int> class Func>
+    template <size_t D0, template<size_t> class Func>
     struct iterate1<D0, Func, D0>
     {
         template <typename Result, typename... Args>
@@ -850,56 +850,56 @@ inline T vec<T, N>::operator*(const vec& rhs) const
 // vec<T, N> operations impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::eq_op<I>::operator()(vec& out, const vec& rhs) const
 {
     out.m_data[I] = rhs.m_data[I];
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::eq_op<I>::operator()(vec& out, float rhs) const
 {
     out.m_data[I] = rhs;
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::add_op<I>::operator()(vec& out, const vec& lhs, const vec& rhs) const
 {
     out.m_data[I] = lhs.m_data[I] + rhs.m_data[I];
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::sub_op<I>::operator()(vec& out, const vec& lhs, const vec& rhs) const
 {
     out.m_data[I] = lhs.m_data[I] - rhs.m_data[I];
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::mul_op<I>::operator()(vec& out, const vec& lhs, const vec& rhs) const
 {
     out.m_data[I] = lhs.m_data[I] * rhs.m_data[I];
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::mul_op<I>::operator()(vec& out, const vec& lhs, T rhs) const
 {
     out.m_data[I] = lhs.m_data[I] * rhs;
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::neg_op<I>::operator()(vec& out, const vec& rhs) const
 {
     out.m_data[I] = -rhs.m_data[I];
 }
 
 template <typename T, size_t N>
-template <int I>
+template <size_t I>
 inline void vec<T, N>::dot_op<I>::operator()(T& out, const vec& lhs, const vec& rhs) const
 {
     out += lhs.m_data[I] * rhs.m_data[I];
@@ -925,67 +925,60 @@ inline vec3 vec3::operator^(const vec3& rhs) const
 static_assert(sizeof(vec4) == 4 * sizeof(float), "vec4 is not a value type");
 
 ///////////////////////////////////////////////////////////////////////////////
-// mat<T, D0, D1>::row_t<is_const> impl
+// detail::row_t<T, N, is_const> impl
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline mat<T, D0, D1>::row_t<is_const>::row_t(ptr_t start) :
+template <typename T, size_t N, bool is_const>
+inline detail::row_t<T, N, is_const>::row_t(ptr_t start) :
     m_start(start)
 {}
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline mat<T, D0, D1>::row_t<is_const>::row_t(const row_t<false>& rhs) :
+template <typename T, size_t N, bool is_const>
+inline detail::row_t<T, N, is_const>::row_t(const row_t<T, N, false>& rhs) :
     m_start(rhs.m_start)
 {}
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline typename mat<T, D0, D1>::template row_t<is_const>::ref_t
-mat<T, D0, D1>::row_t<is_const>::operator[](int index)
+template <typename T, size_t N, bool is_const>
+inline typename detail::row_t<T, N, is_const>::ref_t
+detail::row_t<T, N, is_const>::operator[](int index)
 {
     return m_start[index];
 }
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline typename mat<T, D0, D1>::template row_t<is_const>::value_t
-mat<T, D0, D1>::row_t<is_const>::operator[](int index) const
+template <typename T, size_t N, bool is_const>
+inline typename detail::row_t<T, N, is_const>::value_t
+detail::row_t<T, N, is_const>::operator[](int index) const
 {
     return m_start[index];
 }
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline typename mat<T, D0, D1>::row_t<is_const>& mat<T, D0, D1>::row_t<is_const>::operator=(const vec<T, D1>& rhs)
+template <typename T, size_t N, bool is_const>
+inline typename detail::row_t<T, N, is_const>&
+detail::row_t<T, N, is_const>::operator=(const vec<T, N>& rhs)
 {
-    return detail::iterate1<D1, set_vec>()(*this, rhs);
+    return detail::iterate1<N, set_vec>()(*this, rhs);
 }
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-inline typename mat<T, D0, D1>::row_t<is_const>::operator vec<T, D1>() const
+template <typename T, size_t N, bool is_const>
+inline detail::row_t<T, N, is_const>::operator vec<T, N>() const
 {
-    vec<T, D1> ret;
-    detail::iterate1<D1, get_vec>()(ret, *this);
+    vec<T, N> ret;
+    detail::iterate1<N, get_vec>()(ret, *this);
     return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// mat<T, D0, D1>::row_t<is_const>::set/get_vec impl
+// detail::row_t<T, N, is_const>::set/get_vec impl
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-template <int I>
-inline void mat<T, D0, D1>::row_t<is_const>::set_vec<I>::operator()(row_t& out, const vec<T, D1>& rhs)
+template <typename T, size_t N, bool is_const>
+template <size_t I>
+inline void detail::row_t<T, N, is_const>::set_vec<I>::operator()(row_t& out, const vec<T, N>& rhs)
 {
     out.m_start[I] = rhs[I];
 }
 
-template <typename T, size_t D0, size_t D1>
-template <bool is_const>
-template <int I>
-inline void mat<T, D0, D1>::row_t<is_const>::get_vec<I>::operator()(vec<T, D1>& out, const row_t& rhs)
+template <typename T, size_t N, bool is_const>
+template <size_t I>
+inline void detail::row_t<T, N, is_const>::get_vec<I>::operator()(vec<T, N>& out, const row_t& rhs)
 {
     out[I] = rhs.m_start[I];
 }
@@ -995,7 +988,7 @@ inline void mat<T, D0, D1>::row_t<is_const>::get_vec<I>::operator()(vec<T, D1>& 
 ///////////////////////////////////////////////////////////////////////////////
 namespace detail
 {
-    template <int D0, int D1, template<int, int> class Op, int I = 0, int J = 0>
+    template <size_t D0, size_t D1, template<size_t, size_t> class Op, size_t I = 0, size_t J = 0>
     struct iterate2
     {
         template <typename Result, typename... Args>
@@ -1006,7 +999,7 @@ namespace detail
         }
     };
 
-    template <int D0, int D1, template<int, int> class Op, int I>
+    template <size_t D0, size_t D1, template<size_t, size_t> class Op, size_t I>
     struct iterate2<D0, D1, Op, I, D1>
     {
         template <typename Result, typename... Args>
@@ -1016,7 +1009,7 @@ namespace detail
         }
     };
 
-    template <int D0, int D1, template<int, int> class Op>
+    template <size_t D0, size_t D1, template<size_t, size_t> class Op>
     struct iterate2<D0, D1, Op, D0, 0>
     {
         template <typename Result, typename... Args>
@@ -1067,14 +1060,13 @@ inline mat<T, D0, D1>& mat<T, D0, D1>::operator=(const mat& rhs)
 }
 
 template <typename T, size_t D0, size_t D1>
-template <typename>
-mat<T, D0, D1>& mat<T, D0, D1>::operator*=(const mat& rhs)
+inline mat<T, D0, D0>& mat<T, D0, D1>::operator*=(const mat<T, D0, D0>& rhs)
 {
     // NOTE: keep result in a different var because cells get overwritten
     // while doing the multiplication algo
     mat result(no_init_tag {});
 
-    detail::iterate2<D0, D1, mul_op<>::mul_row>()(result, *this, rhs);
+    detail::iterate2<D0, D1, mul_op<>::template mul_row>()(result, *this, rhs);
     return detail::iterate2<D0, D1, eq_op>()(*this, result);
 }
 
@@ -1085,11 +1077,11 @@ inline mat<T, D0, D1>& mat<T, D0, D1>::operator*=(T rhs)
 }
 
 template <typename T, size_t D0, size_t D1>
-template <int D2>
+template <size_t D2>
 inline mat<T, D0, D2> mat<T, D0, D1>::operator*(const mat<T, D1, D2>& rhs) const
 {
     mat<T, D0, D2> ret(no_init_tag {});
-    return detail::iterate2<D0, D2, mul_op<>::mul_row>()(ret, *this, rhs);
+    return detail::iterate2<D0, D2, mul_op<>::template mul_row>()(ret, *this, rhs);
 }
 
 template <typename T, size_t D0, size_t D1>
@@ -1110,7 +1102,7 @@ inline mat<T, D0, D1> mat<T, D0, D1>::operator*(T rhs) const
 // mat4::scale_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
-template <int I>
+template <size_t I>
 inline void mat<T, D0, D1>::scale_op<I>::operator()(mat& out, const mat& lhs, T rhs) const
 {
     out.m_data[I] = lhs.m_data[I] * rhs;
@@ -1120,9 +1112,9 @@ inline void mat<T, D0, D1>::scale_op<I>::operator()(mat& out, const mat& lhs, T 
 // mat4::eq_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
-template <int I, int J>
+template <size_t I, size_t J>
 template <size_t RD0, size_t RD1>
-inline void mat<T, D0, D1>::eq_op<I, J>::operator()(mat& out, const mat<T, RD0, RD1>& rhs) const
+inline void mat<T, D0, D1>::eq_op<I, J>::operator()(mat<T, D0, D1>& out, const mat<T, RD0, RD1>& rhs) const
 {
     out.m_data[I*D1 + J] = rhs.m_data[I*RD1 + J];
 }
@@ -1131,7 +1123,7 @@ inline void mat<T, D0, D1>::eq_op<I, J>::operator()(mat& out, const mat<T, RD0, 
 // mat4::transpose_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
-template <int I, int J>
+template <size_t I, size_t J>
 inline void mat<T, D0, D1>::transpose_op<I, J>::operator()(mat<T, D1, D0>& out, const mat& rhs) const
 {
     out.m_data[J*D0 + I] = rhs.m_data[I*D1 + J];
@@ -1141,9 +1133,9 @@ inline void mat<T, D0, D1>::transpose_op<I, J>::operator()(mat<T, D1, D0>& out, 
 // mat4::mul_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
-template <int _D1, int K>
-template <int I, int J>
-template <int D2>
+template <size_t _D1, size_t K>
+template <size_t I, size_t J>
+template <size_t D2>
 inline void mat<T, D0, D1>::mul_op<_D1, K>::mul_row<I, J>::operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const
 {
     out.m_data[I*D1 + J] += lhs.m_data[I*D1 + K] * rhs.m_data[K*D1 + J];
@@ -1151,9 +1143,9 @@ inline void mat<T, D0, D1>::mul_op<_D1, K>::mul_row<I, J>::operator()(mat<T, D0,
 }
 
 template <typename T, size_t D0, size_t D1>
-template <int _D1>
-template <int I, int J>
-template <int D2>
+template <size_t _D1>
+template <size_t I, size_t J>
+template <size_t D2>
 inline void mat<T, D0, D1>::mul_op<_D1, 0>::mul_row<I, J>::operator()(mat<T, D0, D2>& out, const mat& lhs, const mat<T, _D1, D2>& rhs) const
 {
     // start with 0 case because we need to initialize the out matrix
@@ -1162,9 +1154,9 @@ inline void mat<T, D0, D1>::mul_op<_D1, 0>::mul_row<I, J>::operator()(mat<T, D0,
 }
 
 template <typename T, size_t D0, size_t D1>
-template <int _D1>
-template <int I, int J>
-template <int D2>
+template <size_t _D1>
+template <size_t I, size_t J>
+template <size_t D2>
 inline void mat<T, D0, D1>::mul_op<_D1, _D1>::mul_row<I, J>::operator()(mat<T, D0, D2>&, const mat&, const mat<T, _D1, D2>&) const
 {}
 
@@ -1172,14 +1164,14 @@ inline void mat<T, D0, D1>::mul_op<_D1, _D1>::mul_row<I, J>::operator()(mat<T, D
 // mat4::transform_op impl
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t D0, size_t D1>
-template <int I, int J>
+template <size_t I, size_t J>
 inline void mat<T, D0, D1>::transform_op<I, J>::operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const
 {
     out[I] += lhs.m_data[I*D1 + J] * rhs[J];
 }
 
 template <typename T, size_t D0, size_t D1>
-template <int I>
+template <size_t I>
 inline void mat<T, D0, D1>::transform_op<I, 0>::operator()(vec<T, D0>& out, const mat& lhs, const vec<T, D1>& rhs) const
 {
     out[I] = lhs.m_data[I*D1] * rhs[0];

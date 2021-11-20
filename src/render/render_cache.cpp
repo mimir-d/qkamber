@@ -68,7 +68,7 @@ shared_ptr<Mesh> RenderCache::get_mesh(const std::string& name)
         );
 
         if (raw_obj == raw_objects.end())
-            throw exception(print_fmt("Mesh not found [name = %s]", name.c_str()).c_str());
+            throw std::runtime_error(print_fmt("Mesh not found [name = %s]", name.c_str()).c_str());
 
         return std::make_unique<Mesh>(*raw_obj, m_render);
     });

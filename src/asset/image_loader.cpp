@@ -18,7 +18,7 @@ unique_ptr<ImageAsset> ImageLoader::load(const std::string& filename, FileFormat
             return load_bmp(filename);
     }
 
-    throw exception("unknown file format");
+    throw std::runtime_error("unknown file format");
 }
 
 namespace
@@ -82,7 +82,7 @@ namespace
 
         ifstream fin(filename, ios::binary);
         if (!fin)
-            throw exception("cannot open file");
+            throw std::runtime_error("cannot open file");
 
         read_file_header(fin);
         read_bitmap_header(fin);
@@ -130,15 +130,15 @@ namespace
         fin.seekg(0, ios::beg);
         fin.read(reinterpret_cast<char*>(&m_fh), sizeof(FileHeader));
         if (fin.eof() || fin.fail())
-            throw exception("invalid file size");
+            throw std::runtime_error("invalid file size");
 
         if (m_fh.signature != BitmapSignature)
-            throw exception("invalid bitmap signature");
+            throw std::runtime_error("invalid bitmap signature");
 
         // check full bitmap size in order to skip further errors
         fin.seekg(0, ios::end);
         if (static_cast<uint32_t>(fin.tellg()) != m_fh.size)
-            throw exception("invalid file size");
+            throw std::runtime_error("invalid file size");
         fin.seekg(sizeof(FileHeader), ios::beg);
     }
 
@@ -152,11 +152,11 @@ namespace
             case 24: m_format = ImageFormat::Rgb8;  break;
             case 32: m_format = ImageFormat::Rgba8; break;
             default:
-                throw exception(print_fmt("unsupported bitcount %d, must be 24/32", m_bh.bit_count).c_str());
+                throw std::runtime_error(print_fmt("unsupported bitcount %d, must be 24/32", m_bh.bit_count).c_str());
         }
 
         if (m_bh.compression != 0)
-            throw exception("unsupported compression type, must be uncompressed/0");
+            throw std::runtime_error("unsupported compression type, must be uncompressed/0");
     }
 
     inline void BmpImage::read_data(ifstream& fin)

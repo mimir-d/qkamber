@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #define __FILE_SHORT__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #define __CONCAT(x, y) x ## y
 #define __LINE_VARNAME(prefix) __CONCAT(prefix, __LINE__)
@@ -104,7 +106,7 @@ template <typename T>
 T& optional_t<T>::value()
 {
     if (!m_has_value)
-        throw std::exception("optional_t doesnt have value");
+        throw std::runtime_error("optional_t doesnt have value");
     return *reinterpret_cast<T*>(&m_storage);
 }
 
@@ -112,7 +114,7 @@ template <typename T>
 const T& optional_t<T>::value() const
 {
     if (!m_has_value)
-        throw std::exception("optional_t doesnt have value");
+        throw std::runtime_error("optional_t doesnt have value");
     return *reinterpret_cast<const T*>(&m_storage);
 }
 
@@ -304,7 +306,7 @@ namespace detail
                 }
                 else
                 {
-                    throw std::exception("print_fmt invalid format string: missing arguments");
+                    throw std::runtime_error("print_fmt invalid format string: missing arguments");
                 }
             }
             os << *fmt++;
@@ -331,7 +333,7 @@ namespace detail
             }
             os << *fmt++;
         }
-        throw std::exception("print_fmt invalid format string: extra arguments");
+        throw std::runtime_error("print_fmt invalid format string: extra arguments");
     }
     */
 }

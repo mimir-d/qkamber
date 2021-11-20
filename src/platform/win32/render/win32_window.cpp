@@ -26,7 +26,7 @@ Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc, int width, int height) :
     if (GetDeviceCaps(surface_dc, BITSPIXEL) != 32)
     {
         // TODO: fix this with forcing the window bpp thru wgl
-        throw exception("window needs to be 32bpp");
+        throw std::runtime_error("window needs to be 32bpp");
     }
 
     resize(width, height);
@@ -167,7 +167,7 @@ void Win32Window::register_class()
     };
 
     if (!RegisterClassEx(&wcex))
-        throw exception("RegisterClassEx failed");
+        throw std::runtime_error("RegisterClassEx failed");
 
     dlog("Registered win32 class: %s", WINDOW_CLASS);
 }
@@ -204,7 +204,7 @@ void Win32Window::create_window(int width, int height)
     );
 
     if (!m_window_handle)
-        throw exception("CreateWindow failed");
+        throw std::runtime_error("CreateWindow failed");
     log_info("Created window hwnd = %#x, title = %s", m_window_handle, WINDOW_TITLE);
 
     m_dc = GetDC(m_window_handle);

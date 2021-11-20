@@ -191,7 +191,7 @@ inline size_t VertexDecl::get_elem_size(VertexType type)
         case VertexType::Color:
             return 4 * sizeof(float);
     }
-    throw std::exception("unknown vertex decl element");
+    throw std::runtime_error("unknown vertex decl element");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -234,5 +234,5 @@ inline size_t Texture::get_elem_size(PixelFormat format)
         case PixelFormat::RgbaU8: return 4;
         case PixelFormat::RgbU8: return 3;
     }
-    throw std::exception("unknown pixel format");
+    throw std::runtime_error("unknown pixel format");
 }

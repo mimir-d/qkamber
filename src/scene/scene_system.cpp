@@ -29,22 +29,22 @@ namespace
 
     inline const mat4& NullCamera::get_view() const
     {
-        throw std::exception("Attempted to use null camera");
+        throw std::runtime_error("Attempted to use null camera");
     }
 
     inline const mat4& NullCamera::get_proj() const
     {
-        throw std::exception("Attempted to use null camera");
+        throw std::runtime_error("Attempted to use null camera");
     }
 
     inline const mat4& NullCamera::get_view_inv() const
     {
-        throw std::exception("Attempted to use null camera");
+        throw std::runtime_error("Attempted to use null camera");
     }
 
     inline const mat3x4& NullViewport::get_clip() const
     {
-        throw std::exception("Attempted to use null viewport");
+        throw std::runtime_error("Attempted to use null viewport");
     }
 }
 

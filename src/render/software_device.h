@@ -308,14 +308,14 @@ inline void SoftwareDevice::set_render_target(RenderTarget* target)
 inline void SoftwareDevice::set_texture_unit(size_t index, const Texture* texture)
 {
     if (index >= detail::SOFTWARE_TEXTURE_COUNT)
-        throw std::exception("invalid texture unit index");
+        throw std::runtime_error("invalid texture unit index");
     m_texture_units[index] = texture;
 }
 
 inline void SoftwareDevice::set_light_unit(size_t index, const Light* light)
 {
     if (index >= detail::SOFTWARE_LIGHT_COUNT)
-        throw std::exception("invalid light unit index");
+        throw std::runtime_error("invalid light unit index");
 
     m_light_units[index] = light;
     if (light)
