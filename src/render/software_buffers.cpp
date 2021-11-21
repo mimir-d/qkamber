@@ -2,6 +2,38 @@
 #include "precompiled.h"
 #include "software_buffers.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// SoftwareDepthBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+SoftwareDepthBuffer::SoftwareDepthBuffer(int width, int height) :
+    BufferStorage(width * height)
+{
+    resize(width, height);
+    log_info("Created software depth buffer");
+}
+
+void SoftwareDepthBuffer::resize(int width, int height)
+{
+    if (m_width == width && m_height == height)
+        return;
+
+    // update dimensions
+    m_width = width;
+    m_height = height;
+
+    m_data.reset(new float[height * width]);
+}
+
+void SoftwareDepthBuffer::clear()
+{
+    float* data = lock();
+    std::fill(data, data + m_width * m_height, std::numeric_limits<float>::max());
+    unlock();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SoftwareTexture impl
+///////////////////////////////////////////////////////////////////////////////
 SoftwareTexture::SoftwareTexture(size_t width, size_t height, PixelFormat format) :
     BufferStorage(width * height * 4),
     m_width(width),
@@ -26,7 +58,7 @@ void SoftwareTexture::unlock()
     if (m_format == PixelFormat::RgbU8)
     {
         uint8_t* pi = m_rgb8u_data.data();
-        uint8_t* po = m_data.data();
+        uint8_t* po = m_data.get();
         for (; pi != m_rgb8u_data.data() + m_height * m_width * 3; pi += 3, po += 4)
         {
             po[0] = pi[0];

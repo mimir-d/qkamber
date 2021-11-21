@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine.h"
+#include "render/software_buffers.h"
 #include "render/render_buffers.h"
 #include "render/render_window.h"
 
@@ -30,23 +31,6 @@ private:
     size_t m_width = 0;
     size_t m_height = 0;
     size_t m_stride;
-};
-
-class Win32DepthBuffer : public DepthBuffer
-{
-public:
-    Win32DepthBuffer(int width, int height);
-    ~Win32DepthBuffer() = default;
-
-    float* get_data();
-    size_t get_stride();
-
-    void resize(int width, int height);
-
-private:
-    std::unique_ptr<float[]> m_data;
-    size_t m_width = 0;
-    size_t m_height = 0;
 };
 
 class Win32Window : public RenderWindow
@@ -89,7 +73,7 @@ private:
     WindowState m_window_state = WindowState::Unknown;
 
     std::unique_ptr<Win32ColorBuffer> m_color_buf;
-    std::unique_ptr<Win32DepthBuffer> m_depth_buf;
+    std::unique_ptr<SoftwareDepthBuffer> m_depth_buf;
 
     QkEngine::Context& m_context;
     bool m_discard_input = false;
@@ -111,19 +95,6 @@ inline DWORD* Win32ColorBuffer::get_data()
 inline size_t Win32ColorBuffer::get_stride()
 {
     return m_stride;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Win32DepthBuffer impl
-///////////////////////////////////////////////////////////////////////////////
-inline float* Win32DepthBuffer::get_data()
-{
-    return m_data.get();
-}
-
-inline size_t Win32DepthBuffer::get_stride()
-{
-    return m_width;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

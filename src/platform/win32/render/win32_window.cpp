@@ -76,29 +76,6 @@ void Win32ColorBuffer::resize(int width, int height)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Win32DepthBuffer impl
-///////////////////////////////////////////////////////////////////////////////
-Win32DepthBuffer::Win32DepthBuffer(int width, int height)
-{
-    flog("id = %#x", this);
-
-    resize(width, height);
-    log_info("Created win32 depth buffer");
-}
-
-void Win32DepthBuffer::resize(int width, int height)
-{
-    if (m_width == width && m_height == height)
-        return;
-
-    // update dimensions
-    m_width = width;
-    m_height = height;
-
-    m_data.reset(new float[height * width]);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Win32Window impl
 ///////////////////////////////////////////////////////////////////////////////
 Win32Window::Win32Window(QkEngine::Context& context, int width, int height) :
@@ -211,7 +188,7 @@ void Win32Window::create_window(int width, int height)
 
     // create render buffer objects
     m_color_buf = std::make_unique<Win32ColorBuffer>(m_dc, width, height);
-    m_depth_buf = std::make_unique<Win32DepthBuffer>(width, height);
+    m_depth_buf = std::make_unique<SoftwareDepthBuffer>(width, height);
 
     ShowWindow(m_window_handle, SW_SHOW);
     UpdateWindow(m_window_handle);

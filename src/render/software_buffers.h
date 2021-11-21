@@ -6,40 +6,55 @@
 
 namespace detail
 {
-    template <typename Buffer>
+    template <typename Buffer, typename T>
     class BufferStorage : public Buffer
     {
     public:
-        uint8_t* lock() override;
+        T* lock() override;
         void unlock() override;
 
-        const uint8_t* data() const;
+        const T* data() const;
 
     protected:
         template <typename... Args>
         BufferStorage(size_t size, Args&&... args);
         ~BufferStorage() = default;
 
-        // TODO: a const-size vector after init
-        std::vector<uint8_t> m_data;
+        std::unique_ptr<T[]> m_data;
     };
 }
 
-class SoftwareVertexBuffer : public detail::BufferStorage<VertexBuffer>
+class SoftwareDepthBuffer : public detail::BufferStorage<DepthBuffer, float>
+{
+public:
+    SoftwareDepthBuffer(int width, int height);
+    ~SoftwareDepthBuffer() = default;
+
+    size_t get_stride();
+
+    void resize(int width, int height);
+    void clear();
+
+private:
+    size_t m_width = 0;
+    size_t m_height = 0;
+};
+
+class SoftwareVertexBuffer : public detail::BufferStorage<VertexBuffer, uint8_t>
 {
 public:
     SoftwareVertexBuffer(std::unique_ptr<VertexDecl> decl, size_t count);
     ~SoftwareVertexBuffer() = default;
 };
 
-class SoftwareIndexBuffer : public detail::BufferStorage<IndexBuffer>
+class SoftwareIndexBuffer : public detail::BufferStorage<IndexBuffer, uint8_t>
 {
 public:
     SoftwareIndexBuffer(size_t count);
     ~SoftwareIndexBuffer() = default;
 };
 
-class SoftwareTexture : public detail::BufferStorage<Texture>
+class SoftwareTexture : public detail::BufferStorage<Texture, uint8_t>
 {
 public:
     SoftwareTexture(size_t width, size_t height, PixelFormat format);
@@ -63,28 +78,36 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // detail::BufferStorage impl
 ///////////////////////////////////////////////////////////////////////////////
-template <typename Buffer>
+template <typename Buffer, typename T>
 template <typename... Args>
-inline detail::BufferStorage<Buffer>::BufferStorage(size_t size, Args&&... args) :
+inline detail::BufferStorage<Buffer, T>::BufferStorage(size_t size, Args&&... args) :
     Buffer{ std::forward<Args>(args)... }
 {
-    m_data.resize(size);
+    m_data.reset(new T[size]);
 }
 
-template <typename Buffer>
-inline uint8_t* detail::BufferStorage<Buffer>::lock()
+template <typename Buffer, typename T>
+inline T* detail::BufferStorage<Buffer, T>::lock()
 {
-    return m_data.data();
+    return m_data.get();
 }
 
-template <typename Buffer>
-inline void detail::BufferStorage<Buffer>::unlock()
+template <typename Buffer, typename T>
+inline void detail::BufferStorage<Buffer, T>::unlock()
 {}
 
-template <typename Buffer>
-inline const uint8_t* detail::BufferStorage<Buffer>::data() const
+template <typename Buffer, typename T>
+inline const T* detail::BufferStorage<Buffer, T>::data() const
 {
-    return m_data.data();
+    return m_data.get();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SoftwareDepthBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+inline size_t SoftwareDepthBuffer::get_stride()
+{
+    return m_width;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,6 +146,6 @@ inline Color SoftwareTexture::sample(float u, float v) const
 {
     const size_t x = clamp(static_cast<size_t>(u * m_width), size_t(0), m_width - 1);
     const size_t y = clamp(static_cast<size_t>(v * m_height), size_t(0), m_height - 1);
-    const uint8_t* data = m_data.data() + (y * m_width + x) * 4;
+    const uint8_t* data = m_data.get() + (y * m_width + x) * 4;
     return Color{ data[0] / 255.0f, data[1] / 255.0f, data[2] / 255.0f, data[3] / 255.0f };
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine.h"
+#include "render/software_buffers.h"
 #include "render/render_buffers.h"
 #include "render/render_window.h"
 
@@ -23,23 +24,6 @@ private:
 
     size_t m_width;
     size_t m_height;
-};
-
-class SdlDepthBuffer : public DepthBuffer
-{
-public:
-    SdlDepthBuffer(int width, int height);
-    ~SdlDepthBuffer() = default;
-
-    float* get_data();
-    size_t get_stride();
-
-    void resize(int width, int height);
-
-private:
-    std::unique_ptr<float[]> m_data;
-    size_t m_width = 0;
-    size_t m_height = 0;
 };
 
 class SdlWindow : public RenderWindow
@@ -66,7 +50,7 @@ private:
     int m_height;
 
     std::unique_ptr<SdlColorBuffer> m_color_buf;
-    std::unique_ptr<SdlDepthBuffer> m_depth_buf;
+    std::unique_ptr<SoftwareDepthBuffer> m_depth_buf;
 
     QkEngine::Context& m_context;
 };
@@ -82,19 +66,6 @@ inline SDL_Renderer* SdlColorBuffer::get_renderer()
 inline SDL_Surface* SdlColorBuffer::get_surface()
 {
     return m_surface;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// SdlDepthBuffer impl
-///////////////////////////////////////////////////////////////////////////////
-inline float* SdlDepthBuffer::get_data()
-{
-    return m_data.get();
-}
-
-inline size_t SdlDepthBuffer::get_stride()
-{
-    return m_width;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

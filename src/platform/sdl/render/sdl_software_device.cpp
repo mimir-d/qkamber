@@ -66,12 +66,8 @@ void SdlSoftwareDevice::clear()
     SDL_RenderClear(renderer);
 
     // clear the zbuffer
-    auto& depth_buf = static_cast<SdlDepthBuffer&>(m_render_target->get_depth_buffer());
-    std::fill(
-        depth_buf.get_data(),
-        depth_buf.get_data() + m_render_target->get_height() * depth_buf.get_stride(),
-        std::numeric_limits<float>::max()
-    );
+    auto& depth_buf = static_cast<SoftwareDepthBuffer&>(m_render_target->get_depth_buffer());
+    depth_buf.clear();
 }
 
 void SdlSoftwareDevice::swap_buffers()

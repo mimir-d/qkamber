@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render/software_device.h"
+#include "render/software_buffers.h"
 #include "engine.h"
 
 class Win32SoftwareDevice : public SoftwareDevice

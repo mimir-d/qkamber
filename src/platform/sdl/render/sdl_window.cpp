@@ -52,29 +52,6 @@ void SdlColorBuffer::resize(int width, int height)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// SdlDepthBuffer impl
-///////////////////////////////////////////////////////////////////////////////
-SdlDepthBuffer::SdlDepthBuffer(int width, int height)
-{
-    flog("id = %#x", this);
-
-    resize(width, height);
-    log_info("Created SDL depth buffer");
-}
-
-void SdlDepthBuffer::resize(int width, int height)
-{
-    if (m_width == width && m_height == height)
-        return;
-
-    // update dimensions
-    m_width = width;
-    m_height = height;
-
-    m_data.reset(new float[height * width]);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // SdlWindow impl
 ///////////////////////////////////////////////////////////////////////////////
 SdlWindow::SdlWindow(QkEngine::Context& context, int width, int height) :
@@ -121,7 +98,7 @@ void SdlWindow::create_window(int width, int height)
 
     // create render buffer objects
     m_color_buf = std::make_unique<SdlColorBuffer>(width, height);
-    m_depth_buf = std::make_unique<SdlDepthBuffer>(width, height);
+    m_depth_buf = std::make_unique<SoftwareDepthBuffer>(width, height);
 
     // TODO: until sdl window events are in place
     m_context.on_resize(width, height);

@@ -100,12 +100,8 @@ void Win32SoftwareDevice::clear()
     FillRect(color_buf.get_dc(), &rc, m_clear_brush);
 
     // clear the zbuffer
-    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
-    std::fill(
-        depth_buf.get_data(),
-        depth_buf.get_data() + m_render_target->get_height() * depth_buf.get_stride(),
-        std::numeric_limits<float>::max()
-    );
+    auto& depth_buf = static_cast<SoftwareDepthBuffer&>(m_render_target->get_depth_buffer());
+    depth_buf.clear();
 }
 
 void Win32SoftwareDevice::swap_buffers()
@@ -422,9 +418,9 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
     const size_t color_stride = color_buf.get_stride();
     DWORD* color_ptr = color_buf.get_data() + min_y * color_stride;
 
-    auto& depth_buf = static_cast<Win32DepthBuffer&>(m_render_target->get_depth_buffer());
+    auto& depth_buf = static_cast<SoftwareDepthBuffer&>(m_render_target->get_depth_buffer());
     const size_t depth_stride = depth_buf.get_stride();
-    float* depth_ptr = depth_buf.get_data() + min_y * depth_stride;
+    float* depth_ptr = depth_buf.lock() + min_y * depth_stride;
 
     for (int y = min_y; y < max_y; y++)
     {
@@ -535,4 +531,6 @@ void Win32SoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint
         color_ptr += color_stride;
         depth_ptr += depth_stride;
     }
+
+    depth_buf.unlock();
 }

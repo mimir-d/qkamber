@@ -15,6 +15,9 @@ class DepthBuffer
 {
 public:
     virtual ~DepthBuffer() = default;
+
+    virtual float* lock() = 0;
+    virtual void unlock() = 0;
 };
 
 class RenderTarget
