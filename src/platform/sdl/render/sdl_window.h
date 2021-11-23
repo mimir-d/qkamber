@@ -44,6 +44,8 @@ public:
     ColorBuffer& get_color_buffer() final;
     DepthBuffer& get_depth_buffer() final;
 
+    void resize(int width, int height);
+
 private:
     void create_window(int width, int height);
 

@@ -88,6 +88,19 @@ SdlWindow::~SdlWindow()
     log_info("Destroyed SDL window");
 }
 
+void SdlWindow::resize(int width, int height)
+{
+    if (width == m_width && height == m_height)
+        return;
+
+    m_width = width;
+    m_height = height;
+
+    m_color_buf->resize(width, height);
+    m_depth_buf->resize(width, height);
+    m_context.on_resize(width, height);
+}
+
 void SdlWindow::create_window(int width, int height)
 {
     flog();
@@ -103,6 +116,7 @@ void SdlWindow::create_window(int width, int height)
     log_info("Created window = %#x, title = %s", m_window, WINDOW_TITLE);
 
     SDL_SetWindowResizable(m_window, SDL_TRUE);
+    SDL_SetWindowData(m_window, SDL_WINDOW_DATA_PTR, this);
 
     m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_renderer)
@@ -112,6 +126,6 @@ void SdlWindow::create_window(int width, int height)
     m_color_buf = std::make_unique<SdlColorBuffer>(width, height);
     m_depth_buf = std::make_unique<SoftwareDepthBuffer>(width, height);
 
-    // TODO: until sdl window events are in place
+    // SDL doesn't automatically throw a resize on create
     m_context.on_resize(width, height);
 }
