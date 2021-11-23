@@ -15,8 +15,9 @@ public:
 
     HDC get_dc();
 
-    DWORD* get_data();
-    size_t get_stride();
+    uint32_t* lock() final;
+    void unlock() final;
+    size_t get_stride() final;
 
     // TODO: should these actually be recreated instead of resized?
     void resize(int width, int height);
@@ -87,10 +88,13 @@ inline HDC Win32ColorBuffer::get_dc()
     return m_dc;
 }
 
-inline DWORD* Win32ColorBuffer::get_data()
+inline uint32_t* Win32ColorBuffer::lock()
 {
     return m_data_ptr;
 }
+
+inline void Win32ColorBuffer::unlock()
+{}
 
 inline size_t Win32ColorBuffer::get_stride()
 {

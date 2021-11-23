@@ -5,10 +5,26 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Framebuffer objects
 ///////////////////////////////////////////////////////////////////////////////
+enum class ColorBufferFormat
+{
+    ARGB8,  // SDL surface
+    xBGR8   // WIN32 GDI DC
+};
+
 class ColorBuffer
 {
 public:
+    ColorBuffer(ColorBufferFormat format);
     virtual ~ColorBuffer() = default;
+
+    virtual uint32_t* lock() = 0;
+    virtual void unlock() = 0;
+    virtual size_t get_stride() = 0;
+
+    ColorBufferFormat get_format() const;
+
+protected:
+    ColorBufferFormat m_format;
 };
 
 class DepthBuffer
@@ -18,6 +34,7 @@ public:
 
     virtual float* lock() = 0;
     virtual void unlock() = 0;
+    virtual size_t get_stride() = 0;
 };
 
 class RenderTarget
@@ -143,6 +160,18 @@ public:
 protected:
     size_t m_count;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// ColorBuffer impl
+///////////////////////////////////////////////////////////////////////////////
+inline ColorBuffer::ColorBuffer(ColorBufferFormat format) :
+    m_format(format)
+{}
+
+inline ColorBufferFormat ColorBuffer::get_format() const
+{
+    return m_format;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DeviceBuffer impl

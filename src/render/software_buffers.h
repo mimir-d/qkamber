@@ -30,7 +30,7 @@ public:
     SoftwareDepthBuffer(int width, int height);
     ~SoftwareDepthBuffer() = default;
 
-    size_t get_stride();
+    size_t get_stride() final;
 
     void resize(int width, int height);
     void clear();

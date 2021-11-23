@@ -18,6 +18,7 @@ constexpr char* WINDOW_TITLE = "Qkamber";
 // Win32ColorBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
 Win32ColorBuffer::Win32ColorBuffer(HDC surface_dc, int width, int height) :
+    ColorBuffer(ColorBufferFormat::xBGR8),
     m_surface_dc(surface_dc)
 {
     flog("id = %#x", this);
@@ -67,6 +68,8 @@ void Win32ColorBuffer::resize(int width, int height)
         nullptr, 0
     );
 
+    // NOTE: win32 buffer is aligned to DWORD per pixel, so it matches
+    // the uint32_t* size of ColorBuffer
     m_stride = (bmi.biWidth * bmi.biBitCount + 0x1f) >> 5;
 
     SelectObject(m_dc, m_bitmap);

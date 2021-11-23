@@ -16,6 +16,7 @@ constexpr char WINDOW_TITLE[] = "Qkamber";
 // SdlColorBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
 SdlColorBuffer::SdlColorBuffer(int width, int height) :
+    ColorBuffer(ColorBufferFormat::ARGB8),
     m_surface(nullptr),
     m_renderer(nullptr)
 {
@@ -29,6 +30,17 @@ SdlColorBuffer::~SdlColorBuffer()
 {
     SDL_DestroyRenderer(m_renderer);
     SDL_FreeSurface(m_surface);
+}
+
+uint32_t* SdlColorBuffer::lock()
+{
+    SDL_LockSurface(m_surface);
+    return static_cast<uint32_t*>(m_surface->pixels);
+}
+
+void SdlColorBuffer::unlock()
+{
+    SDL_UnlockSurface(m_surface);
 }
 
 void SdlColorBuffer::resize(int width, int height)

@@ -13,6 +13,10 @@ public:
     SdlColorBuffer(int width, int height);
     ~SdlColorBuffer();
 
+    uint32_t* lock() final;
+    void unlock() final;
+    size_t get_stride() final;
+
     SDL_Renderer* get_renderer();
     SDL_Surface* get_surface();
 
@@ -58,6 +62,11 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // SdlColorBuffer impl
 ///////////////////////////////////////////////////////////////////////////////
+inline size_t SdlColorBuffer::get_stride()
+{
+    return m_surface->pitch / 4;
+}
+
 inline SDL_Renderer* SdlColorBuffer::get_renderer()
 {
     return m_renderer;

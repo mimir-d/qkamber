@@ -138,8 +138,12 @@ public:
     void debug_normals(bool enable);
 
 protected:
-    virtual void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) = 0;
-    virtual void draw_line(const DevicePoint& p0, const DevicePoint& p1) = 0;
+    void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
+
+    // TODO: these 2 should also be software rendered
+    virtual void draw_points(const std::vector<DevicePoint>& points) = 0;
+    virtual void draw_lines(const std::vector<DevicePoint>& points) = 0;
+    void draw_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
 
 protected:
     SoftwareParams m_params;

@@ -86,64 +86,38 @@ void SdlSoftwareDevice::swap_buffers()
 ///////////////////////////////////////////////////////////////////////////////
 // Low-level drawing methods
 ///////////////////////////////////////////////////////////////////////////////
-void SdlSoftwareDevice::draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
+void SdlSoftwareDevice::draw_points(const std::vector<DevicePoint>& points)
 {
-    switch (m_poly_mode)
-    {
-        case PolygonMode::Point: draw_tri_point(p0, p1, p2); break;
-        case PolygonMode::Line:  draw_tri_line(p0, p1, p2);  break;
-        case PolygonMode::Fill:  draw_tri_fill(p0, p1, p2);  break;
-    }
-}
+    std::vector<SDL_FPoint> sdl_points;
+    sdl_points.reserve(points.size());
 
-void SdlSoftwareDevice::draw_line(const DevicePoint& p0, const DevicePoint& p1)
-{
-    auto& color_buf = static_cast<SdlColorBuffer&>(m_render_target->get_color_buffer());
-    SDL_Renderer* renderer = color_buf.get_renderer();
-
-    SDL_SetRenderDrawColor(renderer, 150, 0, 200, SDL_ALPHA_OPAQUE);
-    SDL_RenderDrawLineF(
-        renderer,
-        p0.position.x(), p0.position.y(),
-        p1.position.x(), p1.position.y()
+    std::transform(
+        points.begin(), points.end(),
+        std::back_inserter(sdl_points),
+        [](const auto& p) { return SDL_FPoint{ p.position.x(), p.position.y() }; }
     );
-}
-
-void SdlSoftwareDevice::draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
-{
-    SDL_FPoint points[] = {
-        { p0.position.x(), p0.position.y() },
-        { p1.position.x(), p1.position.y() },
-        { p2.position.x(), p2.position.y() }
-    };
 
     auto& color_buf = static_cast<SdlColorBuffer&>(m_render_target->get_color_buffer());
     SDL_Renderer* renderer = color_buf.get_renderer();
 
     SDL_SetRenderDrawColor(renderer, 150, 0, 200, SDL_ALPHA_OPAQUE);
-    SDL_RenderDrawPointsF(renderer, points, 3);
+    SDL_RenderDrawPointsF(renderer, sdl_points.data(), sdl_points.size());
 }
 
-void SdlSoftwareDevice::draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
+void SdlSoftwareDevice::draw_lines(const std::vector<DevicePoint>& points)
 {
-    SDL_FPoint points[] = {
-        { p0.position.x(), p0.position.y() },
-        { p1.position.x(), p1.position.y() },
-        { p2.position.x(), p2.position.y() },
-        { p0.position.x(), p0.position.y() }
-    };
+    std::vector<SDL_FPoint> sdl_points;
+    sdl_points.reserve(points.size());
 
-    // for (int i =0; i <4;i++) {
-    //     log_info("p%d: %f %f", i, points[i].x, points[i].y);
-    // }
+    std::transform(
+        points.begin(), points.end(),
+        std::back_inserter(sdl_points),
+        [](const auto& p) { return SDL_FPoint{ p.position.x(), p.position.y() }; }
+    );
 
     auto& color_buf = static_cast<SdlColorBuffer&>(m_render_target->get_color_buffer());
     SDL_Renderer* renderer = color_buf.get_renderer();
 
     SDL_SetRenderDrawColor(renderer, 150, 0, 200, SDL_ALPHA_OPAQUE);
-    SDL_RenderDrawLinesF(renderer, points, 4);
-}
-
-void SdlSoftwareDevice::draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2)
-{
+    SDL_RenderDrawLinesF(renderer, sdl_points.data(), sdl_points.size());
 }

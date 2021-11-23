@@ -94,8 +94,6 @@ void Context::on_create()
 
     auto& srt_ship = m_objects[1]->get_component<SrtComponent>();
     srt_ship.set_scale({ .5, .5, .5 });
-
-    dev.set_polygon_mode(PolygonMode::Line);
 }
 
 void Context::on_destroy()

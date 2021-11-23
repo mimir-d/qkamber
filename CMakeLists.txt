@@ -24,7 +24,7 @@ if(NOT WINDOWS)
     target_link_libraries(qkamber PRIVATE SDL2)
 endif()
 
-# target_compile_options(qkamber PRIVATE "-O2")
+target_compile_options(qkamber PRIVATE "-O2")
 
 # copy assets
 file(GLOB ASSETS "assets/*")

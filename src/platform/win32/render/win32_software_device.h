@@ -23,13 +23,8 @@ public:
     void swap_buffers() final;
 
 protected:
-    void draw_tri(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2) final;
-    void draw_line(const DevicePoint& p0, const DevicePoint& p1) final;
-
-private:
-    void draw_tri_point(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
-    void draw_tri_line(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
-    void draw_tri_fill(const DevicePoint& p0, const DevicePoint& p1, const DevicePoint& p2);
+    void draw_points(const std::vector<DevicePoint>& points) final;
+    void draw_lines(const std::vector<DevicePoint>& points) final;
 
 private:
     QkEngine::Context& m_context;
