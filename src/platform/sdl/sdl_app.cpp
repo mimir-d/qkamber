@@ -25,6 +25,7 @@ SdlApp::SdlApp(QkEngine::Context& context) :
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS) < 0)
         throw std::runtime_error("SDL_Init failed");
 
+    SDL_ShowCursor(SDL_FALSE);
     log_info("Created SDL application");
 }
 

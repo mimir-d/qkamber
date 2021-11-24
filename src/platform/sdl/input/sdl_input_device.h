@@ -11,6 +11,9 @@ public:
 public:
     bool get_button_pressed(Button button) final;
     vec2 get_position() final;
+
+private:
+    vec2 m_mouse_abs = { 0, 0 };
 };
 
 class SdlKeyboardDevice : public KeyboardDevice

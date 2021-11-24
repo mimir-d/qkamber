@@ -53,9 +53,9 @@ vec3 FpsCamera::get_position_delta()
 
     const vec3 accel = vec3
     {
-        keyboard.get_key_pressed('A') ? -1.0f : keyboard.get_key_pressed('D') ? 1.0f : 0.0f,
-        keyboard.get_key_pressed('Q') ? -1.0f : keyboard.get_key_pressed('E') ? 1.0f : 0.0f,
-        keyboard.get_key_pressed('W') ? -1.0f : keyboard.get_key_pressed('S') ? 1.0f : 0.0f
+        keyboard.get_key_pressed('a') ? -1.0f : keyboard.get_key_pressed('d') ? 1.0f : 0.0f,
+        keyboard.get_key_pressed('q') ? -1.0f : keyboard.get_key_pressed('e') ? 1.0f : 0.0f,
+        keyboard.get_key_pressed('w') ? -1.0f : keyboard.get_key_pressed('s') ? 1.0f : 0.0f
     }.normalize() * m_accel_scaler;
 
     if (accel.length_sq() > 0)
