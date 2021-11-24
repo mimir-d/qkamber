@@ -18,14 +18,21 @@ add_executable(qkamber ${SOURCES})
 target_include_directories(qkamber PRIVATE "src")
 target_precompile_headers(qkamber PRIVATE "src/precompiled.h")
 
-if(NOT WINDOWS)
+if(${PLATFORM} STREQUAL "sdl")
     add_subdirectory("extern/sdl")
     target_include_directories(qkamber PRIVATE "extern/sdl/include")
     target_link_libraries(qkamber PRIVATE SDL2)
+
+    add_subdirectory("extern/freetype")
+    add_library(Freetype::Freetype ALIAS freetype)
+
+    add_subdirectory("extern/sdl_ttf")
+    target_include_directories(qkamber PRIVATE "extern/sdl_ttf")
+    target_link_libraries(qkamber PRIVATE SDL2_ttf)
 endif()
 
 target_compile_options(qkamber PRIVATE "-O2")
 
 # copy assets
-file(GLOB ASSETS "assets/*")
+file(GLOB ASSETS CONFIGURE_DEPENDS "assets/*")
 file(COPY ${ASSETS} DESTINATION .)

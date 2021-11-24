@@ -1,3 +1,9 @@
 [submodule "extern/sdl"]
 	path = extern/sdl
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "extern/sdl_ttf"]
+	path = extern/sdl_ttf
+	url = https://github.com/libsdl-org/SDL_ttf.git
+[submodule "extern/freetype"]
+	path = extern/freetype
+	url = https://github.com/freetype/freetype.git

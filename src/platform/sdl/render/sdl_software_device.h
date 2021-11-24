@@ -26,4 +26,6 @@ protected:
 
 private:
     QkEngine::Context& m_context;
+
+    TTF_Font* m_font;
 };

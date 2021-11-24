@@ -22,10 +22,6 @@ SdlApp::SdlApp(QkEngine::Context& context) :
     // on_create gets called after we get a render target and everything is ready for rendering
     m_context.on_create();
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS) < 0)
-        throw std::runtime_error("SDL_Init failed");
-
-    SDL_ShowCursor(SDL_FALSE);
     log_info("Created SDL application");
 }
 
@@ -56,7 +52,6 @@ int SdlApp::mainloop()
     }
     m_context.on_destroy();
 
-    SDL_Quit();
     return 0;
 }
 

@@ -19,7 +19,17 @@ SdlSoftwareDevice::SdlSoftwareDevice(QkEngine::Context& context) :
 {
     flog("id = %#x", this);
 
+    // TODO: should move these to SdlApp, but the ctor order in RenderSystem needs to be changed
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS) < 0)
+        throw std::runtime_error("SDL_Init failed");
+
+    if (TTF_Init() < 0)
+        throw std::runtime_error("TTF_Init failed");
+
+    SDL_ShowCursor(SDL_FALSE);
+
     // create drawing stuff
+    m_font = TTF_OpenFont("freemono_bold.ttf", 12);
 
     log_info("Created SDL software device");
 }
@@ -28,6 +38,10 @@ SdlSoftwareDevice::~SdlSoftwareDevice()
 {
     flog();
 
+    TTF_CloseFont(m_font);
+
+    TTF_Quit();
+    SDL_Quit();
     log_info("Destroyed SDL software device");
 }
 
@@ -37,10 +51,14 @@ SdlSoftwareDevice::~SdlSoftwareDevice()
 void SdlSoftwareDevice::draw_text(const std::string& text, int x, int y)
 {
     auto& color_buf = static_cast<SdlColorBuffer&>(m_render_target->get_color_buffer());
-    SDL_Renderer* renderer = color_buf.get_renderer();
+    SDL_Surface* surface = color_buf.get_surface();
 
-    SDL_SetRenderDrawColor(renderer, 150, 0, 200, SDL_ALPHA_OPAQUE);
-    // TODO: SDL_ttf
+    SDL_Color fg = { 150, 0, 200 };
+    SDL_Surface* text_surface = TTF_RenderText_Blended(m_font, text.c_str(), fg);
+
+    SDL_Rect pos = { x, y, 0, 0 };
+    SDL_BlitSurface(text_surface, nullptr, surface, &pos);
+    SDL_FreeSurface(text_surface);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
